@@ -1,0 +1,128 @@
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { brl, orderStatusLabel } from "@/lib/format";
+import { toast } from "sonner";
+import { Bike, Package } from "lucide-react";
+
+export const Route = createFileRoute("/_authenticated/entregador/")({ component: Page });
+
+function Page() {
+  const nav = useNavigate();
+  const [me, setMe] = useState<any>(null);
+  const [available, setAvailable] = useState(false);
+  const [ready, setReady] = useState<any[]>([]);
+  const [mine, setMine] = useState<any[]>([]);
+
+  const load = async () => {
+    const { data: u } = await supabase.auth.getUser();
+    if (!u.user) return;
+    const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", u.user.id);
+    if (!roles?.some((r) => r.role === "courier")) { nav({ to: "/tornar-se-entregador" }); return; }
+    const { data: c } = await supabase.from("couriers").select("*").eq("id", u.user.id).maybeSingle();
+    setMe({ user: u.user, courier: c });
+    setAvailable(!!c?.is_available);
+
+    const { data: r } = await supabase.from("orders").select("*, store:stores(name,logo_url,address_line,latitude,longitude)").eq("status", "ready").is("courier_id", null).order("created_at");
+    setReady(r ?? []);
+    const { data: m } = await supabase.from("orders").select("*, store:stores(name,logo_url)").eq("courier_id", u.user.id).in("status", ["ready", "out_for_delivery"]).order("created_at");
+    setMine(m ?? []);
+  };
+
+  useEffect(() => {
+    load();
+    const ch = supabase.channel("courier-orders")
+      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, load)
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (!me) return <div className="p-10 text-center text-muted-foreground">Carregando...</div>;
+
+  return (
+    <div className="mx-auto max-w-3xl px-4 py-6">
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Entregas</h1>
+          <p className="text-sm text-muted-foreground">Fique disponível para receber pedidos prontos.</p>
+        </div>
+        <div className="flex items-center gap-2 rounded-lg border bg-card p-2">
+          <Bike className="size-4 text-primary" />
+          <span className="text-sm">{available ? "Disponível" : "Indisponível"}</span>
+          <Switch checked={available} onCheckedChange={async (v) => {
+            await supabase.from("couriers").update({ is_available: v, last_seen_at: new Date().toISOString() }).eq("id", me.user.id);
+            setAvailable(v);
+          }} />
+        </div>
+      </div>
+
+      {mine.length > 0 && (
+        <section className="mb-6">
+          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Suas entregas ativas</h2>
+          <div className="space-y-2">
+            {mine.map((o) => (
+              <OrderCard key={o.id} o={o} mine onUpdate={load} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      <section>
+        <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Pedidos prontos para retirada</h2>
+        {!available ? (
+          <Card className="p-6 text-center text-sm text-muted-foreground">Ative a disponibilidade para ver pedidos prontos.</Card>
+        ) : ready.length === 0 ? (
+          <Card className="p-6 text-center text-sm text-muted-foreground"><Package className="mx-auto mb-2 size-6" /> Nenhum pedido pronto no momento.</Card>
+        ) : (
+          <div className="space-y-2">
+            {ready.map((o) => <OrderCard key={o.id} o={o} onUpdate={load} />)}
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
+function OrderCard({ o, mine, onUpdate }: { o: any; mine?: boolean; onUpdate: () => void }) {
+  const addr = o.address_snapshot ?? {};
+  const accept = async () => {
+    const { data: u } = await supabase.auth.getUser();
+    if (!u.user) return;
+    const { error } = await supabase.from("orders").update({ courier_id: u.user.id, status: "out_for_delivery" }).eq("id", o.id);
+    if (error) return toast.error(error.message);
+    toast.success("Entrega aceita!");
+    onUpdate();
+  };
+  const deliver = async () => {
+    const { error } = await supabase.from("orders").update({ status: "delivered" }).eq("id", o.id);
+    if (error) return toast.error(error.message);
+    toast.success("Pedido entregue");
+    onUpdate();
+  };
+
+  return (
+    <Card className="p-3">
+      <div className="flex items-start gap-3">
+        <div className="size-12 shrink-0 overflow-hidden rounded-lg bg-muted">
+          {o.store?.logo_url && <img src={o.store.logo_url} className="h-full w-full object-cover" alt="" />}
+        </div>
+        <div className="flex-1">
+          <div className="flex items-center gap-2"><div className="font-medium">{o.store?.name}</div><Badge>{orderStatusLabel[o.status]}</Badge></div>
+          <div className="text-xs text-muted-foreground">Retirar: {o.store?.address_line ?? "—"}</div>
+          <div className="text-xs text-muted-foreground">Entregar: {addr.street}{addr.number ? `, ${addr.number}` : ""}</div>
+          <div className="mt-1 text-sm font-semibold">{brl(Number(o.total))}</div>
+        </div>
+        <div className="flex flex-col items-end gap-1">
+          <Button asChild size="sm" variant="outline"><Link to="/pedidos/$id" params={{ id: o.id }}>Abrir</Link></Button>
+          {!mine && <Button size="sm" onClick={accept}>Aceitar</Button>}
+          {mine && o.status === "out_for_delivery" && <Button size="sm" onClick={deliver}>Marcar como entregue</Button>}
+        </div>
+      </div>
+    </Card>
+  );
+}
