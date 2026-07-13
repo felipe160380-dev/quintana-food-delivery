@@ -317,7 +317,7 @@ function OrdersTab({ storeId }: { storeId: string }) {
                 <Button asChild size="sm" variant="outline"><Link to="/pedidos/$id" params={{ id: o.id }}>Abrir</Link></Button>
                 {next && !["cancelled", "delivered"].includes(o.status) && (
                   <Button size="sm" onClick={async () => {
-                    const { error } = await supabase.from("orders").update({ status: next }).eq("id", o.id);
+                    const { error } = await supabase.from("orders").update({ status: next as any }).eq("id", o.id);
                     if (error) return toast.error(error.message);
                     toast.success("Status atualizado");
                   }}>Marcar como {orderStatusLabel[next]}</Button>
