@@ -89,6 +89,10 @@ function Page() {
           {order.notes && <div className="rounded bg-muted p-2 text-xs"><b>Obs:</b> {order.notes}</div>}
         </CardContent>
       </Card>
+      {order.status === "delivered" && me && (
+        <ReviewBox orderId={order.id} storeId={order.store_id} customerId={me} />
+      )}
+
 
       <Card>
         <CardHeader><CardTitle className="text-base">Chat com a loja</CardTitle></CardHeader>
