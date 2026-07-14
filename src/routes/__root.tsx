@@ -95,6 +95,8 @@ function RootComponent() {
         <div className="flex min-h-screen flex-col">
           <AppHeader />
           <main className="flex-1"><Outlet /></main>
+          <Footer />
+          <BottomNav />
         </div>
         <Toaster richColors position="top-center" />
       </CartProvider>
