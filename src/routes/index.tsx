@@ -148,6 +148,7 @@ function Home() {
                       <div className="truncate font-semibold group-hover:text-primary">{s.name}</div>
                       <div className="truncate text-xs text-muted-foreground">{s.category ?? "Restaurante"}</div>
                       <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
+                        <StoreRating storeId={s.id} compact />
                         <span className="inline-flex items-center gap-1"><Timer className="size-3" /> {s.prep_time_min} min</span>
                         <span className="inline-flex items-center gap-1"><Truck className="size-3" /> {s.delivery_fee > 0 ? brl(Number(s.delivery_fee)) : "Grátis"}</span>
                       </div>
