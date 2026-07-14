@@ -101,6 +101,7 @@ function RootComponent() {
           <Footer />
           <BottomNav />
         </div>
+        <InstallPrompt />
         <Toaster richColors position="top-center" />
       </CartProvider>
     </QueryClientProvider>
