@@ -17,6 +17,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { Footer } from "@/components/Footer";
 import { BottomNav } from "@/components/BottomNav";
 import { InstallPrompt } from "@/components/InstallPrompt";
+import { useLiveNotifications } from "@/hooks/use-live-notifications";
 
 function NotFoundComponent() {
   return (
