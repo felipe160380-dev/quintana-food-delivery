@@ -96,6 +96,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <CartProvider>
+        <NotificationsMount />
         <div className="flex min-h-screen flex-col">
           <AppHeader />
           <main className="flex-1"><Outlet /></main>
@@ -107,4 +108,9 @@ function RootComponent() {
       </CartProvider>
     </QueryClientProvider>
   );
+}
+
+function NotificationsMount() {
+  useLiveNotifications();
+  return null;
 }
