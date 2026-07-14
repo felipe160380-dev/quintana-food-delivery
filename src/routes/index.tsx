@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { brl } from "@/lib/format";
+import { StoreRating } from "@/components/StoreRating";
 import {
   Search, Store as StoreIcon, Timer, Truck, Pizza, Sandwich, IceCream,
   Coffee, Beef, Salad, Soup, CupSoda, ShieldCheck, Zap, CreditCard,
