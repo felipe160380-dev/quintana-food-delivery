@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/lib/cart";
 import { Store as StoreIcon, Timer, Truck, ArrowLeft, Plus, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
+import { StoreRating } from "@/components/StoreRating";
 
 export const Route = createFileRoute("/loja/$slug")({
   loader: async ({ params }) => {
@@ -59,7 +60,8 @@ function StorePage() {
           <div className="pt-8">
             <h1 className="text-xl font-bold">{store.name}</h1>
             <p className="text-sm text-muted-foreground">{store.category ?? "Restaurante"}</p>
-            <div className="mt-1 flex flex-wrap gap-3 text-xs text-muted-foreground">
+            <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+              <StoreRating storeId={store.id} />
               <span className="inline-flex items-center gap-1"><Timer className="size-3" /> {store.prep_time_min} min</span>
               <span className="inline-flex items-center gap-1"><Truck className="size-3" /> {Number(store.delivery_fee) > 0 ? brl(Number(store.delivery_fee)) : "Grátis"}</span>
               {Number(store.min_order) > 0 && <span>Pedido mín. {brl(Number(store.min_order))}</span>}

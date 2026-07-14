@@ -16,6 +16,8 @@ import { CartProvider } from "@/lib/cart";
 import { AppHeader } from "@/components/AppHeader";
 import { Footer } from "@/components/Footer";
 import { BottomNav } from "@/components/BottomNav";
+import { InstallPrompt } from "@/components/InstallPrompt";
+import { useLiveNotifications } from "@/hooks/use-live-notifications";
 
 function NotFoundComponent() {
   return (
@@ -69,7 +71,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/favicon-32.png", type: "image/png", sizes: "32x32" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png", sizes: "180x180" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
     ],
   }),
   shellComponent: RootShell,
@@ -92,14 +96,21 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <CartProvider>
+        <NotificationsMount />
         <div className="flex min-h-screen flex-col">
           <AppHeader />
           <main className="flex-1"><Outlet /></main>
           <Footer />
           <BottomNav />
         </div>
+        <InstallPrompt />
         <Toaster richColors position="top-center" />
       </CartProvider>
     </QueryClientProvider>
   );
+}
+
+function NotificationsMount() {
+  useLiveNotifications();
+  return null;
 }
