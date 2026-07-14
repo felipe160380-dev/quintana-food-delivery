@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/lib/cart";
 import { Store as StoreIcon, Timer, Truck, ArrowLeft, Plus, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
+import { StoreRating } from "@/components/StoreRating";
 
 export const Route = createFileRoute("/loja/$slug")({
   loader: async ({ params }) => {
