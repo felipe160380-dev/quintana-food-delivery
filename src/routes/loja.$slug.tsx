@@ -53,8 +53,11 @@ function StorePage() {
         </Button>
       </div>
       <div className="mx-auto max-w-3xl px-4">
-        <div className="-mt-8 flex items-start gap-4">
-          <div className="size-20 shrink-0 overflow-hidden rounded-2xl border-4 border-background bg-muted shadow">
+        <div className="-mt-12 flex flex-col items-start gap-3 sm:flex-row sm:items-end sm:gap-4">
+          <div className="size-24 shrink-0 overflow-hidden rounded-2xl border-4 border-background bg-muted shadow-lg">
+            {store.logo_url ? <img src={store.logo_url} className="h-full w-full object-cover" alt="" /> : <div className="grid h-full w-full place-items-center text-primary"><StoreIcon /></div>}
+          </div>
+          <div className="min-w-0 flex-1 pt-1 sm:pb-2">
             {store.logo_url ? <img src={store.logo_url} className="h-full w-full object-cover" alt="" /> : <div className="grid h-full w-full place-items-center text-primary"><StoreIcon /></div>}
           </div>
           <div className="pt-8">
