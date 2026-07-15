@@ -155,28 +155,6 @@ function Home() {
         )}
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 pb-10">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Card className="relative overflow-hidden border-none bg-gradient-to-br from-primary to-orange-500 p-6 text-primary-foreground">
-            <div className="absolute -right-8 -top-8 size-32 rounded-full bg-white/10 blur-xl" />
-            <StoreIcon className="mb-2 size-6" />
-            <h3 className="text-lg font-bold">É lojista?</h3>
-            <p className="mt-1 text-sm text-primary-foreground/90">Cadastre sua loja em minutos e comece a receber pedidos hoje.</p>
-            <Button asChild variant="secondary" className="mt-4">
-              <Link to="/tornar-se-lojista">Cadastrar minha loja</Link>
-            </Button>
-          </Card>
-          <Card className="relative overflow-hidden border-none bg-gradient-to-br from-zinc-900 to-zinc-700 p-6 text-primary-foreground">
-            <div className="absolute -right-8 -top-8 size-32 rounded-full bg-white/10 blur-xl" />
-            <Truck className="mb-2 size-6" />
-            <h3 className="text-lg font-bold">Faça entregas</h3>
-            <p className="mt-1 text-sm text-white/90">Ganhe dinheiro fazendo entregas próximas a você, no seu tempo.</p>
-            <Button asChild variant="secondary" className="mt-4">
-              <Link to="/tornar-se-entregador">Ser entregador</Link>
-            </Button>
-          </Card>
-        </div>
-      </section>
     </div>
   );
 }
@@ -186,10 +164,8 @@ function EmptyState() {
     <Card className="p-10 text-center">
       <StoreIcon className="mx-auto mb-2 size-10 text-muted-foreground" />
       <div className="font-semibold">Nenhuma loja encontrada</div>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Tente outra categoria ou busca. Você é lojista?{" "}
-        <Link to="/tornar-se-lojista" className="text-primary underline">Cadastre sua loja</Link>.
-      </p>
+      <p className="mt-1 text-sm text-muted-foreground">Tente outra categoria ou busca.</p>
     </Card>
   );
 }
+
