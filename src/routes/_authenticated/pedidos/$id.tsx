@@ -112,8 +112,16 @@ function Page() {
             ))}
           </div>
           <div className="flex gap-2 border-t p-2">
-            <Input value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} placeholder="Escreva uma mensagem..." />
-            <Button onClick={send} size="icon"><Send className="size-4" /></Button>
+            {["delivered", "cancelled"].includes(order.status) ? (
+              <div className="w-full py-2 text-center text-xs text-muted-foreground">
+                Chat encerrado — este pedido já foi finalizado.
+              </div>
+            ) : (
+              <>
+                <Input value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} placeholder="Escreva uma mensagem..." />
+                <Button onClick={send} size="icon"><Send className="size-4" /></Button>
+              </>
+            )}
           </div>
         </CardContent>
       </Card>

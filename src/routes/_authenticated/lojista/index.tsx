@@ -39,8 +39,12 @@ function Page() {
 
   if (loading) return <div className="p-10 text-center text-muted-foreground">Carregando...</div>;
   if (!isMerchant) {
-    nav({ to: "/tornar-se-lojista" });
-    return null;
+    return (
+      <div className="mx-auto max-w-md p-10 text-center">
+        <p className="text-sm text-muted-foreground">Sua conta não é uma conta de lojista. Saia e entre novamente escolhendo "Lojista" para acessar este painel, ou crie uma nova conta como lojista.</p>
+        <Button className="mt-4" onClick={() => nav({ to: "/auth" })}>Ir para login</Button>
+      </div>
+    );
   }
   if (!store) return <StoreCreate onCreated={load} />;
 
