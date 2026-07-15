@@ -9,7 +9,7 @@ import { brl } from "@/lib/format";
 import { StoreRating } from "@/components/StoreRating";
 import {
   Search, Store as StoreIcon, Timer, Truck, Pizza, Sandwich, IceCream,
-  Coffee, Beef, Salad, Soup, CupSoda, ShieldCheck, Zap, CreditCard,
+  Coffee, Beef, Salad, Soup, CupSoda,
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({ component: Home });
@@ -68,7 +68,7 @@ function Home() {
             Comida boa, <span className="underline decoration-white/40 underline-offset-4">entregue rápido.</span>
           </h1>
           <p className="mt-2 max-w-lg text-primary-foreground/90">
-            Explore as lojas online agora na sua região. Pague por Pix, cartão pelo app ou na entrega.
+            Explore as lojas online agora na sua região.
           </p>
           <div className="mt-5 flex items-center gap-2 rounded-2xl bg-background/95 p-1.5 shadow-lg shadow-black/10">
             <Search className="ml-2 size-4 text-muted-foreground" />
@@ -78,12 +78,6 @@ function Home() {
               className="border-0 shadow-none focus-visible:ring-0"
             />
             <Button size="sm" className="rounded-xl">Buscar</Button>
-          </div>
-
-          <div className="mt-5 grid grid-cols-3 gap-3 text-xs sm:max-w-lg">
-            <div className="flex items-center gap-2 rounded-xl bg-white/10 p-2.5 backdrop-blur"><Zap className="size-4" /> Entrega rápida</div>
-            <div className="flex items-center gap-2 rounded-xl bg-white/10 p-2.5 backdrop-blur"><CreditCard className="size-4" /> Pix e cartão</div>
-            <div className="flex items-center gap-2 rounded-xl bg-white/10 p-2.5 backdrop-blur"><ShieldCheck className="size-4" /> Compra segura</div>
           </div>
         </div>
       </section>
