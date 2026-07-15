@@ -1,11 +1,15 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
+export type CartAddon = { name: string; price: number; quantity: number };
 export type CartItem = {
   product_id: string;
   product_name: string;
   unit_price: number;
   quantity: number;
   image_url?: string | null;
+  addons?: CartAddon[];
+  notes?: string;
+  line_id?: string;
 };
 
 type CartState = {
@@ -15,13 +19,20 @@ type CartState = {
 };
 
 const empty: CartState = { storeId: null, storeName: null, items: [] };
-const KEY = "qf.cart.v1";
+const KEY = "qf.cart.v2";
+
+function addonsTotal(a?: CartAddon[]) {
+  return (a ?? []).reduce((s, x) => s + x.price * x.quantity, 0);
+}
+export function itemTotal(i: CartItem) {
+  return (i.unit_price + addonsTotal(i.addons)) * i.quantity;
+}
 
 const Ctx = createContext<{
   state: CartState;
   add: (storeId: string, storeName: string, item: CartItem) => void;
-  remove: (product_id: string) => void;
-  setQty: (product_id: string, qty: number) => void;
+  remove: (line_id: string) => void;
+  setQty: (line_id: string, qty: number) => void;
   clear: () => void;
   subtotal: number;
   count: number;
@@ -52,34 +63,31 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [state]);
 
   const api = useMemo(() => {
-    const subtotal = state.items.reduce((s, i) => s + i.unit_price * i.quantity, 0);
+    const subtotal = state.items.reduce((s, i) => s + itemTotal(i), 0);
     const count = state.items.reduce((s, i) => s + i.quantity, 0);
     return {
       state,
       subtotal,
       count,
       add: (storeId: string, storeName: string, item: CartItem) => {
+        const withId: CartItem = { ...item, line_id: item.line_id ?? crypto.randomUUID() };
         setState((prev) => {
           if (prev.storeId && prev.storeId !== storeId) {
             if (!confirm("Seu carrinho tem itens de outra loja. Deseja esvaziar e adicionar esse item?")) return prev;
-            return { storeId, storeName, items: [item] };
+            return { storeId, storeName, items: [withId] };
           }
-          const existing = prev.items.find((i) => i.product_id === item.product_id);
-          const items = existing
-            ? prev.items.map((i) => (i.product_id === item.product_id ? { ...i, quantity: i.quantity + item.quantity } : i))
-            : [...prev.items, item];
-          return { storeId, storeName, items };
+          return { storeId, storeName, items: [...prev.items, withId] };
         });
       },
-      remove: (product_id: string) =>
+      remove: (line_id: string) =>
         setState((prev) => {
-          const items = prev.items.filter((i) => i.product_id !== product_id);
+          const items = prev.items.filter((i) => i.line_id !== line_id);
           return items.length ? { ...prev, items } : empty;
         }),
-      setQty: (product_id: string, qty: number) =>
+      setQty: (line_id: string, qty: number) =>
         setState((prev) => ({
           ...prev,
-          items: prev.items.map((i) => (i.product_id === product_id ? { ...i, quantity: Math.max(1, qty) } : i)),
+          items: prev.items.map((i) => (i.line_id === line_id ? { ...i, quantity: Math.max(1, qty) } : i)),
         })),
       clear: () => setState(empty),
     };
