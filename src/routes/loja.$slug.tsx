@@ -5,8 +5,9 @@ import { brl } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useCart } from "@/lib/cart";
-import { Store as StoreIcon, Timer, Truck, ArrowLeft, Plus, ShoppingBag } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { useCart, type CartAddon } from "@/lib/cart";
+import { Store as StoreIcon, Timer, Truck, ArrowLeft, Plus, Minus, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 import { StoreRating } from "@/components/StoreRating";
 
