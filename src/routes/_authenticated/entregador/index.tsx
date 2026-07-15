@@ -18,12 +18,15 @@ function Page() {
   const [ready, setReady] = useState<any[]>([]);
   const [mine, setMine] = useState<any[]>([]);
 
+  const [blocked, setBlocked] = useState<string | null>(null);
+
   const load = async () => {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
     const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", u.user.id);
-    if (!roles?.some((r) => r.role === "courier")) { nav({ to: "/tornar-se-entregador" }); return; }
+    if (!roles?.some((r) => r.role === "courier")) { setBlocked("Sua conta não é uma conta de entregador. Saia e entre novamente escolhendo Entregador."); return; }
     const { data: c } = await supabase.from("couriers").select("*").eq("id", u.user.id).maybeSingle();
+    if (!c || c.approval_status !== "approved") { setBlocked("Seu cadastro de entregador está aguardando aprovação do administrador. Você será avisado quando for aprovado."); return; }
     setMe({ user: u.user, courier: c });
     setAvailable(!!c?.is_available);
 
@@ -42,6 +45,13 @@ function Page() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  if (blocked) return (
+    <div className="mx-auto max-w-md p-10 text-center">
+      <Bike className="mx-auto mb-2 size-10 text-muted-foreground" />
+      <p className="text-sm text-muted-foreground">{blocked}</p>
+      <Button className="mt-4" onClick={() => nav({ to: "/auth" })}>Ir para login</Button>
+    </div>
+  );
   if (!me) return <div className="p-10 text-center text-muted-foreground">Carregando...</div>;
 
   return (

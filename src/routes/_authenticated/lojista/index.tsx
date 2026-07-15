@@ -39,8 +39,12 @@ function Page() {
 
   if (loading) return <div className="p-10 text-center text-muted-foreground">Carregando...</div>;
   if (!isMerchant) {
-    nav({ to: "/tornar-se-lojista" });
-    return null;
+    return (
+      <div className="mx-auto max-w-md p-10 text-center">
+        <p className="text-sm text-muted-foreground">Sua conta não é uma conta de lojista. Saia e entre novamente escolhendo "Lojista" para acessar este painel, ou crie uma nova conta como lojista.</p>
+        <Button className="mt-4" onClick={() => nav({ to: "/auth" })}>Ir para login</Button>
+      </div>
+    );
   }
   if (!store) return <StoreCreate onCreated={load} />;
 
@@ -273,6 +277,41 @@ function ProductDialog({ product, onClose }: { product: any; onClose: () => void
             </div>
           </div>
         </form>
+        {!isNew && <AddonsEditor productId={product.id} />}
+      </div>
+    </div>
+  );
+}
+
+function AddonsEditor({ productId }: { productId: string }) {
+  const [items, setItems] = useState<any[]>([]);
+  const [name, setName] = useState("");
+  const [price, setPrice] = useState("");
+  const load = async () => {
+    const { data } = await supabase.from("product_addons").select("*").eq("product_id", productId).order("sort_order");
+    setItems(data ?? []);
+  };
+  useEffect(() => { load(); }, [productId]);
+
+  return (
+    <div className="mt-4 space-y-2 border-t pt-3">
+      <div className="text-sm font-semibold">Adicionais deste produto</div>
+      <div className="space-y-1">
+        {items.map((a) => (
+          <div key={a.id} className="flex items-center gap-2 rounded-lg border p-2 text-sm">
+            <div className="flex-1">{a.name} <span className="text-xs text-muted-foreground">— {brl(Number(a.price))}</span></div>
+            <Button size="icon" variant="ghost" onClick={async () => { await supabase.from("product_addons").delete().eq("id", a.id); load(); }}><Trash2 className="size-4" /></Button>
+          </div>
+        ))}
+      </div>
+      <div className="flex gap-2">
+        <Input placeholder="Nome (ex: Bacon)" value={name} onChange={(e) => setName(e.target.value)} />
+        <Input placeholder="Preço" type="number" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} className="w-24" />
+        <Button type="button" onClick={async () => {
+          if (!name) return;
+          await supabase.from("product_addons").insert({ product_id: productId, name, price: Number(price || 0) });
+          setName(""); setPrice(""); load();
+        }}><Plus className="size-4" /></Button>
       </div>
     </div>
   );

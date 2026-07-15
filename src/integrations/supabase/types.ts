@@ -67,6 +67,9 @@ export type Database = {
       }
       couriers: {
         Row: {
+          approval_note: string | null
+          approval_status: Database["public"]["Enums"]["courier_approval_status"]
+          approved_at: string | null
           created_at: string
           current_lat: number | null
           current_lng: number | null
@@ -79,6 +82,9 @@ export type Database = {
           vehicle_plate: string | null
         }
         Insert: {
+          approval_note?: string | null
+          approval_status?: Database["public"]["Enums"]["courier_approval_status"]
+          approved_at?: string | null
           created_at?: string
           current_lat?: number | null
           current_lng?: number | null
@@ -91,6 +97,9 @@ export type Database = {
           vehicle_plate?: string | null
         }
         Update: {
+          approval_note?: string | null
+          approval_status?: Database["public"]["Enums"]["courier_approval_status"]
+          approved_at?: string | null
           created_at?: string
           current_lat?: number | null
           current_lng?: number | null
@@ -132,6 +141,41 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_item_addons: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          order_item_id: string
+          price: number
+          quantity: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          order_item_id: string
+          price?: number
+          quantity?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          order_item_id?: string
+          price?: number
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_item_addons_order_item_id_fkey"
+            columns: ["order_item_id"]
+            isOneToOne: false
+            referencedRelation: "order_items"
             referencedColumns: ["id"]
           },
         ]
@@ -243,6 +287,42 @@ export type Database = {
           },
         ]
       }
+      payment_methods: {
+        Row: {
+          brand: string | null
+          created_at: string
+          id: string
+          is_default: boolean
+          kind: string
+          label: string
+          last4: string | null
+          pix_key: string | null
+          user_id: string
+        }
+        Insert: {
+          brand?: string | null
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          kind: string
+          label: string
+          last4?: string | null
+          pix_key?: string | null
+          user_id: string
+        }
+        Update: {
+          brand?: string | null
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          kind?: string
+          label?: string
+          last4?: string | null
+          pix_key?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount: number
@@ -283,6 +363,47 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_addons: {
+        Row: {
+          created_at: string
+          id: string
+          is_required: boolean
+          max_qty: number
+          name: string
+          price: number
+          product_id: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_required?: boolean
+          max_qty?: number
+          name: string
+          price?: number
+          product_id: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_required?: boolean
+          max_qty?: number
+          name?: string
+          price?: number
+          product_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_addons_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]
@@ -535,6 +656,7 @@ export type Database = {
     }
     Enums: {
       app_role: "customer" | "merchant" | "courier" | "admin"
+      courier_approval_status: "pending" | "approved" | "rejected"
       order_status:
         | "pending"
         | "accepted"
@@ -678,6 +800,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["customer", "merchant", "courier", "admin"],
+      courier_approval_status: ["pending", "approved", "rejected"],
       order_status: [
         "pending",
         "accepted",

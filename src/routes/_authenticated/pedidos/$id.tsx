@@ -31,7 +31,7 @@ function Page() {
     const load = async () => {
       const { data: o } = await supabase.from("orders").select("*, store:stores(name,logo_url,phone)").eq("id", id).maybeSingle();
       setOrder(o);
-      const { data: it } = await supabase.from("order_items").select("*").eq("order_id", id);
+      const { data: it } = await supabase.from("order_items").select("*, addons:order_item_addons(*)").eq("order_id", id);
       setItems(it ?? []);
       const { data: msgs } = await supabase.from("messages").select("*").eq("order_id", id).order("created_at");
       setMessages((msgs ?? []) as Msg[]);
@@ -79,10 +79,20 @@ function Page() {
             <div className="mb-1 flex items-center gap-1 text-xs font-semibold uppercase text-muted-foreground"><MapPin className="size-3" /> Entrega em</div>
             <div>{addr.street}{addr.number ? `, ${addr.number}` : ""} — {[addr.neighborhood, addr.city].filter(Boolean).join(", ")}</div>
           </div>
-          <div className="space-y-1">
-            {items.map((i) => (
-              <div key={i.id} className="flex justify-between"><span>{i.quantity}× {i.product_name}</span><span>{brl(Number(i.unit_price) * i.quantity)}</span></div>
-            ))}
+          <div className="space-y-2">
+            {items.map((i) => {
+              const addSum = (i.addons ?? []).reduce((s: number, a: any) => s + Number(a.price) * a.quantity, 0);
+              return (
+                <div key={i.id}>
+                  <div className="flex justify-between"><span>{i.quantity}× {i.product_name}</span><span>{brl((Number(i.unit_price) + addSum) * i.quantity)}</span></div>
+                  {(i.addons ?? []).length > 0 && (
+                    <ul className="ml-4 mt-0.5 text-xs text-muted-foreground">
+                      {(i.addons ?? []).map((a: any) => <li key={a.id}>+ {a.quantity}× {a.name} ({brl(Number(a.price))})</li>)}
+                    </ul>
+                  )}
+                </div>
+              );
+            })}
           </div>
           <div className="border-t pt-2 text-xs text-muted-foreground">Pagamento: <span className="font-medium text-foreground">{paymentMethodLabel[order.payment_method]}</span></div>
           <div className="flex justify-between text-base font-bold"><span>Total</span><span>{brl(Number(order.total))}</span></div>
@@ -112,8 +122,16 @@ function Page() {
             ))}
           </div>
           <div className="flex gap-2 border-t p-2">
-            <Input value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} placeholder="Escreva uma mensagem..." />
-            <Button onClick={send} size="icon"><Send className="size-4" /></Button>
+            {["delivered", "cancelled"].includes(order.status) ? (
+              <div className="w-full py-2 text-center text-xs text-muted-foreground">
+                Chat encerrado — este pedido já foi finalizado.
+              </div>
+            ) : (
+              <>
+                <Input value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} placeholder="Escreva uma mensagem..." />
+                <Button onClick={send} size="icon"><Send className="size-4" /></Button>
+              </>
+            )}
           </div>
         </CardContent>
       </Card>

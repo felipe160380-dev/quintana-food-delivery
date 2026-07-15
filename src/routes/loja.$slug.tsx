@@ -5,8 +5,9 @@ import { brl } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useCart } from "@/lib/cart";
-import { Store as StoreIcon, Timer, Truck, ArrowLeft, Plus, ShoppingBag } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { useCart, type CartAddon } from "@/lib/cart";
+import { Store as StoreIcon, Timer, Truck, ArrowLeft, Plus, Minus, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 import { StoreRating } from "@/components/StoreRating";
 
@@ -31,6 +32,7 @@ type Product = { id: string; name: string; description: string | null; price: nu
 function StorePage() {
   const { store } = Route.useLoaderData();
   const [products, setProducts] = useState<Product[]>([]);
+  const [selected, setSelected] = useState<Product | null>(null);
   const { add, count } = useCart();
 
   useEffect(() => {
@@ -53,11 +55,11 @@ function StorePage() {
         </Button>
       </div>
       <div className="mx-auto max-w-3xl px-4">
-        <div className="-mt-8 flex items-start gap-4">
-          <div className="size-20 shrink-0 overflow-hidden rounded-2xl border-4 border-background bg-muted shadow">
+        <div className="-mt-12 flex flex-col items-start gap-3 sm:flex-row sm:items-end sm:gap-4">
+          <div className="size-24 shrink-0 overflow-hidden rounded-2xl border-4 border-background bg-muted shadow-lg">
             {store.logo_url ? <img src={store.logo_url} className="h-full w-full object-cover" alt="" /> : <div className="grid h-full w-full place-items-center text-primary"><StoreIcon /></div>}
           </div>
-          <div className="pt-8">
+          <div className="min-w-0 flex-1 pt-1 sm:pb-2">
             <h1 className="text-xl font-bold">{store.name}</h1>
             <p className="text-sm text-muted-foreground">{store.category ?? "Restaurante"}</p>
             <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
@@ -93,12 +95,7 @@ function StorePage() {
                     <Button
                       size="icon"
                       className="self-center"
-                      onClick={() => {
-                        add(store.id, store.name, {
-                          product_id: p.id, product_name: p.name, unit_price: Number(p.price), quantity: 1, image_url: p.image_url,
-                        });
-                        toast.success(`${p.name} adicionado`);
-                      }}
+                      onClick={() => setSelected(p)}
                     >
                       <Plus className="size-4" />
                     </Button>
@@ -108,6 +105,22 @@ function StorePage() {
             </section>
           ))}
         </div>
+
+        {selected && (
+          <ProductDialog
+            product={selected}
+            onClose={() => setSelected(null)}
+            onAdd={(qty, addons, notes) => {
+              add(store.id, store.name, {
+                product_id: selected.id, product_name: selected.name,
+                unit_price: Number(selected.price), quantity: qty,
+                image_url: selected.image_url, addons, notes,
+              });
+              toast.success(`${selected.name} adicionado`);
+              setSelected(null);
+            }}
+          />
+        )}
 
         {count > 0 && (
           <div className="fixed inset-x-0 bottom-3 z-30 mx-auto max-w-md px-4">
@@ -120,3 +133,83 @@ function StorePage() {
     </div>
   );
 }
+
+type Addon = { id: string; name: string; price: number; is_required: boolean; max_qty: number };
+
+function ProductDialog({
+  product, onClose, onAdd,
+}: {
+  product: Product;
+  onClose: () => void;
+  onAdd: (qty: number, addons: CartAddon[], notes: string) => void;
+}) {
+  const [qty, setQty] = useState(1);
+  const [notes, setNotes] = useState("");
+  const [addons, setAddons] = useState<Addon[]>([]);
+  const [picked, setPicked] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    supabase.from("product_addons").select("*").eq("product_id", product.id).order("sort_order")
+      .then(({ data }) => setAddons((data ?? []) as Addon[]));
+  }, [product.id]);
+
+  const inc = (a: Addon) => setPicked((p) => ({ ...p, [a.id]: Math.min(a.max_qty, (p[a.id] ?? 0) + 1) }));
+  const dec = (a: Addon) => setPicked((p) => ({ ...p, [a.id]: Math.max(0, (p[a.id] ?? 0) - 1) }));
+
+  const chosen: CartAddon[] = addons
+    .filter((a) => (picked[a.id] ?? 0) > 0)
+    .map((a) => ({ name: a.name, price: Number(a.price), quantity: picked[a.id]! }));
+
+  const addonsSum = chosen.reduce((s, a) => s + a.price * a.quantity, 0);
+  const total = (Number(product.price) + addonsSum) * qty;
+
+  const missing = addons.some((a) => a.is_required && !(picked[a.id] ?? 0));
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center" onClick={onClose}>
+      <div className="w-full max-w-md rounded-t-2xl bg-card p-4 sm:rounded-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="mb-2">
+          <h3 className="text-lg font-bold">{product.name}</h3>
+          {product.description && <p className="text-sm text-muted-foreground">{product.description}</p>}
+          <div className="mt-1 font-semibold text-primary">{brl(Number(product.price))}</div>
+        </div>
+
+        {addons.length > 0 && (
+          <div className="mt-3 space-y-1">
+            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Adicionais</div>
+            <ul className="space-y-1">
+              {addons.map((a) => (
+                <li key={a.id} className="flex items-center gap-2 rounded-lg border p-2">
+                  <div className="flex-1">
+                    <div className="text-sm font-medium">{a.name}{a.is_required && <span className="ml-1 text-xs text-primary">(obrigatório)</span>}</div>
+                    <div className="text-xs text-muted-foreground">+ {brl(Number(a.price))}</div>
+                  </div>
+                  <Button size="icon" variant="outline" className="size-7" onClick={() => dec(a)}><Minus className="size-3" /></Button>
+                  <span className="w-5 text-center text-sm">{picked[a.id] ?? 0}</span>
+                  <Button size="icon" variant="outline" className="size-7" onClick={() => inc(a)}><Plus className="size-3" /></Button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <div className="mt-3 space-y-1">
+          <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Observações</div>
+          <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Ex: tirar cebola, sem gelo…" rows={2} />
+        </div>
+
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-1">
+            <Button size="icon" variant="outline" className="size-8" onClick={() => setQty((q) => Math.max(1, q - 1))}><Minus className="size-3" /></Button>
+            <span className="w-8 text-center text-sm">{qty}</span>
+            <Button size="icon" variant="outline" className="size-8" onClick={() => setQty((q) => q + 1)}><Plus className="size-3" /></Button>
+          </div>
+          <Button className="flex-1" disabled={missing} onClick={() => onAdd(qty, chosen, notes)}>
+            {missing ? "Escolha os obrigatórios" : `Adicionar — ${brl(total)}`}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+

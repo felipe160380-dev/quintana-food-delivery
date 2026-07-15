@@ -9,7 +9,7 @@ import { brl } from "@/lib/format";
 import { StoreRating } from "@/components/StoreRating";
 import {
   Search, Store as StoreIcon, Timer, Truck, Pizza, Sandwich, IceCream,
-  Coffee, Beef, Salad, Soup, CupSoda, ShieldCheck, Zap, CreditCard,
+  Coffee, Beef, Salad, Soup, CupSoda,
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({ component: Home });
@@ -68,7 +68,7 @@ function Home() {
             Comida boa, <span className="underline decoration-white/40 underline-offset-4">entregue rápido.</span>
           </h1>
           <p className="mt-2 max-w-lg text-primary-foreground/90">
-            Explore as lojas online agora na sua região. Pague por Pix, cartão pelo app ou na entrega.
+            Explore as lojas online agora na sua região.
           </p>
           <div className="mt-5 flex items-center gap-2 rounded-2xl bg-background/95 p-1.5 shadow-lg shadow-black/10">
             <Search className="ml-2 size-4 text-muted-foreground" />
@@ -78,12 +78,6 @@ function Home() {
               className="border-0 shadow-none focus-visible:ring-0"
             />
             <Button size="sm" className="rounded-xl">Buscar</Button>
-          </div>
-
-          <div className="mt-5 grid grid-cols-3 gap-3 text-xs sm:max-w-lg">
-            <div className="flex items-center gap-2 rounded-xl bg-white/10 p-2.5 backdrop-blur"><Zap className="size-4" /> Entrega rápida</div>
-            <div className="flex items-center gap-2 rounded-xl bg-white/10 p-2.5 backdrop-blur"><CreditCard className="size-4" /> Pix e cartão</div>
-            <div className="flex items-center gap-2 rounded-xl bg-white/10 p-2.5 backdrop-blur"><ShieldCheck className="size-4" /> Compra segura</div>
           </div>
         </div>
       </section>
@@ -161,28 +155,6 @@ function Home() {
         )}
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 pb-10">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Card className="relative overflow-hidden border-none bg-gradient-to-br from-primary to-orange-500 p-6 text-primary-foreground">
-            <div className="absolute -right-8 -top-8 size-32 rounded-full bg-white/10 blur-xl" />
-            <StoreIcon className="mb-2 size-6" />
-            <h3 className="text-lg font-bold">É lojista?</h3>
-            <p className="mt-1 text-sm text-primary-foreground/90">Cadastre sua loja em minutos e comece a receber pedidos hoje.</p>
-            <Button asChild variant="secondary" className="mt-4">
-              <Link to="/tornar-se-lojista">Cadastrar minha loja</Link>
-            </Button>
-          </Card>
-          <Card className="relative overflow-hidden border-none bg-gradient-to-br from-zinc-900 to-zinc-700 p-6 text-primary-foreground">
-            <div className="absolute -right-8 -top-8 size-32 rounded-full bg-white/10 blur-xl" />
-            <Truck className="mb-2 size-6" />
-            <h3 className="text-lg font-bold">Faça entregas</h3>
-            <p className="mt-1 text-sm text-white/90">Ganhe dinheiro fazendo entregas próximas a você, no seu tempo.</p>
-            <Button asChild variant="secondary" className="mt-4">
-              <Link to="/tornar-se-entregador">Ser entregador</Link>
-            </Button>
-          </Card>
-        </div>
-      </section>
     </div>
   );
 }
@@ -192,10 +164,8 @@ function EmptyState() {
     <Card className="p-10 text-center">
       <StoreIcon className="mx-auto mb-2 size-10 text-muted-foreground" />
       <div className="font-semibold">Nenhuma loja encontrada</div>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Tente outra categoria ou busca. Você é lojista?{" "}
-        <Link to="/tornar-se-lojista" className="text-primary underline">Cadastre sua loja</Link>.
-      </p>
+      <p className="mt-1 text-sm text-muted-foreground">Tente outra categoria ou busca.</p>
     </Card>
   );
 }
+

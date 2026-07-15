@@ -15,11 +15,13 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as LojaSlugRouteImport } from './routes/loja.$slug'
 import { Route as AuthenticatedTornarSeLojistaRouteImport } from './routes/_authenticated/tornar-se-lojista'
 import { Route as AuthenticatedTornarSeEntregadorRouteImport } from './routes/_authenticated/tornar-se-entregador'
+import { Route as AuthenticatedPagamentosRouteImport } from './routes/_authenticated/pagamentos'
 import { Route as AuthenticatedEnderecosRouteImport } from './routes/_authenticated/enderecos'
 import { Route as AuthenticatedCheckoutRouteImport } from './routes/_authenticated/checkout'
 import { Route as AuthenticatedPedidosIndexRouteImport } from './routes/_authenticated/pedidos/index'
 import { Route as AuthenticatedLojistaIndexRouteImport } from './routes/_authenticated/lojista/index'
 import { Route as AuthenticatedEntregadorIndexRouteImport } from './routes/_authenticated/entregador/index'
+import { Route as ApiPublicCourierApplicationRouteImport } from './routes/api/public/courier-application'
 import { Route as AuthenticatedPedidosIdRouteImport } from './routes/_authenticated/pedidos/$id'
 
 const AuthRoute = AuthRouteImport.update({
@@ -53,6 +55,11 @@ const AuthenticatedTornarSeEntregadorRoute =
     path: '/tornar-se-entregador',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedPagamentosRoute = AuthenticatedPagamentosRouteImport.update({
+  id: '/pagamentos',
+  path: '/pagamentos',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedEnderecosRoute = AuthenticatedEnderecosRouteImport.update({
   id: '/enderecos',
   path: '/enderecos',
@@ -81,6 +88,12 @@ const AuthenticatedEntregadorIndexRoute =
     path: '/entregador/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicCourierApplicationRoute =
+  ApiPublicCourierApplicationRouteImport.update({
+    id: '/api/public/courier-application',
+    path: '/api/public/courier-application',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedPedidosIdRoute = AuthenticatedPedidosIdRouteImport.update({
   id: '/pedidos/$id',
   path: '/pedidos/$id',
@@ -92,10 +105,12 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/checkout': typeof AuthenticatedCheckoutRoute
   '/enderecos': typeof AuthenticatedEnderecosRoute
+  '/pagamentos': typeof AuthenticatedPagamentosRoute
   '/tornar-se-entregador': typeof AuthenticatedTornarSeEntregadorRoute
   '/tornar-se-lojista': typeof AuthenticatedTornarSeLojistaRoute
   '/loja/$slug': typeof LojaSlugRoute
   '/pedidos/$id': typeof AuthenticatedPedidosIdRoute
+  '/api/public/courier-application': typeof ApiPublicCourierApplicationRoute
   '/entregador/': typeof AuthenticatedEntregadorIndexRoute
   '/lojista/': typeof AuthenticatedLojistaIndexRoute
   '/pedidos/': typeof AuthenticatedPedidosIndexRoute
@@ -105,10 +120,12 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/checkout': typeof AuthenticatedCheckoutRoute
   '/enderecos': typeof AuthenticatedEnderecosRoute
+  '/pagamentos': typeof AuthenticatedPagamentosRoute
   '/tornar-se-entregador': typeof AuthenticatedTornarSeEntregadorRoute
   '/tornar-se-lojista': typeof AuthenticatedTornarSeLojistaRoute
   '/loja/$slug': typeof LojaSlugRoute
   '/pedidos/$id': typeof AuthenticatedPedidosIdRoute
+  '/api/public/courier-application': typeof ApiPublicCourierApplicationRoute
   '/entregador': typeof AuthenticatedEntregadorIndexRoute
   '/lojista': typeof AuthenticatedLojistaIndexRoute
   '/pedidos': typeof AuthenticatedPedidosIndexRoute
@@ -120,10 +137,12 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/checkout': typeof AuthenticatedCheckoutRoute
   '/_authenticated/enderecos': typeof AuthenticatedEnderecosRoute
+  '/_authenticated/pagamentos': typeof AuthenticatedPagamentosRoute
   '/_authenticated/tornar-se-entregador': typeof AuthenticatedTornarSeEntregadorRoute
   '/_authenticated/tornar-se-lojista': typeof AuthenticatedTornarSeLojistaRoute
   '/loja/$slug': typeof LojaSlugRoute
   '/_authenticated/pedidos/$id': typeof AuthenticatedPedidosIdRoute
+  '/api/public/courier-application': typeof ApiPublicCourierApplicationRoute
   '/_authenticated/entregador/': typeof AuthenticatedEntregadorIndexRoute
   '/_authenticated/lojista/': typeof AuthenticatedLojistaIndexRoute
   '/_authenticated/pedidos/': typeof AuthenticatedPedidosIndexRoute
@@ -135,10 +154,12 @@ export interface FileRouteTypes {
     | '/auth'
     | '/checkout'
     | '/enderecos'
+    | '/pagamentos'
     | '/tornar-se-entregador'
     | '/tornar-se-lojista'
     | '/loja/$slug'
     | '/pedidos/$id'
+    | '/api/public/courier-application'
     | '/entregador/'
     | '/lojista/'
     | '/pedidos/'
@@ -148,10 +169,12 @@ export interface FileRouteTypes {
     | '/auth'
     | '/checkout'
     | '/enderecos'
+    | '/pagamentos'
     | '/tornar-se-entregador'
     | '/tornar-se-lojista'
     | '/loja/$slug'
     | '/pedidos/$id'
+    | '/api/public/courier-application'
     | '/entregador'
     | '/lojista'
     | '/pedidos'
@@ -162,10 +185,12 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/checkout'
     | '/_authenticated/enderecos'
+    | '/_authenticated/pagamentos'
     | '/_authenticated/tornar-se-entregador'
     | '/_authenticated/tornar-se-lojista'
     | '/loja/$slug'
     | '/_authenticated/pedidos/$id'
+    | '/api/public/courier-application'
     | '/_authenticated/entregador/'
     | '/_authenticated/lojista/'
     | '/_authenticated/pedidos/'
@@ -176,6 +201,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   LojaSlugRoute: typeof LojaSlugRoute
+  ApiPublicCourierApplicationRoute: typeof ApiPublicCourierApplicationRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -222,6 +248,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTornarSeEntregadorRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/pagamentos': {
+      id: '/_authenticated/pagamentos'
+      path: '/pagamentos'
+      fullPath: '/pagamentos'
+      preLoaderRoute: typeof AuthenticatedPagamentosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/enderecos': {
       id: '/_authenticated/enderecos'
       path: '/enderecos'
@@ -257,6 +290,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEntregadorIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/courier-application': {
+      id: '/api/public/courier-application'
+      path: '/api/public/courier-application'
+      fullPath: '/api/public/courier-application'
+      preLoaderRoute: typeof ApiPublicCourierApplicationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/pedidos/$id': {
       id: '/_authenticated/pedidos/$id'
       path: '/pedidos/$id'
@@ -270,6 +310,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedCheckoutRoute: typeof AuthenticatedCheckoutRoute
   AuthenticatedEnderecosRoute: typeof AuthenticatedEnderecosRoute
+  AuthenticatedPagamentosRoute: typeof AuthenticatedPagamentosRoute
   AuthenticatedTornarSeEntregadorRoute: typeof AuthenticatedTornarSeEntregadorRoute
   AuthenticatedTornarSeLojistaRoute: typeof AuthenticatedTornarSeLojistaRoute
   AuthenticatedPedidosIdRoute: typeof AuthenticatedPedidosIdRoute
@@ -281,6 +322,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCheckoutRoute: AuthenticatedCheckoutRoute,
   AuthenticatedEnderecosRoute: AuthenticatedEnderecosRoute,
+  AuthenticatedPagamentosRoute: AuthenticatedPagamentosRoute,
   AuthenticatedTornarSeEntregadorRoute: AuthenticatedTornarSeEntregadorRoute,
   AuthenticatedTornarSeLojistaRoute: AuthenticatedTornarSeLojistaRoute,
   AuthenticatedPedidosIdRoute: AuthenticatedPedidosIdRoute,
@@ -297,6 +339,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   LojaSlugRoute: LojaSlugRoute,
+  ApiPublicCourierApplicationRoute: ApiPublicCourierApplicationRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
