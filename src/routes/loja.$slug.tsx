@@ -133,3 +133,83 @@ function StorePage() {
     </div>
   );
 }
+
+type Addon = { id: string; name: string; price: number; is_required: boolean; max_qty: number };
+
+function ProductDialog({
+  product, onClose, onAdd,
+}: {
+  product: Product;
+  onClose: () => void;
+  onAdd: (qty: number, addons: CartAddon[], notes: string) => void;
+}) {
+  const [qty, setQty] = useState(1);
+  const [notes, setNotes] = useState("");
+  const [addons, setAddons] = useState<Addon[]>([]);
+  const [picked, setPicked] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    supabase.from("product_addons").select("*").eq("product_id", product.id).order("sort_order")
+      .then(({ data }) => setAddons((data ?? []) as Addon[]));
+  }, [product.id]);
+
+  const inc = (a: Addon) => setPicked((p) => ({ ...p, [a.id]: Math.min(a.max_qty, (p[a.id] ?? 0) + 1) }));
+  const dec = (a: Addon) => setPicked((p) => ({ ...p, [a.id]: Math.max(0, (p[a.id] ?? 0) - 1) }));
+
+  const chosen: CartAddon[] = addons
+    .filter((a) => (picked[a.id] ?? 0) > 0)
+    .map((a) => ({ name: a.name, price: Number(a.price), quantity: picked[a.id]! }));
+
+  const addonsSum = chosen.reduce((s, a) => s + a.price * a.quantity, 0);
+  const total = (Number(product.price) + addonsSum) * qty;
+
+  const missing = addons.some((a) => a.is_required && !(picked[a.id] ?? 0));
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center" onClick={onClose}>
+      <div className="w-full max-w-md rounded-t-2xl bg-card p-4 sm:rounded-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="mb-2">
+          <h3 className="text-lg font-bold">{product.name}</h3>
+          {product.description && <p className="text-sm text-muted-foreground">{product.description}</p>}
+          <div className="mt-1 font-semibold text-primary">{brl(Number(product.price))}</div>
+        </div>
+
+        {addons.length > 0 && (
+          <div className="mt-3 space-y-1">
+            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Adicionais</div>
+            <ul className="space-y-1">
+              {addons.map((a) => (
+                <li key={a.id} className="flex items-center gap-2 rounded-lg border p-2">
+                  <div className="flex-1">
+                    <div className="text-sm font-medium">{a.name}{a.is_required && <span className="ml-1 text-xs text-primary">(obrigatório)</span>}</div>
+                    <div className="text-xs text-muted-foreground">+ {brl(Number(a.price))}</div>
+                  </div>
+                  <Button size="icon" variant="outline" className="size-7" onClick={() => dec(a)}><Minus className="size-3" /></Button>
+                  <span className="w-5 text-center text-sm">{picked[a.id] ?? 0}</span>
+                  <Button size="icon" variant="outline" className="size-7" onClick={() => inc(a)}><Plus className="size-3" /></Button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <div className="mt-3 space-y-1">
+          <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Observações</div>
+          <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Ex: tirar cebola, sem gelo…" rows={2} />
+        </div>
+
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-1">
+            <Button size="icon" variant="outline" className="size-8" onClick={() => setQty((q) => Math.max(1, q - 1))}><Minus className="size-3" /></Button>
+            <span className="w-8 text-center text-sm">{qty}</span>
+            <Button size="icon" variant="outline" className="size-8" onClick={() => setQty((q) => q + 1)}><Plus className="size-3" /></Button>
+          </div>
+          <Button className="flex-1" disabled={missing} onClick={() => onAdd(qty, chosen, notes)}>
+            {missing ? "Escolha os obrigatórios" : `Adicionar — ${brl(total)}`}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
