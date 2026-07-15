@@ -58,9 +58,6 @@ function StorePage() {
             {store.logo_url ? <img src={store.logo_url} className="h-full w-full object-cover" alt="" /> : <div className="grid h-full w-full place-items-center text-primary"><StoreIcon /></div>}
           </div>
           <div className="min-w-0 flex-1 pt-1 sm:pb-2">
-            {store.logo_url ? <img src={store.logo_url} className="h-full w-full object-cover" alt="" /> : <div className="grid h-full w-full place-items-center text-primary"><StoreIcon /></div>}
-          </div>
-          <div className="pt-8">
             <h1 className="text-xl font-bold">{store.name}</h1>
             <p className="text-sm text-muted-foreground">{store.category ?? "Restaurante"}</p>
             <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
