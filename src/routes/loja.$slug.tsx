@@ -32,6 +32,7 @@ type Product = { id: string; name: string; description: string | null; price: nu
 function StorePage() {
   const { store } = Route.useLoaderData();
   const [products, setProducts] = useState<Product[]>([]);
+  const [selected, setSelected] = useState<Product | null>(null);
   const { add, count } = useCart();
 
   useEffect(() => {
@@ -94,12 +95,7 @@ function StorePage() {
                     <Button
                       size="icon"
                       className="self-center"
-                      onClick={() => {
-                        add(store.id, store.name, {
-                          product_id: p.id, product_name: p.name, unit_price: Number(p.price), quantity: 1, image_url: p.image_url,
-                        });
-                        toast.success(`${p.name} adicionado`);
-                      }}
+                      onClick={() => setSelected(p)}
                     >
                       <Plus className="size-4" />
                     </Button>
@@ -109,6 +105,22 @@ function StorePage() {
             </section>
           ))}
         </div>
+
+        {selected && (
+          <ProductDialog
+            product={selected}
+            onClose={() => setSelected(null)}
+            onAdd={(qty, addons, notes) => {
+              add(store.id, store.name, {
+                product_id: selected.id, product_name: selected.name,
+                unit_price: Number(selected.price), quantity: qty,
+                image_url: selected.image_url, addons, notes,
+              });
+              toast.success(`${selected.name} adicionado`);
+              setSelected(null);
+            }}
+          />
+        )}
 
         {count > 0 && (
           <div className="fixed inset-x-0 bottom-3 z-30 mx-auto max-w-md px-4">
