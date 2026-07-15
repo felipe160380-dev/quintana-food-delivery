@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { ShoppingBag, LogOut, Store, MapPin, ClipboardList, Bike, LogIn, UtensilsCrossed } from "lucide-react";
+import { ShoppingBag, LogOut, Store, MapPin, ClipboardList, Bike, LogIn, UtensilsCrossed, CreditCard } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useCart } from "@/lib/cart";
 import { Button } from "@/components/ui/button";
@@ -30,9 +30,11 @@ export function AppHeader() {
           <span className="grid size-8 place-items-center rounded-xl bg-primary text-primary-foreground">
             <UtensilsCrossed className="size-4" />
           </span>
-          <span className="text-lg tracking-tight">quintana<span className="text-primary">food</span></span>
+          <span className="text-lg tracking-tight">Quintana<span className="text-primary">Food</span></span>
         </Link>
         <div className="flex-1" />
+
+
 
         <Button variant="ghost" size="sm" asChild className="hidden sm:inline-flex">
           <Link to="/enderecos"><MapPin className="mr-1 size-4" /> Endereços</Link>
@@ -66,22 +68,17 @@ export function AppHeader() {
               <DropdownMenuItem onClick={() => nav({ to: "/enderecos" })}>
                 <MapPin className="mr-2 size-4" /> Endereços
               </DropdownMenuItem>
-              {roles.includes("merchant") ? (
+              <DropdownMenuItem onClick={() => nav({ to: "/pagamentos" })}>
+                <CreditCard className="mr-2 size-4" /> Formas de pagamento
+              </DropdownMenuItem>
+              {roles.includes("merchant") && (
                 <DropdownMenuItem onClick={() => nav({ to: "/lojista" })}>
                   <Store className="mr-2 size-4" /> Painel do lojista
                 </DropdownMenuItem>
-              ) : (
-                <DropdownMenuItem onClick={() => nav({ to: "/tornar-se-lojista" })}>
-                  <Store className="mr-2 size-4" /> Cadastrar minha loja
-                </DropdownMenuItem>
               )}
-              {roles.includes("courier") ? (
+              {roles.includes("courier") && (
                 <DropdownMenuItem onClick={() => nav({ to: "/entregador" })}>
                   <Bike className="mr-2 size-4" /> Painel do entregador
-                </DropdownMenuItem>
-              ) : (
-                <DropdownMenuItem onClick={() => nav({ to: "/tornar-se-entregador" })}>
-                  <Bike className="mr-2 size-4" /> Ser entregador
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
