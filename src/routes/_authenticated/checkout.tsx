@@ -74,13 +74,21 @@ function Page() {
     }).select("id").single();
     if (error) { setPlacing(false); return toast.error(error.message); }
 
-    const items = state.items.map((i) => ({
-      order_id: order!.id, product_id: i.product_id, product_name: i.product_name,
-      unit_price: i.unit_price, quantity: i.quantity,
-    }));
-    const { error: itErr } = await supabase.from("order_items").insert(items);
+    const inserted: { id: string; addons?: any[] }[] = [];
+    for (const i of state.items) {
+      const { data: oi, error: e } = await supabase.from("order_items").insert({
+        order_id: order!.id, product_id: i.product_id, product_name: i.product_name,
+        unit_price: i.unit_price, quantity: i.quantity,
+      }).select("id").single();
+      if (e) { setPlacing(false); return toast.error(e.message); }
+      if (i.addons?.length) {
+        await supabase.from("order_item_addons").insert(
+          i.addons.map((a) => ({ order_item_id: oi!.id, name: a.name, price: a.price, quantity: a.quantity })),
+        );
+      }
+      inserted.push({ id: oi!.id });
+    }
     setPlacing(false);
-    if (itErr) return toast.error(itErr.message);
 
     clear();
     toast.success("Pedido enviado!");
@@ -94,17 +102,31 @@ function Page() {
       <Card>
         <CardHeader><CardTitle className="text-base">{store?.name}</CardTitle></CardHeader>
         <CardContent className="space-y-2 pt-0">
-          {state.items.map((i) => (
-            <div key={i.product_id} className="flex items-center gap-3">
-              <div className="flex-1"><div className="font-medium">{i.product_name}</div><div className="text-xs text-muted-foreground">{brl(i.unit_price)}</div></div>
-              <div className="flex items-center gap-1">
-                <Button size="icon" variant="outline" className="size-7" onClick={() => (i.quantity <= 1 ? remove(i.product_id) : setQty(i.product_id, i.quantity - 1))}><Minus className="size-3" /></Button>
-                <span className="w-6 text-center text-sm">{i.quantity}</span>
-                <Button size="icon" variant="outline" className="size-7" onClick={() => setQty(i.product_id, i.quantity + 1)}><Plus className="size-3" /></Button>
+          {state.items.map((i) => {
+            const lineTotal = (i.unit_price + (i.addons ?? []).reduce((s, a) => s + a.price * a.quantity, 0)) * i.quantity;
+            return (
+              <div key={i.line_id} className="flex items-start gap-3">
+                <div className="flex-1">
+                  <div className="font-medium">{i.product_name}</div>
+                  <div className="text-xs text-muted-foreground">{brl(i.unit_price)}</div>
+                  {i.addons && i.addons.length > 0 && (
+                    <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground">
+                      {i.addons.map((a, idx) => (
+                        <li key={idx}>+ {a.quantity}× {a.name} ({brl(a.price)})</li>
+                      ))}
+                    </ul>
+                  )}
+                  {i.notes && <div className="mt-1 text-xs italic text-muted-foreground">"{i.notes}"</div>}
+                </div>
+                <div className="flex items-center gap-1">
+                  <Button size="icon" variant="outline" className="size-7" onClick={() => (i.quantity <= 1 ? remove(i.line_id!) : setQty(i.line_id!, i.quantity - 1))}><Minus className="size-3" /></Button>
+                  <span className="w-6 text-center text-sm">{i.quantity}</span>
+                  <Button size="icon" variant="outline" className="size-7" onClick={() => setQty(i.line_id!, i.quantity + 1)}><Plus className="size-3" /></Button>
+                </div>
+                <div className="w-20 text-right font-medium">{brl(lineTotal)}</div>
               </div>
-              <div className="w-16 text-right font-medium">{brl(i.unit_price * i.quantity)}</div>
-            </div>
-          ))}
+            );
+          })}
         </CardContent>
       </Card>
 
