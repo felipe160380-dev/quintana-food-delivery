@@ -31,7 +31,7 @@ function Page() {
     const load = async () => {
       const { data: o } = await supabase.from("orders").select("*, store:stores(name,logo_url,phone)").eq("id", id).maybeSingle();
       setOrder(o);
-      const { data: it } = await supabase.from("order_items").select("*").eq("order_id", id);
+      const { data: it } = await supabase.from("order_items").select("*, addons:order_item_addons(*)").eq("order_id", id);
       setItems(it ?? []);
       const { data: msgs } = await supabase.from("messages").select("*").eq("order_id", id).order("created_at");
       setMessages((msgs ?? []) as Msg[]);
