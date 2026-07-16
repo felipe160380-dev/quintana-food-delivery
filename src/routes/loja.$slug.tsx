@@ -116,7 +116,7 @@ function StorePage() {
             onAdd={(qty, addons, notes) => {
               add(store.id, store.name, {
                 product_id: selected.id, product_name: selected.name,
-                unit_price: Number(selected.price), quantity: qty,
+                unit_price: Number(selected.promo_price ?? selected.price), quantity: qty,
                 image_url: selected.image_url, addons, notes,
               });
               toast.success(`${selected.name} adicionado`);
