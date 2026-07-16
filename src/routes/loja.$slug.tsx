@@ -90,7 +90,9 @@ function StorePage() {
                     <div className="min-w-0 flex-1">
                       <div className="font-medium">{p.name}</div>
                       {p.description && <div className="line-clamp-2 text-sm text-muted-foreground">{p.description}</div>}
-                      <div className="mt-1 font-semibold text-primary">{brl(Number(p.price))}</div>
+                      <div className="mt-1 font-semibold text-primary">
+                        {p.promo_price ? <><span className="mr-1 text-xs text-muted-foreground line-through">{brl(Number(p.price))}</span>{brl(Number(p.promo_price))}</> : brl(Number(p.price))}
+                      </div>
                     </div>
                     {p.image_url && <img src={p.image_url} alt="" className="size-20 shrink-0 rounded-lg object-cover" />}
                     <Button
