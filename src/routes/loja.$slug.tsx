@@ -27,7 +27,7 @@ export const Route = createFileRoute("/loja/$slug")({
   ),
 });
 
-type Product = { id: string; name: string; description: string | null; price: number; image_url: string | null; category: string | null; is_available: boolean };
+type Product = { id: string; name: string; description: string | null; price: number; promo_price: number | null; image_url: string | null; category: string | null; is_available: boolean; is_paused: boolean; stock: number | null };
 
 function StorePage() {
   const { store } = Route.useLoaderData();
@@ -36,8 +36,9 @@ function StorePage() {
   const { add, count } = useCart();
 
   useEffect(() => {
-    supabase.from("products").select("*").eq("store_id", store.id).eq("is_available", true).order("category").order("sort_order")
-      .then(({ data }) => setProducts((data ?? []) as Product[]));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase as any).from("products").select("*").eq("store_id", store.id).eq("is_available", true).eq("is_paused", false).order("category").order("sort_order")
+      .then(({ data }: { data: Product[] | null }) => setProducts((data ?? []).filter((p) => p.stock == null || p.stock > 0)));
   }, [store.id]);
 
   const byCategory: Record<string, Product[]> = {};
