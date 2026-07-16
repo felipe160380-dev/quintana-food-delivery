@@ -416,9 +416,13 @@ export type Database = {
           id: string
           image_url: string | null
           is_available: boolean
+          is_paused: boolean
+          low_stock_threshold: number
           name: string
           price: number
+          promo_price: number | null
           sort_order: number
+          stock: number | null
           store_id: string
           updated_at: string
         }
@@ -429,9 +433,13 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_available?: boolean
+          is_paused?: boolean
+          low_stock_threshold?: number
           name: string
           price: number
+          promo_price?: number | null
           sort_order?: number
+          stock?: number | null
           store_id: string
           updated_at?: string
         }
@@ -442,9 +450,13 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_available?: boolean
+          is_paused?: boolean
+          low_stock_threshold?: number
           name?: string
           price?: number
+          promo_price?: number | null
           sort_order?: number
+          stock?: number | null
           store_id?: string
           updated_at?: string
         }
@@ -485,6 +497,54 @@ export type Database = {
         }
         Relationships: []
       }
+      store_notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          kind: string
+          order_id: string | null
+          read_at: string | null
+          store_id: string
+          title: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          order_id?: string | null
+          read_at?: string | null
+          store_id: string
+          title: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          order_id?: string | null
+          read_at?: string | null
+          store_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_notifications_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_notifications_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       store_reviews: {
         Row: {
           comment: string | null
@@ -493,6 +553,8 @@ export type Database = {
           id: string
           order_id: string
           rating: number
+          replied_at: string | null
+          reply: string | null
           store_id: string
           updated_at: string
         }
@@ -503,6 +565,8 @@ export type Database = {
           id?: string
           order_id: string
           rating: number
+          replied_at?: string | null
+          reply?: string | null
           store_id: string
           updated_at?: string
         }
@@ -513,6 +577,8 @@ export type Database = {
           id?: string
           order_id?: string
           rating?: number
+          replied_at?: string | null
+          reply?: string | null
           store_id?: string
           updated_at?: string
         }
@@ -533,6 +599,104 @@ export type Database = {
           },
         ]
       }
+      store_wallet_entries: {
+        Row: {
+          created_at: string
+          description: string | null
+          fee: number
+          gross: number
+          id: string
+          kind: string
+          net: number
+          order_id: string | null
+          store_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          fee?: number
+          gross?: number
+          id?: string
+          kind: string
+          net: number
+          order_id?: string | null
+          store_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          fee?: number
+          gross?: number
+          id?: string
+          kind?: string
+          net?: number
+          order_id?: string | null
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_wallet_entries_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_wallet_entries_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      store_withdrawals: {
+        Row: {
+          amount: number
+          fee: number
+          id: string
+          net: number
+          note: string | null
+          pix_key: string
+          processed_at: string | null
+          requested_at: string
+          status: string
+          store_id: string
+        }
+        Insert: {
+          amount: number
+          fee?: number
+          id?: string
+          net: number
+          note?: string | null
+          pix_key: string
+          processed_at?: string | null
+          requested_at?: string
+          status?: string
+          store_id: string
+        }
+        Update: {
+          amount?: number
+          fee?: number
+          id?: string
+          net?: number
+          note?: string | null
+          pix_key?: string
+          processed_at?: string | null
+          requested_at?: string
+          status?: string
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_withdrawals_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stores: {
         Row: {
           accepts_card_on_delivery: boolean
@@ -542,11 +706,13 @@ export type Database = {
           address_line: string | null
           category: string | null
           city: string | null
+          cnpj: string | null
           cover_url: string | null
           created_at: string
           delivery_fee: number
           delivery_radius_km: number
           description: string | null
+          hours: Json
           id: string
           is_online: boolean
           latitude: number | null
@@ -555,12 +721,15 @@ export type Database = {
           min_order: number
           name: string
           owner_id: string
+          payout_pix_key: string | null
           phone: string | null
+          platform_fee_pct: number
           postal_code: string | null
           prep_time_min: number
           slug: string
           state: string | null
           updated_at: string
+          whatsapp: string | null
         }
         Insert: {
           accepts_card_on_delivery?: boolean
@@ -570,11 +739,13 @@ export type Database = {
           address_line?: string | null
           category?: string | null
           city?: string | null
+          cnpj?: string | null
           cover_url?: string | null
           created_at?: string
           delivery_fee?: number
           delivery_radius_km?: number
           description?: string | null
+          hours?: Json
           id?: string
           is_online?: boolean
           latitude?: number | null
@@ -583,12 +754,15 @@ export type Database = {
           min_order?: number
           name: string
           owner_id: string
+          payout_pix_key?: string | null
           phone?: string | null
+          platform_fee_pct?: number
           postal_code?: string | null
           prep_time_min?: number
           slug: string
           state?: string | null
           updated_at?: string
+          whatsapp?: string | null
         }
         Update: {
           accepts_card_on_delivery?: boolean
@@ -598,11 +772,13 @@ export type Database = {
           address_line?: string | null
           category?: string | null
           city?: string | null
+          cnpj?: string | null
           cover_url?: string | null
           created_at?: string
           delivery_fee?: number
           delivery_radius_km?: number
           description?: string | null
+          hours?: Json
           id?: string
           is_online?: boolean
           latitude?: number | null
@@ -611,12 +787,15 @@ export type Database = {
           min_order?: number
           name?: string
           owner_id?: string
+          payout_pix_key?: string | null
           phone?: string | null
+          platform_fee_pct?: number
           postal_code?: string | null
           prep_time_min?: number
           slug?: string
           state?: string | null
           updated_at?: string
+          whatsapp?: string | null
         }
         Relationships: []
       }
@@ -653,6 +832,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      store_wallet_balance: { Args: { _store_id: string }; Returns: number }
     }
     Enums: {
       app_role: "customer" | "merchant" | "courier" | "admin"
