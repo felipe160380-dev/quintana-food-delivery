@@ -164,7 +164,8 @@ function ProductDialog({
     .map((a) => ({ name: a.name, price: Number(a.price), quantity: picked[a.id]! }));
 
   const addonsSum = chosen.reduce((s, a) => s + a.price * a.quantity, 0);
-  const total = (Number(product.price) + addonsSum) * qty;
+  const effectivePrice = Number(product.promo_price ?? product.price);
+  const total = (effectivePrice + addonsSum) * qty;
 
   const missing = addons.some((a) => a.is_required && !(picked[a.id] ?? 0));
 
@@ -174,7 +175,9 @@ function ProductDialog({
         <div className="mb-2">
           <h3 className="text-lg font-bold">{product.name}</h3>
           {product.description && <p className="text-sm text-muted-foreground">{product.description}</p>}
-          <div className="mt-1 font-semibold text-primary">{brl(Number(product.price))}</div>
+          <div className="mt-1 font-semibold text-primary">
+            {product.promo_price ? <><span className="mr-1 text-xs text-muted-foreground line-through">{brl(Number(product.price))}</span>{brl(effectivePrice)}</> : brl(effectivePrice)}
+          </div>
         </div>
 
         {addons.length > 0 && (
