@@ -515,7 +515,12 @@ function WithdrawalsTab() {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const variant = status === "approved" ? "default" : status === "rejected" ? "destructive" : "secondary";
-  const label = status === "approved" ? "Aprovado" : status === "rejected" ? "Rejeitado" : "Pendente";
-  return <Badge variant={variant as any} className="ml-1">{label}</Badge>;
+  const map: Record<string, { variant: string; label: string }> = {
+    pending: { variant: "secondary", label: "Pendente" },
+    in_review: { variant: "outline", label: "Em análise" },
+    approved: { variant: "default", label: "Aprovado" },
+    rejected: { variant: "destructive", label: "Recusado" },
+  };
+  const it = map[status] ?? { variant: "secondary", label: status };
+  return <Badge variant={it.variant as any} className="ml-1">{it.label}</Badge>;
 }
