@@ -124,7 +124,7 @@ function AdminPanel() {
 }
 
 function DashboardTab() {
-  const [stats, setStats] = useState({ stores: 0, couriers: 0, pendingCouriers: 0, orders: 0, todayOrders: 0, pendingWithdrawals: 0 });
+  const [stats, setStats] = useState({ stores: 0, pendingStores: 0, couriers: 0, pendingCouriers: 0, orders: 0, todayOrders: 0, pendingWithdrawals: 0 });
   useEffect(() => {
     (async () => {
       const today = new Date(); today.setHours(0, 0, 0, 0);
