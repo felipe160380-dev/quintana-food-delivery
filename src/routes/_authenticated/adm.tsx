@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Loader2, ShieldCheck, Store as StoreIcon, Users, Bike, ClipboardList, Wallet } from "lucide-react";
 
@@ -14,12 +16,15 @@ export const Route = createFileRoute("/_authenticated/adm")({
   component: AdminPanel,
 });
 
+export type ApprovalStatus = "pending" | "in_review" | "approved" | "rejected";
+
 type Courier = {
   id: string;
   document: string | null;
   vehicle: string | null;
   vehicle_plate: string | null;
-  approval_status: "pending" | "approved" | "rejected";
+  approval_status: ApprovalStatus;
+  approval_note: string | null;
   created_at: string;
   profile?: { full_name: string | null; phone: string | null } | null;
 };
@@ -32,6 +37,8 @@ type StoreRow = {
   is_online: boolean;
   city: string | null;
   cnpj: string | null;
+  approval_status: ApprovalStatus;
+  approval_note: string | null;
   created_at: string;
 };
 
