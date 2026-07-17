@@ -704,6 +704,9 @@ export type Database = {
           accepts_cash: boolean
           accepts_pix: boolean
           address_line: string | null
+          approval_note: string | null
+          approval_status: Database["public"]["Enums"]["store_approval_status"]
+          approved_at: string | null
           category: string | null
           city: string | null
           cnpj: string | null
@@ -737,6 +740,9 @@ export type Database = {
           accepts_cash?: boolean
           accepts_pix?: boolean
           address_line?: string | null
+          approval_note?: string | null
+          approval_status?: Database["public"]["Enums"]["store_approval_status"]
+          approved_at?: string | null
           category?: string | null
           city?: string | null
           cnpj?: string | null
@@ -770,6 +776,9 @@ export type Database = {
           accepts_cash?: boolean
           accepts_pix?: boolean
           address_line?: string | null
+          approval_note?: string | null
+          approval_status?: Database["public"]["Enums"]["store_approval_status"]
+          approved_at?: string | null
           category?: string | null
           city?: string | null
           cnpj?: string | null
@@ -836,7 +845,7 @@ export type Database = {
     }
     Enums: {
       app_role: "customer" | "merchant" | "courier" | "admin"
-      courier_approval_status: "pending" | "approved" | "rejected"
+      courier_approval_status: "pending" | "in_review" | "approved" | "rejected"
       order_status:
         | "pending"
         | "accepted"
@@ -851,6 +860,7 @@ export type Database = {
         | "cash_on_delivery"
         | "card_on_delivery"
       payment_status: "pending" | "paid" | "failed" | "refunded"
+      store_approval_status: "pending" | "in_review" | "approved" | "rejected"
       vehicle_type: "bike" | "motorcycle" | "car" | "foot"
     }
     CompositeTypes: {
@@ -980,7 +990,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["customer", "merchant", "courier", "admin"],
-      courier_approval_status: ["pending", "approved", "rejected"],
+      courier_approval_status: ["pending", "in_review", "approved", "rejected"],
       order_status: [
         "pending",
         "accepted",
@@ -997,6 +1007,7 @@ export const Constants = {
         "card_on_delivery",
       ],
       payment_status: ["pending", "paid", "failed", "refunded"],
+      store_approval_status: ["pending", "in_review", "approved", "rejected"],
       vehicle_type: ["bike", "motorcycle", "car", "foot"],
     },
   },

@@ -88,13 +88,31 @@ function Page() {
 
   const th = todayHours(store.hours);
 
+  const approvalLabel: Record<string, string> = { pending: "Pendente", in_review: "Em análise", approved: "Aprovada", rejected: "Recusada" };
+  const approvalVariant: Record<string, "default" | "secondary" | "outline" | "destructive"> = { pending: "secondary", in_review: "outline", approved: "default", rejected: "destructive" };
+  const isApproved = store.approval_status === "approved";
+
   return (
     <div className="mx-auto max-w-5xl px-4 pb-24 pt-6">
+      {!isApproved && (
+        <div className={`mb-4 rounded-lg border p-3 text-sm ${store.approval_status === "rejected" ? "border-destructive/50 bg-destructive/5" : "border-primary/40 bg-primary/5"}`}>
+          <p className="font-medium">
+            Status do cadastro: {approvalLabel[store.approval_status] ?? store.approval_status}
+          </p>
+          {store.approval_status === "rejected" && store.approval_note && (
+            <p className="mt-1 text-destructive">Motivo da recusa: {store.approval_note}</p>
+          )}
+          {store.approval_status !== "rejected" && (
+            <p className="mt-1 text-muted-foreground">Sua loja só ficará visível aos clientes após a aprovação pelo administrador.</p>
+          )}
+        </div>
+      )}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">{store.name}</h1>
           <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
-            <Badge variant={store.is_online ? "default" : "secondary"}>{store.is_online ? "Online" : "Offline"}</Badge>
+            <Badge variant={approvalVariant[store.approval_status] ?? "secondary"}>{approvalLabel[store.approval_status] ?? store.approval_status}</Badge>
+            {isApproved && <Badge variant={store.is_online ? "default" : "secondary"}>{store.is_online ? "Online" : "Offline"}</Badge>}
             <Link to="/loja/$slug" params={{ slug: store.slug }} className="text-primary hover:underline">Ver como cliente →</Link>
           </div>
         </div>
@@ -102,6 +120,7 @@ function Page() {
           <span className="text-sm">{store.is_online ? "No ar" : "Fora do ar"}</span>
           <Switch
             checked={store.is_online}
+            disabled={!isApproved}
             onCheckedChange={async (v) => {
               const { error } = await sb.from("stores").update({ is_online: v }).eq("id", store.id);
               if (error) return toast.error(error.message);
@@ -111,6 +130,7 @@ function Page() {
           />
         </div>
       </div>
+
 
       <Tabs defaultValue="dashboard">
         <TabsList className="flex w-full flex-wrap justify-start gap-1 bg-muted/40 p-1">

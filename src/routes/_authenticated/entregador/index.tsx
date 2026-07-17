@@ -26,7 +26,13 @@ function Page() {
     const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", u.user.id);
     if (!roles?.some((r) => r.role === "courier")) { setBlocked("Sua conta não é uma conta de entregador. Saia e entre novamente escolhendo Entregador."); return; }
     const { data: c } = await supabase.from("couriers").select("*").eq("id", u.user.id).maybeSingle();
-    if (!c || c.approval_status !== "approved") { setBlocked("Seu cadastro de entregador está aguardando aprovação do administrador. Você será avisado quando for aprovado."); return; }
+    if (!c || c.approval_status !== "approved") {
+      const st = c?.approval_status ?? "pending";
+      const label = st === "in_review" ? "em análise pela nossa equipe" : st === "rejected" ? "recusado" : "aguardando aprovação do administrador";
+      let msg = `Seu cadastro de entregador está ${label}.`;
+      if (st === "rejected" && c?.approval_note) msg += ` Motivo: ${c.approval_note}`;
+      setBlocked(msg); return;
+    }
     setMe({ user: u.user, courier: c });
     setAvailable(!!c?.is_available);
 

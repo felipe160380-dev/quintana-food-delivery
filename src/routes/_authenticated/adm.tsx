@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Loader2, ShieldCheck, Store as StoreIcon, Users, Bike, ClipboardList, Wallet } from "lucide-react";
 
@@ -14,12 +16,15 @@ export const Route = createFileRoute("/_authenticated/adm")({
   component: AdminPanel,
 });
 
+export type ApprovalStatus = "pending" | "in_review" | "approved" | "rejected";
+
 type Courier = {
   id: string;
   document: string | null;
   vehicle: string | null;
   vehicle_plate: string | null;
-  approval_status: "pending" | "approved" | "rejected";
+  approval_status: ApprovalStatus;
+  approval_note: string | null;
   created_at: string;
   profile?: { full_name: string | null; phone: string | null } | null;
 };
@@ -32,6 +37,8 @@ type StoreRow = {
   is_online: boolean;
   city: string | null;
   cnpj: string | null;
+  approval_status: ApprovalStatus;
+  approval_note: string | null;
   created_at: string;
 };
 
@@ -117,20 +124,22 @@ function AdminPanel() {
 }
 
 function DashboardTab() {
-  const [stats, setStats] = useState({ stores: 0, couriers: 0, pendingCouriers: 0, orders: 0, todayOrders: 0, pendingWithdrawals: 0 });
+  const [stats, setStats] = useState({ stores: 0, pendingStores: 0, couriers: 0, pendingCouriers: 0, orders: 0, todayOrders: 0, pendingWithdrawals: 0 });
   useEffect(() => {
     (async () => {
       const today = new Date(); today.setHours(0, 0, 0, 0);
-      const [s, c, cp, o, ot, w] = await Promise.all([
+      const [s, sp, c, cp, o, ot, w] = await Promise.all([
         supabase.from("stores").select("id", { count: "exact", head: true }),
+        supabase.from("stores").select("id", { count: "exact", head: true }).in("approval_status", ["pending", "in_review"]),
         supabase.from("couriers").select("id", { count: "exact", head: true }),
-        supabase.from("couriers").select("id", { count: "exact", head: true }).eq("approval_status", "pending"),
+        supabase.from("couriers").select("id", { count: "exact", head: true }).in("approval_status", ["pending", "in_review"]),
         supabase.from("orders").select("id", { count: "exact", head: true }),
         supabase.from("orders").select("id", { count: "exact", head: true }).gte("created_at", today.toISOString()),
         supabase.from("store_withdrawals").select("id", { count: "exact", head: true }).eq("status", "requested"),
       ]);
       setStats({
         stores: s.count ?? 0,
+        pendingStores: sp.count ?? 0,
         couriers: c.count ?? 0,
         pendingCouriers: cp.count ?? 0,
         orders: o.count ?? 0,
@@ -141,8 +150,9 @@ function DashboardTab() {
   }, []);
   const kpis = [
     { label: "Lojas cadastradas", value: stats.stores },
+    { label: "Lojas aguardando análise", value: stats.pendingStores, alert: stats.pendingStores > 0 },
     { label: "Entregadores", value: stats.couriers },
-    { label: "Entregadores pendentes", value: stats.pendingCouriers, alert: stats.pendingCouriers > 0 },
+    { label: "Entregadores aguardando análise", value: stats.pendingCouriers, alert: stats.pendingCouriers > 0 },
     { label: "Pedidos totais", value: stats.orders },
     { label: "Pedidos hoje", value: stats.todayOrders },
     { label: "Saques a processar", value: stats.pendingWithdrawals, alert: stats.pendingWithdrawals > 0 },
@@ -159,14 +169,81 @@ function DashboardTab() {
   );
 }
 
+const STATUS_FILTERS: { key: ApprovalStatus | "all"; label: string }[] = [
+  { key: "pending", label: "Pendentes" },
+  { key: "in_review", label: "Em análise" },
+  { key: "approved", label: "Aprovados" },
+  { key: "rejected", label: "Recusados" },
+  { key: "all", label: "Todos" },
+];
+
+function ApprovalActions({
+  status,
+  onSet,
+}: {
+  status: ApprovalStatus;
+  onSet: (next: ApprovalStatus, note?: string) => Promise<void> | void;
+}) {
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [note, setNote] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  async function submitReject() {
+    if (note.trim().length < 3) {
+      toast.error("Informe o motivo da recusa (mínimo 3 caracteres).");
+      return;
+    }
+    setSaving(true);
+    await onSet("rejected", note.trim());
+    setSaving(false);
+    setRejectOpen(false);
+    setNote("");
+  }
+
+  return (
+    <div className="flex gap-2 flex-wrap">
+      {status !== "in_review" && status !== "approved" && (
+        <Button size="sm" variant="secondary" onClick={() => onSet("in_review")}>Em análise</Button>
+      )}
+      {status !== "approved" && (
+        <Button size="sm" onClick={() => onSet("approved")}>Aprovar</Button>
+      )}
+      {status !== "rejected" && (
+        <Button size="sm" variant="destructive" onClick={() => setRejectOpen(true)}>Recusar</Button>
+      )}
+      <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Motivo da recusa</DialogTitle>
+            <DialogDescription>Explique ao solicitante por que o cadastro foi recusado. Esta nota será registrada.</DialogDescription>
+          </DialogHeader>
+          <Textarea
+            placeholder="Ex.: documentação ilegível, dados divergentes..."
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            minLength={3}
+            rows={4}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRejectOpen(false)} disabled={saving}>Cancelar</Button>
+            <Button variant="destructive" onClick={submitReject} disabled={saving}>
+              {saving && <Loader2 className="w-4 h-4 mr-1 animate-spin" />} Confirmar recusa
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
 function CouriersTab() {
   const [items, setItems] = useState<Courier[]>([]);
-  const [filter, setFilter] = useState<"pending" | "approved" | "rejected" | "all">("pending");
+  const [filter, setFilter] = useState<ApprovalStatus | "all">("pending");
   const [loading, setLoading] = useState(false);
 
   async function load() {
     setLoading(true);
-    let q = supabase.from("couriers").select("id, document, vehicle, vehicle_plate, approval_status, created_at").order("created_at", { ascending: false });
+    let q = supabase.from("couriers").select("id, document, vehicle, vehicle_plate, approval_status, approval_note, created_at").order("created_at", { ascending: false });
     if (filter !== "all") q = q.eq("approval_status", filter);
     const { data } = await q;
     const rows = (data ?? []) as Courier[];
@@ -180,20 +257,20 @@ function CouriersTab() {
   }
   useEffect(() => { load(); }, [filter]);
 
-  async function act(id: string, approval_status: "approved" | "rejected") {
-    const { error } = await supabase.from("couriers").update({ approval_status, approved_at: new Date().toISOString() }).eq("id", id);
+  async function setStatus(id: string, next: ApprovalStatus, note?: string) {
+    const patch: any = { approval_status: next, approval_note: next === "rejected" ? note ?? null : null };
+    if (next === "approved") patch.approved_at = new Date().toISOString();
+    const { error } = await supabase.from("couriers").update(patch).eq("id", id);
     if (error) return toast.error(error.message);
-    toast.success(approval_status === "approved" ? "Entregador aprovado" : "Entregador rejeitado");
+    toast.success("Status atualizado");
     load();
   }
 
   return (
     <div className="space-y-3">
       <div className="flex gap-2 flex-wrap">
-        {(["pending", "approved", "rejected", "all"] as const).map((f) => (
-          <Button key={f} size="sm" variant={filter === f ? "default" : "outline"} onClick={() => setFilter(f)}>
-            {f === "pending" ? "Pendentes" : f === "approved" ? "Aprovados" : f === "rejected" ? "Rejeitados" : "Todos"}
-          </Button>
+        {STATUS_FILTERS.map((f) => (
+          <Button key={f.key} size="sm" variant={filter === f.key ? "default" : "outline"} onClick={() => setFilter(f.key)}>{f.label}</Button>
         ))}
       </div>
       {loading && <Loader2 className="animate-spin" />}
@@ -201,20 +278,17 @@ function CouriersTab() {
       <div className="space-y-2">
         {items.map((c) => (
           <Card key={c.id}>
-            <CardContent className="p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-              <div>
-                <p className="font-semibold">{c.profile?.full_name ?? "Sem nome"}</p>
+            <CardContent className="p-4 flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+              <div className="flex-1">
+                <p className="font-semibold">{c.profile?.full_name ?? "Sem nome"} <StatusBadge status={c.approval_status} /></p>
                 <p className="text-xs text-muted-foreground">
                   {c.profile?.phone ?? "—"} · CPF {c.document ?? "—"} · {c.vehicle ?? "—"} {c.vehicle_plate ?? ""}
                 </p>
-                <StatusBadge status={c.approval_status} />
+                {c.approval_status === "rejected" && c.approval_note && (
+                  <p className="text-xs text-destructive mt-1">Motivo: {c.approval_note}</p>
+                )}
               </div>
-              {c.approval_status === "pending" && (
-                <div className="flex gap-2">
-                  <Button size="sm" onClick={() => act(c.id, "approved")}>Aprovar</Button>
-                  <Button size="sm" variant="destructive" onClick={() => act(c.id, "rejected")}>Rejeitar</Button>
-                </div>
-              )}
+              <ApprovalActions status={c.approval_status} onSet={async (next, note) => { await setStatus(c.id, next, note); }} />
             </CardContent>
           </Card>
         ))}
@@ -226,12 +300,26 @@ function CouriersTab() {
 function StoresTab() {
   const [items, setItems] = useState<StoreRow[]>([]);
   const [q, setQ] = useState("");
-  useEffect(() => { load(); }, []);
+  const [filter, setFilter] = useState<ApprovalStatus | "all">("pending");
+  useEffect(() => { load(); }, [filter]);
   async function load() {
-    const { data } = await supabase.from("stores").select("id, name, slug, owner_id, is_online, city, cnpj, created_at").order("created_at", { ascending: false });
+    let query = supabase.from("stores").select("id, name, slug, owner_id, is_online, city, cnpj, approval_status, approval_note, created_at").order("created_at", { ascending: false });
+    if (filter !== "all") query = query.eq("approval_status", filter);
+    const { data } = await query;
     setItems((data ?? []) as StoreRow[]);
   }
+  async function setStatus(id: string, next: ApprovalStatus, note?: string) {
+    const patch: any = { approval_status: next, approval_note: next === "rejected" ? note ?? null : null };
+    if (next === "approved") patch.approved_at = new Date().toISOString();
+    if (next !== "approved") patch.is_online = false;
+    const { error } = await supabase.from("stores").update(patch).eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Status atualizado"); load();
+  }
   async function toggle(s: StoreRow) {
+    if (s.approval_status !== "approved") {
+      toast.error("Só é possível ativar lojas aprovadas."); return;
+    }
     const { error } = await supabase.from("stores").update({ is_online: !s.is_online }).eq("id", s.id);
     if (error) return toast.error(error.message);
     toast.success(!s.is_online ? "Loja ativada" : "Loja desativada");
@@ -246,17 +334,35 @@ function StoresTab() {
   const filtered = items.filter((s) => !q || s.name.toLowerCase().includes(q.toLowerCase()) || s.slug.includes(q.toLowerCase()));
   return (
     <div className="space-y-3">
+      <div className="flex gap-2 flex-wrap">
+        {STATUS_FILTERS.map((f) => (
+          <Button key={f.key} size="sm" variant={filter === f.key ? "default" : "outline"} onClick={() => setFilter(f.key)}>{f.label}</Button>
+        ))}
+      </div>
       <Input placeholder="Buscar loja..." value={q} onChange={(e) => setQ(e.target.value)} />
       {filtered.map((s) => (
         <Card key={s.id}>
-          <CardContent className="p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <div>
-              <p className="font-semibold">{s.name} <Badge variant={s.is_online ? "default" : "secondary"}>{s.is_online ? "Online" : "Offline"}</Badge></p>
+          <CardContent className="p-4 flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+            <div className="flex-1">
+              <p className="font-semibold">
+                {s.name} <StatusBadge status={s.approval_status} />{" "}
+                {s.approval_status === "approved" && (
+                  <Badge variant={s.is_online ? "default" : "secondary"}>{s.is_online ? "Online" : "Offline"}</Badge>
+                )}
+              </p>
               <p className="text-xs text-muted-foreground">/{s.slug} · {s.city ?? "—"} · CNPJ {s.cnpj ?? "—"}</p>
+              {s.approval_status === "rejected" && s.approval_note && (
+                <p className="text-xs text-destructive mt-1">Motivo: {s.approval_note}</p>
+              )}
             </div>
-            <div className="flex gap-2">
-              <Button size="sm" variant="outline" onClick={() => toggle(s)}>{s.is_online ? "Desativar" : "Ativar"}</Button>
-              <Button size="sm" variant="destructive" onClick={() => remove(s)}>Excluir</Button>
+            <div className="flex flex-col gap-2 items-end">
+              <ApprovalActions status={s.approval_status} onSet={async (next, note) => { await setStatus(s.id, next, note); }} />
+              <div className="flex gap-2">
+                {s.approval_status === "approved" && (
+                  <Button size="sm" variant="outline" onClick={() => toggle(s)}>{s.is_online ? "Desativar" : "Ativar"}</Button>
+                )}
+                <Button size="sm" variant="destructive" onClick={() => remove(s)}>Excluir</Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -409,7 +515,12 @@ function WithdrawalsTab() {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const variant = status === "approved" ? "default" : status === "rejected" ? "destructive" : "secondary";
-  const label = status === "approved" ? "Aprovado" : status === "rejected" ? "Rejeitado" : "Pendente";
-  return <Badge variant={variant as any} className="ml-1">{label}</Badge>;
+  const map: Record<string, { variant: string; label: string }> = {
+    pending: { variant: "secondary", label: "Pendente" },
+    in_review: { variant: "outline", label: "Em análise" },
+    approved: { variant: "default", label: "Aprovado" },
+    rejected: { variant: "destructive", label: "Recusado" },
+  };
+  const it = map[status] ?? { variant: "secondary", label: status };
+  return <Badge variant={it.variant as any} className="ml-1">{it.label}</Badge>;
 }
