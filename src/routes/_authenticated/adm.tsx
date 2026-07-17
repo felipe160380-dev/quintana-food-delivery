@@ -128,16 +128,18 @@ function DashboardTab() {
   useEffect(() => {
     (async () => {
       const today = new Date(); today.setHours(0, 0, 0, 0);
-      const [s, c, cp, o, ot, w] = await Promise.all([
+      const [s, sp, c, cp, o, ot, w] = await Promise.all([
         supabase.from("stores").select("id", { count: "exact", head: true }),
+        supabase.from("stores").select("id", { count: "exact", head: true }).in("approval_status", ["pending", "in_review"]),
         supabase.from("couriers").select("id", { count: "exact", head: true }),
-        supabase.from("couriers").select("id", { count: "exact", head: true }).eq("approval_status", "pending"),
+        supabase.from("couriers").select("id", { count: "exact", head: true }).in("approval_status", ["pending", "in_review"]),
         supabase.from("orders").select("id", { count: "exact", head: true }),
         supabase.from("orders").select("id", { count: "exact", head: true }).gte("created_at", today.toISOString()),
         supabase.from("store_withdrawals").select("id", { count: "exact", head: true }).eq("status", "requested"),
       ]);
       setStats({
         stores: s.count ?? 0,
+        pendingStores: sp.count ?? 0,
         couriers: c.count ?? 0,
         pendingCouriers: cp.count ?? 0,
         orders: o.count ?? 0,
@@ -148,8 +150,9 @@ function DashboardTab() {
   }, []);
   const kpis = [
     { label: "Lojas cadastradas", value: stats.stores },
+    { label: "Lojas aguardando análise", value: stats.pendingStores, alert: stats.pendingStores > 0 },
     { label: "Entregadores", value: stats.couriers },
-    { label: "Entregadores pendentes", value: stats.pendingCouriers, alert: stats.pendingCouriers > 0 },
+    { label: "Entregadores aguardando análise", value: stats.pendingCouriers, alert: stats.pendingCouriers > 0 },
     { label: "Pedidos totais", value: stats.orders },
     { label: "Pedidos hoje", value: stats.todayOrders },
     { label: "Saques a processar", value: stats.pendingWithdrawals, alert: stats.pendingWithdrawals > 0 },
