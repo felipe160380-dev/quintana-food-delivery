@@ -288,7 +288,7 @@ function CouriersTab() {
                   <p className="text-xs text-destructive mt-1">Motivo: {c.approval_note}</p>
                 )}
               </div>
-              <ApprovalActions status={c.approval_status} onSet={(next, note) => setStatus(c.id, next, note)} />
+              <ApprovalActions status={c.approval_status} onSet={async (next, note) => { await setStatus(c.id, next, note); }} />
             </CardContent>
           </Card>
         ))}
@@ -356,7 +356,7 @@ function StoresTab() {
               )}
             </div>
             <div className="flex flex-col gap-2 items-end">
-              <ApprovalActions status={s.approval_status} onSet={(next, note) => setStatus(s.id, next, note)} />
+              <ApprovalActions status={s.approval_status} onSet={async (next, note) => { await setStatus(s.id, next, note); }} />
               <div className="flex gap-2">
                 {s.approval_status === "approved" && (
                   <Button size="sm" variant="outline" onClick={() => toggle(s)}>{s.is_online ? "Desativar" : "Ativar"}</Button>
