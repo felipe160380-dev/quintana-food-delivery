@@ -96,11 +96,21 @@ function Page() {
           </div>
           <div className="border-t pt-2 text-xs text-muted-foreground">Pagamento: <span className="font-medium text-foreground">{paymentMethodLabel[order.payment_method]}</span></div>
           <div className="flex justify-between text-base font-bold"><span>Total</span><span>{brl(Number(order.total))}</span></div>
+          {order.status === "out_for_delivery" && order.delivery_code && order.customer_id === me && (
+            <div className="rounded-lg border-2 border-primary bg-primary/5 p-3 text-center">
+              <div className="text-xs font-semibold uppercase text-muted-foreground">Código de entrega</div>
+              <div className="my-1 font-mono text-3xl tracking-widest text-primary">{order.delivery_code}</div>
+              <div className="text-xs text-muted-foreground">Informe estes 4 dígitos ao entregador na chegada.</div>
+            </div>
+          )}
           {order.notes && <div className="rounded bg-muted p-2 text-xs"><b>Obs:</b> {order.notes}</div>}
         </CardContent>
       </Card>
-      {order.status === "delivered" && me && (
-        <ReviewBox orderId={order.id} storeId={order.store_id} customerId={me} />
+      {order.status === "delivered" && me && order.customer_id === me && (
+        <>
+          <ReviewBox orderId={order.id} storeId={order.store_id} customerId={me} />
+          <CourierRating orderId={order.id} initial={order.courier_rating} />
+        </>
       )}
 
 
