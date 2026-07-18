@@ -229,9 +229,15 @@ export type Database = {
         Row: {
           address_snapshot: Json
           change_for: number | null
+          courier_comment: string | null
           courier_id: string | null
+          courier_rating: number | null
           created_at: string
           customer_id: string
+          delivered_at: string | null
+          delivered_lat: number | null
+          delivered_lng: number | null
+          delivery_code: string | null
           delivery_fee: number
           id: string
           notes: string | null
@@ -246,9 +252,15 @@ export type Database = {
         Insert: {
           address_snapshot: Json
           change_for?: number | null
+          courier_comment?: string | null
           courier_id?: string | null
+          courier_rating?: number | null
           created_at?: string
           customer_id: string
+          delivered_at?: string | null
+          delivered_lat?: number | null
+          delivered_lng?: number | null
+          delivery_code?: string | null
           delivery_fee?: number
           id?: string
           notes?: string | null
@@ -263,9 +275,15 @@ export type Database = {
         Update: {
           address_snapshot?: Json
           change_for?: number | null
+          courier_comment?: string | null
           courier_id?: string | null
+          courier_rating?: number | null
           created_at?: string
           customer_id?: string
+          delivered_at?: string | null
+          delivered_lat?: number | null
+          delivered_lng?: number | null
+          delivery_code?: string | null
           delivery_fee?: number
           id?: string
           notes?: string | null
@@ -834,12 +852,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      confirm_delivery: {
+        Args: { _code: string; _lat: number; _lng: number; _order_id: string }
+        Returns: undefined
+      }
+      courier_resubmit: { Args: never; Returns: undefined }
+      delete_my_account: { Args: never; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      rate_courier: {
+        Args: { _comment: string; _order_id: string; _rating: number }
+        Returns: undefined
       }
       store_wallet_balance: { Args: { _store_id: string }; Returns: number }
     }
