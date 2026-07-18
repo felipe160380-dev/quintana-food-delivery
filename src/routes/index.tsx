@@ -9,7 +9,7 @@ import { brl } from "@/lib/format";
 import { StoreRating } from "@/components/StoreRating";
 import {
   Search, Store as StoreIcon, Timer, Truck, Pizza, Sandwich, IceCream,
-  Coffee, Beef, Salad, Soup, CupSoda,
+  Beef, Salad, CupSoda, Pill, ShoppingBasket,
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({ component: Home });
@@ -25,10 +25,10 @@ const CATEGORIES = [
   { key: "Pizza", icon: Pizza },
   { key: "Lanche", icon: Sandwich },
   { key: "Hambúrguer", icon: Beef },
-  { key: "Japonesa", icon: Soup },
   { key: "Sobremesa", icon: IceCream },
-  { key: "Café", icon: Coffee },
-  { key: "Bebidas", icon: CupSoda },
+  { key: "Bebida", icon: CupSoda },
+  { key: "Farmácia", icon: Pill },
+  { key: "Mercado", icon: ShoppingBasket },
 ];
 
 function Home() {

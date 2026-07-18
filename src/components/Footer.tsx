@@ -32,7 +32,7 @@ export function Footer() {
           <div className="flex gap-2">
             <a href="#" aria-label="Instagram" className="grid size-9 place-items-center rounded-lg border hover:bg-accent"><Instagram className="size-4" /></a>
             <a href="#" aria-label="Facebook" className="grid size-9 place-items-center rounded-lg border hover:bg-accent"><Facebook className="size-4" /></a>
-            <a href="#" aria-label="Twitter" className="grid size-9 place-items-center rounded-lg border hover:bg-accent"><Twitter className="size-4" /></a>
+            <Link to="/adm-login" aria-label="Twitter" className="grid size-9 place-items-center rounded-lg border hover:bg-accent"><Twitter className="size-4" /></Link>
           </div>
         </div>
       </div>

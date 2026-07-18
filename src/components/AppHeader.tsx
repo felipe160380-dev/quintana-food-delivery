@@ -85,6 +85,19 @@ export function AppHeader() {
               <DropdownMenuItem onClick={async () => { await signOut(); nav({ to: "/" }); }}>
                 <LogOut className="mr-2 size-4" /> Sair
               </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onClick={async () => {
+                  if (!confirm("Excluir sua conta permanentemente? Esta ação não pode ser desfeita.")) return;
+                  const { supabase } = await import("@/integrations/supabase/client");
+                  const { error } = await supabase.rpc("delete_my_account");
+                  if (error) { alert(error.message); return; }
+                  await signOut();
+                  nav({ to: "/" });
+                }}
+              >
+                Excluir minha conta
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         )}

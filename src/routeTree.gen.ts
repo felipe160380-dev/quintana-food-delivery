@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AdmLoginRouteImport } from './routes/adm-login'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LojaSlugRouteImport } from './routes/loja.$slug'
@@ -23,11 +24,17 @@ import { Route as AuthenticatedPedidosIndexRouteImport } from './routes/_authent
 import { Route as AuthenticatedLojistaIndexRouteImport } from './routes/_authenticated/lojista/index'
 import { Route as AuthenticatedEntregadorIndexRouteImport } from './routes/_authenticated/entregador/index'
 import { Route as ApiPublicCourierApplicationRouteImport } from './routes/api/public/courier-application'
+import { Route as ApiPublicAdminEnsureRouteImport } from './routes/api/public/admin-ensure'
 import { Route as AuthenticatedPedidosIdRouteImport } from './routes/_authenticated/pedidos/$id'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdmLoginRoute = AdmLoginRouteImport.update({
+  id: '/adm-login',
+  path: '/adm-login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
@@ -100,6 +107,11 @@ const ApiPublicCourierApplicationRoute =
     path: '/api/public/courier-application',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicAdminEnsureRoute = ApiPublicAdminEnsureRouteImport.update({
+  id: '/api/public/admin-ensure',
+  path: '/api/public/admin-ensure',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedPedidosIdRoute = AuthenticatedPedidosIdRouteImport.update({
   id: '/pedidos/$id',
   path: '/pedidos/$id',
@@ -108,6 +120,7 @@ const AuthenticatedPedidosIdRoute = AuthenticatedPedidosIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/adm-login': typeof AdmLoginRoute
   '/auth': typeof AuthRoute
   '/adm': typeof AuthenticatedAdmRoute
   '/checkout': typeof AuthenticatedCheckoutRoute
@@ -117,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/tornar-se-lojista': typeof AuthenticatedTornarSeLojistaRoute
   '/loja/$slug': typeof LojaSlugRoute
   '/pedidos/$id': typeof AuthenticatedPedidosIdRoute
+  '/api/public/admin-ensure': typeof ApiPublicAdminEnsureRoute
   '/api/public/courier-application': typeof ApiPublicCourierApplicationRoute
   '/entregador/': typeof AuthenticatedEntregadorIndexRoute
   '/lojista/': typeof AuthenticatedLojistaIndexRoute
@@ -124,6 +138,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/adm-login': typeof AdmLoginRoute
   '/auth': typeof AuthRoute
   '/adm': typeof AuthenticatedAdmRoute
   '/checkout': typeof AuthenticatedCheckoutRoute
@@ -133,6 +148,7 @@ export interface FileRoutesByTo {
   '/tornar-se-lojista': typeof AuthenticatedTornarSeLojistaRoute
   '/loja/$slug': typeof LojaSlugRoute
   '/pedidos/$id': typeof AuthenticatedPedidosIdRoute
+  '/api/public/admin-ensure': typeof ApiPublicAdminEnsureRoute
   '/api/public/courier-application': typeof ApiPublicCourierApplicationRoute
   '/entregador': typeof AuthenticatedEntregadorIndexRoute
   '/lojista': typeof AuthenticatedLojistaIndexRoute
@@ -142,6 +158,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/adm-login': typeof AdmLoginRoute
   '/auth': typeof AuthRoute
   '/_authenticated/adm': typeof AuthenticatedAdmRoute
   '/_authenticated/checkout': typeof AuthenticatedCheckoutRoute
@@ -151,6 +168,7 @@ export interface FileRoutesById {
   '/_authenticated/tornar-se-lojista': typeof AuthenticatedTornarSeLojistaRoute
   '/loja/$slug': typeof LojaSlugRoute
   '/_authenticated/pedidos/$id': typeof AuthenticatedPedidosIdRoute
+  '/api/public/admin-ensure': typeof ApiPublicAdminEnsureRoute
   '/api/public/courier-application': typeof ApiPublicCourierApplicationRoute
   '/_authenticated/entregador/': typeof AuthenticatedEntregadorIndexRoute
   '/_authenticated/lojista/': typeof AuthenticatedLojistaIndexRoute
@@ -160,6 +178,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/adm-login'
     | '/auth'
     | '/adm'
     | '/checkout'
@@ -169,6 +188,7 @@ export interface FileRouteTypes {
     | '/tornar-se-lojista'
     | '/loja/$slug'
     | '/pedidos/$id'
+    | '/api/public/admin-ensure'
     | '/api/public/courier-application'
     | '/entregador/'
     | '/lojista/'
@@ -176,6 +196,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/adm-login'
     | '/auth'
     | '/adm'
     | '/checkout'
@@ -185,6 +206,7 @@ export interface FileRouteTypes {
     | '/tornar-se-lojista'
     | '/loja/$slug'
     | '/pedidos/$id'
+    | '/api/public/admin-ensure'
     | '/api/public/courier-application'
     | '/entregador'
     | '/lojista'
@@ -193,6 +215,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/adm-login'
     | '/auth'
     | '/_authenticated/adm'
     | '/_authenticated/checkout'
@@ -202,6 +225,7 @@ export interface FileRouteTypes {
     | '/_authenticated/tornar-se-lojista'
     | '/loja/$slug'
     | '/_authenticated/pedidos/$id'
+    | '/api/public/admin-ensure'
     | '/api/public/courier-application'
     | '/_authenticated/entregador/'
     | '/_authenticated/lojista/'
@@ -211,8 +235,10 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AdmLoginRoute: typeof AdmLoginRoute
   AuthRoute: typeof AuthRoute
   LojaSlugRoute: typeof LojaSlugRoute
+  ApiPublicAdminEnsureRoute: typeof ApiPublicAdminEnsureRoute
   ApiPublicCourierApplicationRoute: typeof ApiPublicCourierApplicationRoute
 }
 
@@ -223,6 +249,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/adm-login': {
+      id: '/adm-login'
+      path: '/adm-login'
+      fullPath: '/adm-login'
+      preLoaderRoute: typeof AdmLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -316,6 +349,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCourierApplicationRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/admin-ensure': {
+      id: '/api/public/admin-ensure'
+      path: '/api/public/admin-ensure'
+      fullPath: '/api/public/admin-ensure'
+      preLoaderRoute: typeof ApiPublicAdminEnsureRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/pedidos/$id': {
       id: '/_authenticated/pedidos/$id'
       path: '/pedidos/$id'
@@ -358,8 +398,10 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AdmLoginRoute: AdmLoginRoute,
   AuthRoute: AuthRoute,
   LojaSlugRoute: LojaSlugRoute,
+  ApiPublicAdminEnsureRoute: ApiPublicAdminEnsureRoute,
   ApiPublicCourierApplicationRoute: ApiPublicCourierApplicationRoute,
 }
 export const routeTree = rootRouteImport

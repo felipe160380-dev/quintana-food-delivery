@@ -110,11 +110,34 @@ export function LocationPicker({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready]);
 
+  function useCurrentLocation() {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition((pos) => {
+      const g = window.google;
+      const p = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      if (mapObj.current) { mapObj.current.setCenter(p); mapObj.current.setZoom(17); }
+      if (markerObj.current) markerObj.current.setPosition(p);
+      const geocoder = new g.maps.Geocoder();
+      geocoder.geocode({ location: p }, (res: any[], status: string) => {
+        if (status === "OK" && res[0]) {
+          const loc = parseAddress(res[0]);
+          if (inputRef.current) inputRef.current.value = loc.address_line;
+          onChange(loc);
+        }
+      });
+    }, () => {}, { enableHighAccuracy: true });
+  }
+
   return (
     <div className="space-y-2">
       <Input ref={inputRef} placeholder={placeholder} defaultValue={value?.address_line ?? ""} />
+      <div className="flex items-center justify-between gap-2">
+        <button type="button" onClick={useCurrentLocation} className="text-xs text-primary hover:underline">
+          📍 Usar minha localização atual
+        </button>
+        <p className="text-xs text-muted-foreground">Arraste o alfinete para ajustar.</p>
+      </div>
       <div ref={mapRef} className="h-56 w-full overflow-hidden rounded-lg border bg-muted" />
-      <p className="text-xs text-muted-foreground">Arraste o marcador para ajustar a localização exata.</p>
     </div>
   );
 }
