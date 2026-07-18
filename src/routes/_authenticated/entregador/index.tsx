@@ -123,7 +123,7 @@ function OrderCard({ o, mine, onUpdate }: { o: any; mine?: boolean; onUpdate: ()
         navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true, timeout: 5000 }));
       lat = pos.coords.latitude; lng = pos.coords.longitude;
     } catch {}
-    const { error } = await supabase.rpc("confirm_delivery", { _order_id: o.id, _code: code, _lat: lat, _lng: lng });
+    const { error } = await supabase.rpc("confirm_delivery", { _order_id: o.id, _code: code, _lat: lat ?? 0, _lng: lng ?? 0 });
     if (error) return toast.error(error.message);
     toast.success("Entrega confirmada!");
     setCode("");
