@@ -19,6 +19,7 @@ function Page() {
   const [mine, setMine] = useState<any[]>([]);
 
   const [blocked, setBlocked] = useState<string | null>(null);
+  const [rejected, setRejected] = useState(false);
 
   const load = async () => {
     const { data: u } = await supabase.auth.getUser();
@@ -31,6 +32,7 @@ function Page() {
       const label = st === "in_review" ? "em análise pela nossa equipe" : st === "rejected" ? "recusado" : "aguardando aprovação do administrador";
       let msg = `Seu cadastro de entregador está ${label}.`;
       if (st === "rejected" && c?.approval_note) msg += ` Motivo: ${c.approval_note}`;
+      setRejected(st === "rejected");
       setBlocked(msg); return;
     }
     setMe({ user: u.user, courier: c });
@@ -55,7 +57,19 @@ function Page() {
     <div className="mx-auto max-w-md p-10 text-center">
       <Bike className="mx-auto mb-2 size-10 text-muted-foreground" />
       <p className="text-sm text-muted-foreground">{blocked}</p>
-      <Button className="mt-4" onClick={() => nav({ to: "/auth" })}>Ir para login</Button>
+      {rejected && (
+        <Button
+          className="mt-4"
+          onClick={async () => {
+            const { error } = await supabase.rpc("courier_resubmit");
+            if (error) return toast.error(error.message);
+            toast.success("Cadastro reenviado. Aguarde nova análise.");
+            setRejected(false);
+            load();
+          }}
+        >Reenviar cadastro para nova análise</Button>
+      )}
+      <Button variant="outline" className="mt-2 ml-2" onClick={() => nav({ to: "/auth" })}>Ir para login</Button>
     </div>
   );
   if (!me) return <div className="p-10 text-center text-muted-foreground">Carregando...</div>;
