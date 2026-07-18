@@ -167,7 +167,7 @@ function CourierRating({ orderId, initial }: { orderId: string; initial: number 
         className="mt-2 w-full"
         disabled={rating < 1}
         onClick={async () => {
-          const { error } = await supabase.rpc("rate_courier", { _order_id: orderId, _rating: rating, _comment: comment || null });
+          const { error } = await supabase.rpc("rate_courier", { _order_id: orderId, _rating: rating, _comment: comment || "" });
           if (error) return toast.error(error.message);
           toast.success("Obrigado pela avaliação!");
           setSaved(true);
