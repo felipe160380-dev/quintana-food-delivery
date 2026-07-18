@@ -105,6 +105,7 @@ function Page() {
 }
 
 function OrderCard({ o, mine, onUpdate }: { o: any; mine?: boolean; onUpdate: () => void }) {
+  const [code, setCode] = useState("");
   const addr = o.address_snapshot ?? {};
   const accept = async () => {
     const { data: u } = await supabase.auth.getUser();
@@ -114,10 +115,18 @@ function OrderCard({ o, mine, onUpdate }: { o: any; mine?: boolean; onUpdate: ()
     toast.success("Entrega aceita!");
     onUpdate();
   };
-  const deliver = async () => {
-    const { error } = await supabase.from("orders").update({ status: "delivered" }).eq("id", o.id);
+  const confirmDeliver = async () => {
+    if (code.length !== 4) return toast.error("Informe o código de 4 dígitos do cliente");
+    let lat: number | null = null, lng: number | null = null;
+    try {
+      const pos = await new Promise<GeolocationPosition>((res, rej) =>
+        navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true, timeout: 5000 }));
+      lat = pos.coords.latitude; lng = pos.coords.longitude;
+    } catch {}
+    const { error } = await supabase.rpc("confirm_delivery", { _order_id: o.id, _code: code, _lat: lat, _lng: lng });
     if (error) return toast.error(error.message);
-    toast.success("Pedido entregue");
+    toast.success("Entrega confirmada!");
+    setCode("");
     onUpdate();
   };
 
@@ -136,9 +145,21 @@ function OrderCard({ o, mine, onUpdate }: { o: any; mine?: boolean; onUpdate: ()
         <div className="flex flex-col items-end gap-1">
           <Button asChild size="sm" variant="outline"><Link to="/pedidos/$id" params={{ id: o.id }}>Abrir</Link></Button>
           {!mine && <Button size="sm" onClick={accept}>Aceitar</Button>}
-          {mine && o.status === "out_for_delivery" && <Button size="sm" onClick={deliver}>Marcar como entregue</Button>}
         </div>
       </div>
+      {mine && o.status === "out_for_delivery" && (
+        <div className="mt-3 flex items-center gap-2 border-t pt-3">
+          <input
+            value={code}
+            onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 4))}
+            placeholder="Código"
+            inputMode="numeric"
+            className="w-24 rounded-md border bg-background px-3 py-2 text-center text-lg font-mono tracking-widest"
+          />
+          <Button size="sm" onClick={confirmDeliver}>Confirmar entrega</Button>
+          <span className="text-xs text-muted-foreground">Peça ao cliente os 4 dígitos.</span>
+        </div>
+      )}
     </Card>
   );
 }
