@@ -148,3 +148,31 @@ function Page() {
     </div>
   );
 }
+
+function CourierRating({ orderId, initial }: { orderId: string; initial: number | null }) {
+  const [rating, setRating] = useState<number>(initial ?? 0);
+  const [comment, setComment] = useState("");
+  const [saved, setSaved] = useState(!!initial);
+  if (saved) return <Card className="p-4 text-center text-sm text-muted-foreground">✅ Você avaliou o entregador.</Card>;
+  return (
+    <Card className="p-4">
+      <div className="mb-2 text-sm font-semibold">Avalie o entregador</div>
+      <div className="mb-2 flex gap-1">
+        {[1,2,3,4,5].map((n) => (
+          <button key={n} type="button" onClick={() => setRating(n)} className={`text-2xl ${n <= rating ? "text-primary" : "text-muted-foreground"}`}>★</button>
+        ))}
+      </div>
+      <Input placeholder="Comentário (opcional)" value={comment} onChange={(e) => setComment(e.target.value)} />
+      <Button
+        className="mt-2 w-full"
+        disabled={rating < 1}
+        onClick={async () => {
+          const { error } = await supabase.rpc("rate_courier", { _order_id: orderId, _rating: rating, _comment: comment || null });
+          if (error) return toast.error(error.message);
+          toast.success("Obrigado pela avaliação!");
+          setSaved(true);
+        }}
+      >Enviar avaliação</Button>
+    </Card>
+  );
+}
