@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
@@ -181,14 +181,14 @@ function SignUp({ onDone }: { onDone: (r: Role) => void }) {
   const [loading, setLoading] = useState(false);
 
   // Cidades ativas (para entregador escolher onde vai atuar)
-  useState(() => {
+  useEffect(() => {
     supabase.from("cities").select("id,name,state").eq("is_active", true).order("name").then(({ data }) => {
       const list = (data ?? []) as { id: string; name: string; state: string }[];
       setCities(list);
-      if (list.length > 0) setCityId((prev) => prev || list[0].id);
+      setCityId((prev) => prev || list[0]?.id || "");
     });
-    return undefined;
-  });
+  }, []);
+
 
 
 
