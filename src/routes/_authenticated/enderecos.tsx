@@ -107,7 +107,7 @@ function AddressForm({ onSaved }: { onSaved: () => void }) {
       onSaved();
     }}>
       <div className="space-y-1.5"><Label>Apelido</Label><Input value={label} onChange={(e) => setLabel(e.target.value)} /></div>
-      <LocationPicker value={loc} onChange={setLoc} />
+      <LocationPicker value={loc} onChange={handleLoc} />
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5"><Label>Número</Label><Input value={number} onChange={(e) => setNumber(e.target.value)} /></div>
         <div className="space-y-1.5"><Label>Complemento</Label><Input value={complement} onChange={(e) => setComplement(e.target.value)} /></div>
