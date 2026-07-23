@@ -7,9 +7,11 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { brl } from "@/lib/format";
 import { StoreRating } from "@/components/StoreRating";
+import { useCurrentCity } from "@/hooks/use-current-city";
+import { CityGate } from "@/components/CityGate";
 import {
   Search, Store as StoreIcon, Timer, Truck, Pizza, Sandwich, IceCream,
-  Beef, Salad, CupSoda, Pill, ShoppingBasket,
+  Beef, Salad, CupSoda, Pill, ShoppingBasket, MapPin,
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({ component: Home });
@@ -36,15 +38,24 @@ function Home() {
   const [q, setQ] = useState("");
   const [cat, setCat] = useState("Todos");
   const [loading, setLoading] = useState(true);
+  const { cityId, cities, needsPick, pick } = useCurrentCity();
+  const currentCity = useMemo(
+    () => (cities ?? []).find((c) => c.id === cityId) ?? null,
+    [cities, cityId],
+  );
 
   useEffect(() => {
+    if (!cityId) { setStores([]); setLoading(false); return; }
+    setLoading(true);
     supabase
       .from("stores")
       .select("id,name,slug,description,category,logo_url,cover_url,delivery_fee,prep_time_min,is_online")
       .eq("is_online", true)
+      .eq("city_id", cityId)
       .order("name")
       .then(({ data }) => { setStores((data ?? []) as Store[]); setLoading(false); });
-  }, []);
+  }, [cityId]);
+
 
   const filtered = useMemo(() => {
     const query = q.toLowerCase();
