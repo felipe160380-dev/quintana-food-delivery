@@ -79,6 +79,13 @@ function AddressForm({ onSaved }: { onSaved: () => void }) {
   const [complement, setComplement] = useState("");
   const [saving, setSaving] = useState(false);
 
+  const handleLoc = (l: PickedLocation) => {
+    setLoc(l);
+    // Se o Google trouxe o número da rua, pré-preenche (usuário pode editar).
+    if (l.street_number) setNumber(l.street_number);
+  };
+
+
   return (
     <form className="space-y-3" onSubmit={async (e) => {
       e.preventDefault();
