@@ -176,7 +176,21 @@ function SignUp({ onDone }: { onDone: (r: Role) => void }) {
   const [document, setDocument] = useState("");
   const [vehicle, setVehicle] = useState<"bike" | "motorcycle" | "car" | "foot">("motorcycle");
   const [plate, setPlate] = useState("");
+  const [cityId, setCityId] = useState<string>("");
+  const [cities, setCities] = useState<{ id: string; name: string; state: string }[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // Cidades ativas (para entregador escolher onde vai atuar)
+  useState(() => {
+    supabase.from("cities").select("id,name,state").eq("is_active", true).order("name").then(({ data }) => {
+      const list = (data ?? []) as { id: string; name: string; state: string }[];
+      setCities(list);
+      if (list.length > 0) setCityId((prev) => prev || list[0].id);
+    });
+    return undefined;
+  });
+
+
 
   return (
     <form
