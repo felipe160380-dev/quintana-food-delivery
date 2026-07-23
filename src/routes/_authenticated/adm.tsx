@@ -527,3 +527,92 @@ function StatusBadge({ status }: { status: string }) {
   const it = map[status] ?? { variant: "secondary", label: status };
   return <Badge variant={it.variant as any} className="ml-1">{it.label}</Badge>;
 }
+
+// ============ Cities ============
+type CityRow = { id: string; name: string; state: string; slug: string; is_active: boolean; created_at: string };
+
+function slugifyCity(v: string) {
+  return v.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
+}
+
+function CitiesTab() {
+  const [rows, setRows] = useState<CityRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [name, setName] = useState("");
+  const [state, setState] = useState("SP");
+  const [saving, setSaving] = useState(false);
+
+  const load = async () => {
+    setLoading(true);
+    const { data } = await supabase.from("cities").select("id,name,state,slug,is_active,created_at").order("name");
+    setRows((data ?? []) as CityRow[]);
+    setLoading(false);
+  };
+  useEffect(() => { load(); }, []);
+
+  const create = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !state.trim()) return;
+    setSaving(true);
+    const slug = slugifyCity(`${name}-${state}`);
+    const { error } = await supabase.from("cities").insert({ name: name.trim(), state: state.trim().toUpperCase(), slug });
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success("Cidade cadastrada");
+    setName(""); setState("SP"); load();
+  };
+
+  const toggle = async (row: CityRow) => {
+    const { error } = await supabase.from("cities").update({ is_active: !row.is_active }).eq("id", row.id);
+    if (error) return toast.error(error.message);
+    load();
+  };
+
+  const remove = async (row: CityRow) => {
+    if (!confirm(`Remover a cidade ${row.name}? Só é possível se não houver lojas, entregadores ou pedidos vinculados.`)) return;
+    const { error } = await supabase.from("cities").delete().eq("id", row.id);
+    if (error) return toast.error(error.message);
+    toast.success("Cidade removida");
+    load();
+  };
+
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader><CardTitle className="text-base">Nova cidade</CardTitle></CardHeader>
+        <CardContent>
+          <form onSubmit={create} className="grid gap-3 sm:grid-cols-[1fr_120px_auto]">
+            <Input placeholder="Nome (ex: São Paulo)" value={name} onChange={(e) => setName(e.target.value)} required />
+            <Input placeholder="UF" value={state} onChange={(e) => setState(e.target.value)} maxLength={2} required />
+            <Button type="submit" disabled={saving}>{saving ? "Salvando..." : "Adicionar"}</Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      {loading ? (
+        <div className="flex justify-center py-8"><Loader2 className="animate-spin" /></div>
+      ) : rows.length === 0 ? (
+        <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">Nenhuma cidade cadastrada.</CardContent></Card>
+      ) : (
+        <div className="grid gap-2">
+          {rows.map((r) => (
+            <Card key={r.id}>
+              <CardContent className="flex items-center gap-3 py-3">
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium">{r.name} <span className="text-xs text-muted-foreground">/ {r.state}</span></div>
+                  <div className="text-xs text-muted-foreground">slug: {r.slug}</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">{r.is_active ? "Ativa" : "Inativa"}</span>
+                  <Switch checked={r.is_active} onCheckedChange={() => toggle(r)} />
+                  <Button size="sm" variant="ghost" onClick={() => remove(r)}><Trash2 className="w-4 h-4" /></Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
