@@ -208,14 +208,16 @@ function SignUp({ onDone }: { onDone: (r: Role) => void }) {
           await supabase.from("user_roles").insert({ user_id: data.user.id, role });
         }
         if (role === "courier") {
+          if (!cityId) { setLoading(false); return toast.error("Escolha a cidade de atuação"); }
           await supabase.from("couriers").insert({
             id: data.user.id, document, vehicle, vehicle_plate: plate, approval_status: "pending",
+            city_id: cityId,
           });
           // Send approval-request notification (best-effort)
           try {
             await fetch("/api/public/courier-application", {
               method: "POST", headers: { "content-type": "application/json" },
-              body: JSON.stringify({ user_id: data.user.id, full_name: fullName, email, phone, document, vehicle, plate }),
+              body: JSON.stringify({ user_id: data.user.id, full_name: fullName, email, phone, document, vehicle, plate, city_id: cityId }),
             });
           } catch {}
           setLoading(false);
@@ -256,6 +258,17 @@ function SignUp({ onDone }: { onDone: (r: Role) => void }) {
       {role === "courier" && (
         <div className="space-y-3 rounded-lg border border-primary/30 bg-primary/5 p-3">
           <p className="text-xs text-muted-foreground">Dados do entregador (serão enviados para aprovação).</p>
+          <div className="space-y-1.5">
+            <Label>Cidade de atuação</Label>
+            <Select value={cityId} onValueChange={setCityId}>
+              <SelectTrigger><SelectValue placeholder="Selecione a cidade" /></SelectTrigger>
+              <SelectContent>
+                {cities.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>{c.name} / {c.state}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <div className="space-y-1.5"><Label>CPF</Label><Input value={document} onChange={(e) => setDocument(e.target.value)} required /></div>
           <div className="space-y-1.5">
             <Label>Veículo</Label>
