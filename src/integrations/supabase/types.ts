@@ -65,11 +65,42 @@ export type Database = {
         }
         Relationships: []
       }
+      cities: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          slug: string
+          state: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          slug: string
+          state: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          slug?: string
+          state?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       couriers: {
         Row: {
           approval_note: string | null
           approval_status: Database["public"]["Enums"]["courier_approval_status"]
           approved_at: string | null
+          city_id: string
           created_at: string
           current_lat: number | null
           current_lng: number | null
@@ -85,6 +116,7 @@ export type Database = {
           approval_note?: string | null
           approval_status?: Database["public"]["Enums"]["courier_approval_status"]
           approved_at?: string | null
+          city_id: string
           created_at?: string
           current_lat?: number | null
           current_lng?: number | null
@@ -100,6 +132,7 @@ export type Database = {
           approval_note?: string | null
           approval_status?: Database["public"]["Enums"]["courier_approval_status"]
           approved_at?: string | null
+          city_id?: string
           created_at?: string
           current_lat?: number | null
           current_lng?: number | null
@@ -111,7 +144,15 @@ export type Database = {
           vehicle?: Database["public"]["Enums"]["vehicle_type"]
           vehicle_plate?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "couriers_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       messages: {
         Row: {
@@ -229,6 +270,7 @@ export type Database = {
         Row: {
           address_snapshot: Json
           change_for: number | null
+          city_id: string
           courier_comment: string | null
           courier_id: string | null
           courier_rating: number | null
@@ -252,6 +294,7 @@ export type Database = {
         Insert: {
           address_snapshot: Json
           change_for?: number | null
+          city_id: string
           courier_comment?: string | null
           courier_id?: string | null
           courier_rating?: number | null
@@ -275,6 +318,7 @@ export type Database = {
         Update: {
           address_snapshot?: Json
           change_for?: number | null
+          city_id?: string
           courier_comment?: string | null
           courier_id?: string | null
           courier_rating?: number | null
@@ -296,6 +340,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "orders_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "orders_store_id_fkey"
             columns: ["store_id"]
@@ -727,6 +778,7 @@ export type Database = {
           approved_at: string | null
           category: string | null
           city: string | null
+          city_id: string
           cnpj: string | null
           cover_url: string | null
           created_at: string
@@ -763,6 +815,7 @@ export type Database = {
           approved_at?: string | null
           category?: string | null
           city?: string | null
+          city_id: string
           cnpj?: string | null
           cover_url?: string | null
           created_at?: string
@@ -799,6 +852,7 @@ export type Database = {
           approved_at?: string | null
           category?: string | null
           city?: string | null
+          city_id?: string
           cnpj?: string | null
           cover_url?: string | null
           created_at?: string
@@ -824,7 +878,15 @@ export type Database = {
           updated_at?: string
           whatsapp?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "stores_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
