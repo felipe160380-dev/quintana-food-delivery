@@ -61,11 +61,13 @@ function Page() {
     const addr = addrs.find((a) => a.id === addrId);
     if (!addr) return toast.error("Selecione um endereço de entrega");
     if (subtotal < Number(store?.min_order ?? 0)) return toast.error(`Pedido mínimo ${brl(Number(store.min_order))}`);
+    if (!store?.city_id) return toast.error("Loja sem cidade cadastrada");
     setPlacing(true);
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) { setPlacing(false); return; }
     const { data: order, error } = await supabase.from("orders").insert({
       customer_id: u.user.id, store_id: state.storeId!,
+      city_id: store.city_id as string,
       address_snapshot: addr,
       subtotal, delivery_fee: deliveryFee, total,
       payment_method: method,

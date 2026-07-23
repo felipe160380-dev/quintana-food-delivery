@@ -38,7 +38,7 @@ function Page() {
     setMe({ user: u.user, courier: c });
     setAvailable(!!c?.is_available);
 
-    const { data: r } = await supabase.from("orders").select("*, store:stores(name,logo_url,address_line,latitude,longitude)").eq("status", "ready").is("courier_id", null).order("created_at");
+    const { data: r } = await supabase.from("orders").select("*, store:stores(name,logo_url,address_line,latitude,longitude)").eq("status", "ready").eq("city_id", c.city_id).is("courier_id", null).order("created_at");
     setReady(r ?? []);
     const { data: m } = await supabase.from("orders").select("*, store:stores(name,logo_url)").eq("courier_id", u.user.id).in("status", ["ready", "out_for_delivery"]).order("created_at");
     setMine(m ?? []);

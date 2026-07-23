@@ -7,9 +7,11 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { brl } from "@/lib/format";
 import { StoreRating } from "@/components/StoreRating";
+import { useCurrentCity } from "@/hooks/use-current-city";
+import { CityGate } from "@/components/CityGate";
 import {
   Search, Store as StoreIcon, Timer, Truck, Pizza, Sandwich, IceCream,
-  Beef, Salad, CupSoda, Pill, ShoppingBasket,
+  Beef, Salad, CupSoda, Pill, ShoppingBasket, MapPin,
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({ component: Home });
@@ -36,15 +38,24 @@ function Home() {
   const [q, setQ] = useState("");
   const [cat, setCat] = useState("Todos");
   const [loading, setLoading] = useState(true);
+  const { cityId, cities, needsPick, pick } = useCurrentCity();
+  const currentCity = useMemo(
+    () => (cities ?? []).find((c) => c.id === cityId) ?? null,
+    [cities, cityId],
+  );
 
   useEffect(() => {
+    if (!cityId) { setStores([]); setLoading(false); return; }
+    setLoading(true);
     supabase
       .from("stores")
       .select("id,name,slug,description,category,logo_url,cover_url,delivery_fee,prep_time_min,is_online")
       .eq("is_online", true)
+      .eq("city_id", cityId)
       .order("name")
       .then(({ data }) => { setStores((data ?? []) as Store[]); setLoading(false); });
-  }, []);
+  }, [cityId]);
+
 
   const filtered = useMemo(() => {
     const query = q.toLowerCase();
@@ -70,6 +81,15 @@ function Home() {
           <p className="mt-2 max-w-lg text-primary-foreground/90">
             Explore as lojas online agora na sua região.
           </p>
+          {currentCity && (cities?.length ?? 0) >= 2 && (
+            <button
+              type="button"
+              onClick={() => pick("")}
+              className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-primary-foreground hover:bg-white/25"
+            >
+              <MapPin className="size-3.5" /> {currentCity.name} / {currentCity.state} · trocar
+            </button>
+          )}
           <div className="mt-5 flex items-center gap-2 rounded-2xl bg-background/95 p-1.5 shadow-lg shadow-black/10">
             <Search className="ml-2 size-4 text-muted-foreground" />
             <Input
@@ -81,6 +101,8 @@ function Home() {
           </div>
         </div>
       </section>
+
+      <CityGate open={needsPick || (cityId === null && (cities?.length ?? 0) > 1)} cities={cities ?? []} onPick={pick} />
 
       <section className="mx-auto max-w-6xl px-4 pt-6">
         <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
