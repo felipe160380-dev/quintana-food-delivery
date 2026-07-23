@@ -33,20 +33,70 @@ export type PickedLocation = {
   state?: string;
   postal_code?: string;
   neighborhood?: string;
+  route?: string;
+  street_number?: string;
 };
 
 function parseAddress(place: any): PickedLocation {
   const c = place.address_components ?? [];
   const get = (t: string) => c.find((x: any) => x.types.includes(t))?.long_name ?? "";
+  const getShort = (t: string) => c.find((x: any) => x.types.includes(t))?.short_name ?? "";
   return {
     address_line: place.formatted_address ?? "",
     latitude: place.geometry.location.lat(),
     longitude: place.geometry.location.lng(),
     city: get("administrative_area_level_2") || get("locality"),
-    state: get("administrative_area_level_1"),
+    state: getShort("administrative_area_level_1") || get("administrative_area_level_1"),
     postal_code: get("postal_code"),
     neighborhood: get("sublocality") || get("sublocality_level_1") || get("neighborhood"),
+    route: get("route"),
+    street_number: get("street_number"),
   };
+}
+
+/**
+ * Faz o dropdown .pac-container do Google Places funcionar dentro de um
+ * <Dialog> do Radix. Sem isso:
+ * - Radix aplica pointer-events:none no body e intercepta pointerdown fora
+ *   do content, roubando o clique da sugestão e fechando o dropdown.
+ * - O focus trap do Dialog rouba o foco do input quando o mouse entra na
+ *   sugestão, disparando place_changed com objeto vazio.
+ * Estratégia: observar o body até o .pac-container aparecer e neutralizar
+ * a propagação de pointer/mouse/touch antes que o Radix veja o evento.
+ */
+function attachPacInteractionFix(): () => void {
+  if (typeof document === "undefined") return () => {};
+  const patched = new WeakSet<HTMLElement>();
+
+  const stop = (e: Event) => {
+    // Impede o Radix Dialog/Popover de tratar como "click outside".
+    e.stopPropagation();
+  };
+
+  const patch = (el: HTMLElement) => {
+    if (patched.has(el)) return;
+    patched.add(el);
+    el.style.pointerEvents = "auto";
+    // touchstart precisa ser não-passivo em iOS para stopPropagation valer.
+    el.addEventListener("pointerdown", stop, true);
+    el.addEventListener("mousedown", stop, true);
+    el.addEventListener("touchstart", stop, { capture: true, passive: true });
+    el.addEventListener("click", stop, true);
+  };
+
+  document.querySelectorAll<HTMLElement>(".pac-container").forEach(patch);
+
+  const mo = new MutationObserver((mutations) => {
+    for (const m of mutations) {
+      m.addedNodes.forEach((n) => {
+        if (!(n instanceof HTMLElement)) return;
+        if (n.classList?.contains("pac-container")) patch(n);
+        n.querySelectorAll?.<HTMLElement>(".pac-container").forEach(patch);
+      });
+    }
+  });
+  mo.observe(document.body, { childList: true, subtree: true });
+  return () => mo.disconnect();
 }
 
 export function LocationPicker({
@@ -107,6 +157,22 @@ export function LocationPicker({
         }
       });
     });
+
+    // Impede Enter no input de submeter o form antes de escolher sugestão.
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Enter") {
+        const pac = document.querySelector(".pac-container");
+        if (pac && (pac as HTMLElement).offsetParent !== null) e.preventDefault();
+      }
+    };
+    inputRef.current.addEventListener("keydown", onKeyDown);
+
+    const detach = attachPacInteractionFix();
+
+    return () => {
+      detach();
+      inputRef.current?.removeEventListener("keydown", onKeyDown);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready]);
 
@@ -130,7 +196,14 @@ export function LocationPicker({
 
   return (
     <div className="space-y-2">
-      <Input ref={inputRef} placeholder={placeholder} defaultValue={value?.address_line ?? ""} />
+      <Input
+        ref={inputRef}
+        placeholder={placeholder}
+        defaultValue={value?.address_line ?? ""}
+        autoComplete="off"
+        // Evita que o Radix Dialog trate a interação com as sugestões como "clique fora"
+        onPointerDownCapture={(e) => e.stopPropagation()}
+      />
       <div className="flex items-center justify-between gap-2">
         <button type="button" onClick={useCurrentLocation} className="text-xs text-primary hover:underline">
           📍 Usar minha localização atual
