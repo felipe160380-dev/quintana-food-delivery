@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ImageUpload } from "@/components/ImageUpload";
 import { LocationPicker, type PickedLocation } from "@/components/LocationPicker";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { brl, orderStatusLabel, slugify } from "@/lib/format";
 import { toast } from "sonner";
 import {
@@ -184,7 +185,7 @@ function StoreCreate({ onCreated }: { onCreated: () => void }) {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    sb.from("cities").select("id,name,state").eq("is_active", true).order("name").then(({ data }) => {
+    sb.from("cities").select("id,name,state").eq("is_active", true).order("name").then(({ data }: { data: { id: string; name: string; state: string }[] | null }) => {
       const list = (data ?? []) as { id: string; name: string; state: string }[];
       setCities(list);
       setCityId((prev) => prev || list[0]?.id || "");
