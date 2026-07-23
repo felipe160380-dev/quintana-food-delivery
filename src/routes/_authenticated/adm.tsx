@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Loader2, ShieldCheck, Store as StoreIcon, Users, Bike, ClipboardList, Wallet } from "lucide-react";
+import { Loader2, ShieldCheck, Store as StoreIcon, Users, Bike, ClipboardList, Wallet, MapPin, Trash2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 export const Route = createFileRoute("/_authenticated/adm")({
   component: AdminPanel,
@@ -103,13 +104,14 @@ function AdminPanel() {
       </header>
 
       <Tabs defaultValue="dashboard">
-        <TabsList className="grid grid-cols-3 md:grid-cols-6 mb-4">
+        <TabsList className="grid grid-cols-3 md:grid-cols-7 mb-4">
           <TabsTrigger value="dashboard">Visão</TabsTrigger>
           <TabsTrigger value="couriers"><Bike className="w-4 h-4 mr-1" />Entregadores</TabsTrigger>
           <TabsTrigger value="stores"><StoreIcon className="w-4 h-4 mr-1" />Lojas</TabsTrigger>
           <TabsTrigger value="orders"><ClipboardList className="w-4 h-4 mr-1" />Pedidos</TabsTrigger>
           <TabsTrigger value="users"><Users className="w-4 h-4 mr-1" />Usuários</TabsTrigger>
           <TabsTrigger value="withdrawals"><Wallet className="w-4 h-4 mr-1" />Saques</TabsTrigger>
+          <TabsTrigger value="cities"><MapPin className="w-4 h-4 mr-1" />Cidades</TabsTrigger>
         </TabsList>
 
         <TabsContent value="dashboard"><DashboardTab /></TabsContent>
@@ -118,6 +120,7 @@ function AdminPanel() {
         <TabsContent value="orders"><OrdersTab /></TabsContent>
         <TabsContent value="users"><UsersTab /></TabsContent>
         <TabsContent value="withdrawals"><WithdrawalsTab /></TabsContent>
+        <TabsContent value="cities"><CitiesTab /></TabsContent>
       </Tabs>
     </div>
   );
