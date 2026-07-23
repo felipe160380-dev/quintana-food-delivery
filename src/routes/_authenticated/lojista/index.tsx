@@ -179,7 +179,18 @@ function Page() {
 function StoreCreate({ onCreated }: { onCreated: () => void }) {
   const [name, setName] = useState("");
   const [cnpj, setCnpj] = useState("");
+  const [cityId, setCityId] = useState<string>("");
+  const [cities, setCities] = useState<{ id: string; name: string; state: string }[]>([]);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    sb.from("cities").select("id,name,state").eq("is_active", true).order("name").then(({ data }) => {
+      const list = (data ?? []) as { id: string; name: string; state: string }[];
+      setCities(list);
+      setCityId((prev) => prev || list[0]?.id || "");
+    });
+  }, []);
+
   return (
     <div className="mx-auto max-w-md px-4 py-10">
       <Card>
@@ -187,12 +198,13 @@ function StoreCreate({ onCreated }: { onCreated: () => void }) {
         <CardContent>
           <form className="space-y-4" onSubmit={async (e) => {
             e.preventDefault();
+            if (!cityId) return toast.error("Selecione a cidade da loja");
             setSaving(true);
             const { data: u } = await supabase.auth.getUser();
             if (!u.user) return;
             const base = slugify(name);
             const slug = `${base}-${Math.random().toString(36).slice(2, 6)}`;
-            const { error } = await sb.from("stores").insert({ owner_id: u.user.id, name, slug, cnpj });
+            const { error } = await sb.from("stores").insert({ owner_id: u.user.id, name, slug, cnpj, city_id: cityId });
             setSaving(false);
             if (error) return toast.error(error.message);
             toast.success("Loja criada! Complete os dados para ficar online.");
@@ -200,6 +212,15 @@ function StoreCreate({ onCreated }: { onCreated: () => void }) {
           }}>
             <div className="space-y-1.5"><Label>Nome da loja</Label><Input value={name} onChange={(e) => setName(e.target.value)} required /></div>
             <div className="space-y-1.5"><Label>CNPJ</Label><Input value={cnpj} onChange={(e) => setCnpj(e.target.value)} placeholder="00.000.000/0000-00" required /></div>
+            <div className="space-y-1.5">
+              <Label>Cidade de atuação</Label>
+              <Select value={cityId} onValueChange={setCityId}>
+                <SelectTrigger><SelectValue placeholder="Selecione a cidade" /></SelectTrigger>
+                <SelectContent>
+                  {cities.map((c) => (<SelectItem key={c.id} value={c.id}>{c.name} / {c.state}</SelectItem>))}
+                </SelectContent>
+              </Select>
+            </div>
             <Button className="w-full" type="submit" disabled={saving}>{saving ? "Criando..." : "Criar loja"}</Button>
           </form>
         </CardContent>
