@@ -145,7 +145,7 @@ export const createCardForOrder = createServerFn({ method: "POST" })
         payment_method: mp.payment_method_id ?? "card",
         payment_type: mp.payment_type_id ?? "credit_card",
         paid_at: mp.date_approved,
-        raw: mp as unknown as Record<string, unknown>,
+        raw: mp as any,
       },
       { onConflict: "provider,external_id" },
     );
