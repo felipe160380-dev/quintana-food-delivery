@@ -200,6 +200,28 @@ function Page() {
       <Button size="lg" className="w-full" onClick={placeOrder} disabled={placing || !addrId}>
         {placing ? "Enviando..." : `Fazer pedido — ${brl(total)}`}
       </Button>
+
+      {payDialog && (
+        <MpPaymentDialog
+          orderId={payDialog.orderId}
+          amount={payDialog.amount}
+          mode={payDialog.mode}
+          onPaid={() => {
+            const id = payDialog.orderId;
+            setPayDialog(null);
+            clear();
+            toast.success("Pedido confirmado!");
+            nav({ to: "/pedidos/$id", params: { id } });
+          }}
+          onClose={() => {
+            const id = payDialog.orderId;
+            setPayDialog(null);
+            clear();
+            toast.message("Você pode concluir o pagamento na tela do pedido.");
+            nav({ to: "/pedidos/$id", params: { id } });
+          }}
+        />
+      )}
     </div>
   );
 }
