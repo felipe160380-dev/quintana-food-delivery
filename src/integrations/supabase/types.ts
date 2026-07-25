@@ -399,6 +399,9 @@ export type Database = {
           external_id: string | null
           id: string
           order_id: string
+          paid_at: string | null
+          payment_method: string | null
+          payment_type: string | null
           provider: string
           raw: Json | null
           status: Database["public"]["Enums"]["payment_status"]
@@ -410,6 +413,9 @@ export type Database = {
           external_id?: string | null
           id?: string
           order_id: string
+          paid_at?: string | null
+          payment_method?: string | null
+          payment_type?: string | null
           provider: string
           raw?: Json | null
           status?: Database["public"]["Enums"]["payment_status"]
@@ -421,6 +427,9 @@ export type Database = {
           external_id?: string | null
           id?: string
           order_id?: string
+          paid_at?: string | null
+          payment_method?: string | null
+          payment_type?: string | null
           provider?: string
           raw?: Json | null
           status?: Database["public"]["Enums"]["payment_status"]
