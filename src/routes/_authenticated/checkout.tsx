@@ -28,6 +28,7 @@ function Page() {
   const [notes, setNotes] = useState("");
   const [changeFor, setChangeFor] = useState("");
   const [placing, setPlacing] = useState(false);
+  const [payDialog, setPayDialog] = useState<{ orderId: string; amount: number; mode: MpMode } | null>(null);
 
   useEffect(() => {
     if (!state.storeId) return;
