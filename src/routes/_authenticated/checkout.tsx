@@ -94,6 +94,12 @@ function Page() {
     }
     setPlacing(false);
 
+    if (method === "pix" || method === "card_online") {
+      // Abre pagamento Mercado Pago; carrinho só é limpo após confirmação/fechamento.
+      setPayDialog({ orderId: order!.id, amount: total, mode: method === "pix" ? "pix" : "card" });
+      return;
+    }
+
     clear();
     toast.success("Pedido enviado!");
     nav({ to: "/pedidos/$id", params: { id: order!.id } });
