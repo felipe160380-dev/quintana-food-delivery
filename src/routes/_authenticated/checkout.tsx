@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Minus, Plus, ShoppingBag, MapPin } from "lucide-react";
+import { MpPaymentDialog, type MpMode } from "@/components/MpPaymentDialog";
 
 export const Route = createFileRoute("/_authenticated/checkout")({ component: Page });
 
@@ -27,6 +28,7 @@ function Page() {
   const [notes, setNotes] = useState("");
   const [changeFor, setChangeFor] = useState("");
   const [placing, setPlacing] = useState(false);
+  const [payDialog, setPayDialog] = useState<{ orderId: string; amount: number; mode: MpMode } | null>(null);
 
   useEffect(() => {
     if (!state.storeId) return;
@@ -91,6 +93,12 @@ function Page() {
       inserted.push({ id: oi!.id });
     }
     setPlacing(false);
+
+    if (method === "pix" || method === "card_online") {
+      // Abre pagamento Mercado Pago; carrinho só é limpo após confirmação/fechamento.
+      setPayDialog({ orderId: order!.id, amount: total, mode: method === "pix" ? "pix" : "card" });
+      return;
+    }
 
     clear();
     toast.success("Pedido enviado!");
@@ -192,6 +200,28 @@ function Page() {
       <Button size="lg" className="w-full" onClick={placeOrder} disabled={placing || !addrId}>
         {placing ? "Enviando..." : `Fazer pedido — ${brl(total)}`}
       </Button>
+
+      {payDialog && (
+        <MpPaymentDialog
+          orderId={payDialog.orderId}
+          amount={payDialog.amount}
+          mode={payDialog.mode}
+          onPaid={() => {
+            const id = payDialog.orderId;
+            setPayDialog(null);
+            clear();
+            toast.success("Pedido confirmado!");
+            nav({ to: "/pedidos/$id", params: { id } });
+          }}
+          onClose={() => {
+            const id = payDialog.orderId;
+            setPayDialog(null);
+            clear();
+            toast.message("Você pode concluir o pagamento na tela do pedido.");
+            nav({ to: "/pedidos/$id", params: { id } });
+          }}
+        />
+      )}
     </div>
   );
 }
