@@ -23,6 +23,7 @@ import { Route as AuthenticatedAdmRouteImport } from './routes/_authenticated/ad
 import { Route as AuthenticatedPedidosIndexRouteImport } from './routes/_authenticated/pedidos/index'
 import { Route as AuthenticatedLojistaIndexRouteImport } from './routes/_authenticated/lojista/index'
 import { Route as AuthenticatedEntregadorIndexRouteImport } from './routes/_authenticated/entregador/index'
+import { Route as ApiPublicMpWebhookRouteImport } from './routes/api/public/mp-webhook'
 import { Route as ApiPublicCourierApplicationRouteImport } from './routes/api/public/courier-application'
 import { Route as ApiPublicAdminEnsureRouteImport } from './routes/api/public/admin-ensure'
 import { Route as AuthenticatedPedidosIdRouteImport } from './routes/_authenticated/pedidos/$id'
@@ -101,6 +102,11 @@ const AuthenticatedEntregadorIndexRoute =
     path: '/entregador/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicMpWebhookRoute = ApiPublicMpWebhookRouteImport.update({
+  id: '/api/public/mp-webhook',
+  path: '/api/public/mp-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicCourierApplicationRoute =
   ApiPublicCourierApplicationRouteImport.update({
     id: '/api/public/courier-application',
@@ -132,6 +138,7 @@ export interface FileRoutesByFullPath {
   '/pedidos/$id': typeof AuthenticatedPedidosIdRoute
   '/api/public/admin-ensure': typeof ApiPublicAdminEnsureRoute
   '/api/public/courier-application': typeof ApiPublicCourierApplicationRoute
+  '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
   '/entregador/': typeof AuthenticatedEntregadorIndexRoute
   '/lojista/': typeof AuthenticatedLojistaIndexRoute
   '/pedidos/': typeof AuthenticatedPedidosIndexRoute
@@ -150,6 +157,7 @@ export interface FileRoutesByTo {
   '/pedidos/$id': typeof AuthenticatedPedidosIdRoute
   '/api/public/admin-ensure': typeof ApiPublicAdminEnsureRoute
   '/api/public/courier-application': typeof ApiPublicCourierApplicationRoute
+  '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
   '/entregador': typeof AuthenticatedEntregadorIndexRoute
   '/lojista': typeof AuthenticatedLojistaIndexRoute
   '/pedidos': typeof AuthenticatedPedidosIndexRoute
@@ -170,6 +178,7 @@ export interface FileRoutesById {
   '/_authenticated/pedidos/$id': typeof AuthenticatedPedidosIdRoute
   '/api/public/admin-ensure': typeof ApiPublicAdminEnsureRoute
   '/api/public/courier-application': typeof ApiPublicCourierApplicationRoute
+  '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
   '/_authenticated/entregador/': typeof AuthenticatedEntregadorIndexRoute
   '/_authenticated/lojista/': typeof AuthenticatedLojistaIndexRoute
   '/_authenticated/pedidos/': typeof AuthenticatedPedidosIndexRoute
@@ -190,6 +199,7 @@ export interface FileRouteTypes {
     | '/pedidos/$id'
     | '/api/public/admin-ensure'
     | '/api/public/courier-application'
+    | '/api/public/mp-webhook'
     | '/entregador/'
     | '/lojista/'
     | '/pedidos/'
@@ -208,6 +218,7 @@ export interface FileRouteTypes {
     | '/pedidos/$id'
     | '/api/public/admin-ensure'
     | '/api/public/courier-application'
+    | '/api/public/mp-webhook'
     | '/entregador'
     | '/lojista'
     | '/pedidos'
@@ -227,6 +238,7 @@ export interface FileRouteTypes {
     | '/_authenticated/pedidos/$id'
     | '/api/public/admin-ensure'
     | '/api/public/courier-application'
+    | '/api/public/mp-webhook'
     | '/_authenticated/entregador/'
     | '/_authenticated/lojista/'
     | '/_authenticated/pedidos/'
@@ -240,6 +252,7 @@ export interface RootRouteChildren {
   LojaSlugRoute: typeof LojaSlugRoute
   ApiPublicAdminEnsureRoute: typeof ApiPublicAdminEnsureRoute
   ApiPublicCourierApplicationRoute: typeof ApiPublicCourierApplicationRoute
+  ApiPublicMpWebhookRoute: typeof ApiPublicMpWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -342,6 +355,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEntregadorIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/mp-webhook': {
+      id: '/api/public/mp-webhook'
+      path: '/api/public/mp-webhook'
+      fullPath: '/api/public/mp-webhook'
+      preLoaderRoute: typeof ApiPublicMpWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/courier-application': {
       id: '/api/public/courier-application'
       path: '/api/public/courier-application'
@@ -403,6 +423,7 @@ const rootRouteChildren: RootRouteChildren = {
   LojaSlugRoute: LojaSlugRoute,
   ApiPublicAdminEnsureRoute: ApiPublicAdminEnsureRoute,
   ApiPublicCourierApplicationRoute: ApiPublicCourierApplicationRoute,
+  ApiPublicMpWebhookRoute: ApiPublicMpWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

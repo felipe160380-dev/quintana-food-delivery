@@ -66,10 +66,9 @@ export const Route = createFileRoute("/api/public/mp-webhook")({
 
         // Atualiza o pedido conforme o status mudar.
         if (orderId) {
-          const update: Record<string, unknown> = { payment_status: status };
           const { error: oErr } = await supabaseAdmin
             .from("orders")
-            .update(update)
+            .update({ payment_status: status })
             .eq("id", orderId);
           if (oErr) console.error("mp-webhook orders update error", oErr.message);
         }
