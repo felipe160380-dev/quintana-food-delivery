@@ -12,6 +12,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Minus, Plus, ShoppingBag, MapPin } from "lucide-react";
 import { MpPaymentDialog, type MpMode } from "@/components/MpPaymentDialog";
+import { EmptyState } from "@/components/ui-states";
+
 
 export const Route = createFileRoute("/_authenticated/checkout")({ component: Page });
 
@@ -43,13 +45,17 @@ function Page() {
 
   if (!state.storeId || state.items.length === 0) {
     return (
-      <div className="mx-auto max-w-md p-10 text-center">
-        <ShoppingBag className="mx-auto size-8 text-muted-foreground" />
-        <p className="mt-2 font-medium">Seu carrinho está vazio</p>
-        <Button asChild className="mt-4"><Link to="/">Escolher uma loja</Link></Button>
+      <div className="mx-auto max-w-md px-4 py-10">
+        <EmptyState
+          icon={<ShoppingBag className="size-6" />}
+          title="Seu carrinho está vazio"
+          description="Escolha uma loja aberta e monte seu pedido em poucos toques."
+          action={<Button asChild><Link to="/">Escolher uma loja</Link></Button>}
+        />
       </div>
     );
   }
+
 
   const deliveryFee = Number(store?.delivery_fee ?? 0);
   const total = subtotal + deliveryFee;
@@ -102,22 +108,30 @@ function Page() {
 
     clear();
     toast.success("Pedido enviado!");
-    nav({ to: "/pedidos/$id", params: { id: order!.id } });
+    nav({ to: "/pedidos/$id", params: { id: order!.id }, search: { novo: true } });
   };
 
   return (
     <div className="mx-auto max-w-2xl space-y-4 px-4 py-6">
-      <h1 className="text-2xl font-bold">Finalizar pedido</h1>
+      <h1 className="text-2xl font-bold tracking-tight">Finalizar pedido</h1>
 
       <Card>
-        <CardHeader><CardTitle className="text-base">{store?.name}</CardTitle></CardHeader>
-        <CardContent className="space-y-2 pt-0">
+        <CardHeader className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+          <CardTitle className="truncate text-base">{store?.name}</CardTitle>
+          <Button variant="ghost" size="sm" asChild className="text-muted-foreground">
+            <Link to="/">Adicionar itens</Link>
+          </Button>
+        </CardHeader>
+        <CardContent className="space-y-3 pt-0">
           {state.items.map((i) => {
             const lineTotal = (i.unit_price + (i.addons ?? []).reduce((s, a) => s + a.price * a.quantity, 0)) * i.quantity;
             return (
-              <div key={i.line_id} className="flex items-start gap-3">
-                <div className="flex-1">
-                  <div className="font-medium">{i.product_name}</div>
+              <div key={i.line_id} className="flex items-start gap-3 border-b pb-3 last:border-0 last:pb-0">
+                {i.image_url && (
+                  <img src={i.image_url} alt="" loading="lazy" className="size-14 shrink-0 rounded-xl object-cover" />
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="font-medium leading-snug">{i.product_name}</div>
                   <div className="text-xs text-muted-foreground">{brl(i.unit_price)}</div>
                   {i.addons && i.addons.length > 0 && (
                     <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground">
@@ -127,18 +141,27 @@ function Page() {
                     </ul>
                   )}
                   {i.notes && <div className="mt-1 text-xs italic text-muted-foreground">"{i.notes}"</div>}
+                  <div className="mt-2 flex items-center gap-3">
+                    <div className="flex items-center gap-0.5 rounded-full border p-0.5">
+                      <Button
+                        size="icon" variant="ghost" className="size-7 rounded-full" aria-label="Diminuir"
+                        onClick={() => (i.quantity <= 1 ? remove(i.line_id!) : setQty(i.line_id!, i.quantity - 1))}
+                      ><Minus className="size-3" /></Button>
+                      <span className="w-5 text-center text-sm font-semibold tabular-nums">{i.quantity}</span>
+                      <Button
+                        size="icon" variant="ghost" className="size-7 rounded-full" aria-label="Aumentar"
+                        onClick={() => setQty(i.line_id!, i.quantity + 1)}
+                      ><Plus className="size-3" /></Button>
+                    </div>
+                    <span className="text-sm font-bold tabular-nums">{brl(lineTotal)}</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  <Button size="icon" variant="outline" className="size-7" onClick={() => (i.quantity <= 1 ? remove(i.line_id!) : setQty(i.line_id!, i.quantity - 1))}><Minus className="size-3" /></Button>
-                  <span className="w-6 text-center text-sm">{i.quantity}</span>
-                  <Button size="icon" variant="outline" className="size-7" onClick={() => setQty(i.line_id!, i.quantity + 1)}><Plus className="size-3" /></Button>
-                </div>
-                <div className="w-20 text-right font-medium">{brl(lineTotal)}</div>
               </div>
             );
           })}
         </CardContent>
       </Card>
+
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between"><CardTitle className="text-base">Endereço de entrega</CardTitle><Button variant="ghost" size="sm" asChild><Link to="/enderecos"><MapPin className="mr-1 size-4" /> Gerenciar</Link></Button></CardHeader>
@@ -179,27 +202,34 @@ function Page() {
               <Input type="number" placeholder="Ex: 100" value={changeFor} onChange={(e) => setChangeFor(e.target.value)} />
             </div>
           )}
-          {method === "pix" && <p className="rounded-md bg-accent/40 p-2 text-xs">O QR Code Pix será enviado pela loja no chat do pedido. (Integração Mercado Pago em breve.)</p>}
-          {method === "card_online" && <p className="rounded-md bg-accent/40 p-2 text-xs">Pagamento com cartão pelo app requer configuração do Mercado Pago. Enquanto isso, escolha Pix ou pagamento na entrega.</p>}
+          {method === "pix" && <p className="rounded-lg bg-accent/40 p-2.5 text-xs leading-relaxed">Você verá o QR Code Pix na próxima etapa e a confirmação é automática.</p>}
+          {method === "card_online" && <p className="rounded-lg bg-accent/40 p-2.5 text-xs leading-relaxed">Pagamento seguro com cartão dentro do app, na próxima etapa.</p>}
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader><CardTitle className="text-base">Observações</CardTitle></CardHeader>
-        <CardContent className="pt-0"><Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Ex: sem cebola, deixar na portaria..." /></CardContent>
+        <CardContent className="pt-0"><Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Ex: sem cebola, deixar na portaria..." rows={3} /></CardContent>
       </Card>
 
       <Card>
-        <CardContent className="space-y-1 pt-6 text-sm">
-          <div className="flex justify-between"><span>Subtotal</span><span>{brl(subtotal)}</span></div>
-          <div className="flex justify-between"><span>Taxa de entrega</span><span>{deliveryFee > 0 ? brl(deliveryFee) : "Grátis"}</span></div>
-          <div className="mt-2 flex justify-between border-t pt-2 text-base font-bold"><span>Total</span><span>{brl(total)}</span></div>
+        <CardContent className="space-y-1.5 pt-6 text-sm">
+          <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span className="tabular-nums">{brl(subtotal)}</span></div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Taxa de entrega</span>
+            <span className="tabular-nums">{deliveryFee > 0 ? brl(deliveryFee) : <span className="font-semibold text-success">Grátis</span>}</span>
+          </div>
+          <div className="mt-2 flex justify-between border-t pt-2 text-base font-bold"><span>Total</span><span className="tabular-nums">{brl(total)}</span></div>
         </CardContent>
       </Card>
 
-      <Button size="lg" className="w-full" onClick={placeOrder} disabled={placing || !addrId}>
-        {placing ? "Enviando..." : `Fazer pedido — ${brl(total)}`}
-      </Button>
+      <div className="sticky bottom-16 z-20 -mx-4 border-t bg-background/95 px-4 py-3 backdrop-blur sm:bottom-0">
+        <Button size="lg" className="w-full" onClick={placeOrder} disabled={placing || !addrId}>
+          {placing ? "Enviando pedido..." : `Fazer pedido · ${brl(total)}`}
+        </Button>
+        {!addrId && <p className="mt-1.5 text-center text-xs text-muted-foreground">Selecione um endereço de entrega para continuar.</p>}
+      </div>
+
 
       {payDialog && (
         <MpPaymentDialog
@@ -211,14 +241,14 @@ function Page() {
             setPayDialog(null);
             clear();
             toast.success("Pedido confirmado!");
-            nav({ to: "/pedidos/$id", params: { id } });
+            nav({ to: "/pedidos/$id", params: { id }, search: { novo: true } });
           }}
           onClose={() => {
             const id = payDialog.orderId;
             setPayDialog(null);
             clear();
             toast.message("Você pode concluir o pagamento na tela do pedido.");
-            nav({ to: "/pedidos/$id", params: { id } });
+            nav({ to: "/pedidos/$id", params: { id }, search: { novo: true } });
           }}
         />
       )}

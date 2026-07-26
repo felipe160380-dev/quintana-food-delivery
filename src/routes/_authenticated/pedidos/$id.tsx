@@ -6,16 +6,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Send, MapPin } from "lucide-react";
+import { ArrowLeft, Send, MapPin, CheckCircle2, Timer, Home, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { ReviewBox } from "@/components/ReviewBox";
+import { OrderTimeline } from "@/components/OrderTimeline";
 
-export const Route = createFileRoute("/_authenticated/pedidos/$id")({ component: Page });
+export const Route = createFileRoute("/_authenticated/pedidos/$id")({
+  validateSearch: (search: Record<string, unknown>) => ({ novo: search.novo === true || search.novo === "1" }),
+  component: Page,
+});
+
 
 type Msg = { id: string; body: string; sender_id: string; created_at: string };
 
 function Page() {
   const { id } = Route.useParams();
+  const { novo } = Route.useSearch();
+
   const [order, setOrder] = useState<any>(null);
   const [items, setItems] = useState<any[]>([]);
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -58,23 +65,81 @@ function Page() {
     setText("");
   };
 
-  if (!order) return <div className="p-10 text-center text-muted-foreground">Carregando...</div>;
+  if (!order) {
+    return (
+      <div className="mx-auto max-w-2xl space-y-4 px-4 py-6">
+        <div className="h-8 w-32 animate-pulse rounded bg-muted" />
+        <Card className="space-y-3 p-4">
+          <div className="h-4 w-1/3 animate-pulse rounded bg-muted" />
+          <div className="h-3 w-1/4 animate-pulse rounded bg-muted" />
+          <div className="h-24 w-full animate-pulse rounded bg-muted" />
+        </Card>
+      </div>
+    );
+  }
 
   const addr = order.address_snapshot ?? {};
+  const isCustomer = !!me && order.customer_id === me;
 
   return (
     <div className="mx-auto max-w-2xl space-y-4 px-4 py-6">
-      <Button variant="ghost" size="sm" asChild><Link to="/pedidos"><ArrowLeft className="mr-1 size-4" /> Meus pedidos</Link></Button>
+      <Button variant="ghost" size="sm" asChild className="-ml-2">
+        <Link to="/pedidos"><ArrowLeft className="mr-1 size-4" /> Meus pedidos</Link>
+      </Button>
+
+      {novo && (
+        <Card className="animate-fade-in border-success/40 bg-success/5 p-5 text-center">
+          <div className="mx-auto grid size-12 place-items-center rounded-full bg-success text-success-foreground">
+            <CheckCircle2 className="size-6" />
+          </div>
+          <h1 className="mt-3 text-lg font-bold">Pedido realizado!</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            A loja já recebeu seu pedido e vai confirmar em instantes.
+          </p>
+          <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+            <div className="rounded-xl border bg-card p-2">
+              <div className="text-[10px] uppercase text-muted-foreground">Pedido</div>
+              <div className="text-sm font-semibold">#{id.slice(0, 8)}</div>
+            </div>
+            <div className="rounded-xl border bg-card p-2">
+              <div className="text-[10px] uppercase text-muted-foreground">Valor</div>
+              <div className="text-sm font-semibold tabular-nums">{brl(Number(order.total))}</div>
+            </div>
+            <div className="rounded-xl border bg-card p-2">
+              <div className="text-[10px] uppercase text-muted-foreground">Estimativa</div>
+              <div className="inline-flex items-center gap-1 text-sm font-semibold">
+                <Timer className="size-3.5" /> ~{order.store?.prep_time_min ?? 30} min
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+            <Button className="flex-1" onClick={() => document.getElementById("acompanhamento")?.scrollIntoView({ behavior: "smooth" })}>
+              Acompanhar pedido
+            </Button>
+            <Button variant="outline" className="flex-1" asChild>
+              <Link to="/"><Home className="mr-1.5 size-4" /> Voltar para a Home</Link>
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      <Card id="acompanhamento">
+        <CardHeader><CardTitle className="text-base">Acompanhamento</CardTitle></CardHeader>
+        <CardContent className="pt-0"><OrderTimeline status={order.status} /></CardContent>
+      </Card>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle className="text-base">{order.store?.name}</CardTitle>
+        <CardHeader className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+          <div className="min-w-0">
+            <CardTitle className="truncate text-base">{order.store?.name}</CardTitle>
             <div className="text-xs text-muted-foreground">Pedido #{id.slice(0, 8)}</div>
           </div>
-          <Badge>{orderStatusLabel[order.status] ?? order.status}</Badge>
+          <Badge variant={order.status === "cancelled" ? "destructive" : "default"}>
+            {orderStatusLabel[order.status] ?? order.status}
+          </Badge>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
+
           <div>
             <div className="mb-1 flex items-center gap-1 text-xs font-semibold uppercase text-muted-foreground"><MapPin className="size-3" /> Entrega em</div>
             <div>{addr.street}{addr.number ? `, ${addr.number}` : ""} — {[addr.neighborhood, addr.city].filter(Boolean).join(", ")}</div>
@@ -95,32 +160,36 @@ function Page() {
             })}
           </div>
           <div className="border-t pt-2 text-xs text-muted-foreground">Pagamento: <span className="font-medium text-foreground">{paymentMethodLabel[order.payment_method]}</span></div>
-          <div className="flex justify-between text-base font-bold"><span>Total</span><span>{brl(Number(order.total))}</span></div>
-          {order.status === "out_for_delivery" && order.delivery_code && order.customer_id === me && (
-            <div className="rounded-lg border-2 border-primary bg-primary/5 p-3 text-center">
+          <div className="flex justify-between text-base font-bold"><span>Total</span><span className="tabular-nums">{brl(Number(order.total))}</span></div>
+          {order.status === "out_for_delivery" && order.delivery_code && isCustomer && (
+            <div className="rounded-xl border-2 border-primary bg-primary/5 p-3 text-center">
               <div className="text-xs font-semibold uppercase text-muted-foreground">Código de entrega</div>
               <div className="my-1 font-mono text-3xl tracking-widest text-primary">{order.delivery_code}</div>
               <div className="text-xs text-muted-foreground">Informe estes 4 dígitos ao entregador na chegada.</div>
             </div>
           )}
-          {order.notes && <div className="rounded bg-muted p-2 text-xs"><b>Obs:</b> {order.notes}</div>}
+          {order.notes && <div className="rounded-lg bg-muted p-2.5 text-xs leading-relaxed"><b>Obs:</b> {order.notes}</div>}
         </CardContent>
       </Card>
-      {order.status === "delivered" && me && order.customer_id === me && (
+      {order.status === "delivered" && isCustomer && (
         <>
-          <ReviewBox orderId={order.id} storeId={order.store_id} customerId={me} />
+          <ReviewBox orderId={order.id} storeId={order.store_id} customerId={me!} />
           <CourierRating orderId={order.id} initial={order.courier_rating} />
         </>
       )}
-
 
       <Card>
         <CardHeader><CardTitle className="text-base">Chat com a loja</CardTitle></CardHeader>
         <CardContent className="p-0">
           <div ref={listRef} className="max-h-80 space-y-2 overflow-y-auto p-4">
             {messages.length === 0 ? (
-              <div className="py-6 text-center text-xs text-muted-foreground">Envie uma mensagem para a loja se precisar de ajuda.</div>
+              <div className="flex flex-col items-center gap-1.5 py-8 text-center">
+                <MessageCircle className="size-6 text-muted-foreground" />
+                <div className="text-sm font-medium">Nenhuma mensagem ainda</div>
+                <p className="text-xs text-muted-foreground">Fale com a loja se precisar de ajuda com o pedido.</p>
+              </div>
             ) : messages.map((m) => (
+
               <div key={m.id} className={`flex ${m.sender_id === me ? "justify-end" : "justify-start"}`}>
                 <div className={`max-w-[80%] rounded-2xl px-3 py-1.5 text-sm ${m.sender_id === me ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
                   <div>{m.body}</div>
