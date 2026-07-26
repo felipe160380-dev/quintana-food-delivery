@@ -6,11 +6,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Send, MapPin } from "lucide-react";
+import { ArrowLeft, Send, MapPin, CheckCircle2, Timer, Home, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { ReviewBox } from "@/components/ReviewBox";
+import { OrderTimeline } from "@/components/OrderTimeline";
 
-export const Route = createFileRoute("/_authenticated/pedidos/$id")({ component: Page });
+export const Route = createFileRoute("/_authenticated/pedidos/$id")({
+  validateSearch: (search: Record<string, unknown>) => ({ novo: search.novo === true || search.novo === "1" }),
+  component: Page,
+});
+
 
 type Msg = { id: string; body: string; sender_id: string; created_at: string };
 
