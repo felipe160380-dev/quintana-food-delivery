@@ -126,9 +126,12 @@ function StorePage() {
                 {Number(store.min_order) > 0 && (
                   <span className="inline-flex items-center gap-1"><Receipt className="size-3.5 shrink-0" /> Mín. {brl(Number(store.min_order))}</span>
                 )}
-                {store.opening_hours && (
-                  <span className="inline-flex items-center gap-1"><Clock className="size-3.5 shrink-0" /> {String(store.opening_hours)}</span>
+                {hoursToday && (
+                  <span className="inline-flex items-center gap-1">
+                    <Clock className="size-3.5 shrink-0" /> {hoursToday}
+                  </span>
                 )}
+
               </div>
               {store.description && (
                 <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{store.description}</p>
