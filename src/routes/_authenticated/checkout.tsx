@@ -116,14 +116,22 @@ function Page() {
       <h1 className="text-2xl font-bold tracking-tight">Finalizar pedido</h1>
 
       <Card>
-        <CardHeader><CardTitle className="text-base">{store?.name}</CardTitle></CardHeader>
-        <CardContent className="space-y-2 pt-0">
+        <CardHeader className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+          <CardTitle className="truncate text-base">{store?.name}</CardTitle>
+          <Button variant="ghost" size="sm" asChild className="text-muted-foreground">
+            <Link to="/">Adicionar itens</Link>
+          </Button>
+        </CardHeader>
+        <CardContent className="space-y-3 pt-0">
           {state.items.map((i) => {
             const lineTotal = (i.unit_price + (i.addons ?? []).reduce((s, a) => s + a.price * a.quantity, 0)) * i.quantity;
             return (
-              <div key={i.line_id} className="flex items-start gap-3">
-                <div className="flex-1">
-                  <div className="font-medium">{i.product_name}</div>
+              <div key={i.line_id} className="flex items-start gap-3 border-b pb-3 last:border-0 last:pb-0">
+                {i.image_url && (
+                  <img src={i.image_url} alt="" loading="lazy" className="size-14 shrink-0 rounded-xl object-cover" />
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="font-medium leading-snug">{i.product_name}</div>
                   <div className="text-xs text-muted-foreground">{brl(i.unit_price)}</div>
                   {i.addons && i.addons.length > 0 && (
                     <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground">
@@ -133,18 +141,27 @@ function Page() {
                     </ul>
                   )}
                   {i.notes && <div className="mt-1 text-xs italic text-muted-foreground">"{i.notes}"</div>}
+                  <div className="mt-2 flex items-center gap-3">
+                    <div className="flex items-center gap-0.5 rounded-full border p-0.5">
+                      <Button
+                        size="icon" variant="ghost" className="size-7 rounded-full" aria-label="Diminuir"
+                        onClick={() => (i.quantity <= 1 ? remove(i.line_id!) : setQty(i.line_id!, i.quantity - 1))}
+                      ><Minus className="size-3" /></Button>
+                      <span className="w-5 text-center text-sm font-semibold tabular-nums">{i.quantity}</span>
+                      <Button
+                        size="icon" variant="ghost" className="size-7 rounded-full" aria-label="Aumentar"
+                        onClick={() => setQty(i.line_id!, i.quantity + 1)}
+                      ><Plus className="size-3" /></Button>
+                    </div>
+                    <span className="text-sm font-bold tabular-nums">{brl(lineTotal)}</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  <Button size="icon" variant="outline" className="size-7" onClick={() => (i.quantity <= 1 ? remove(i.line_id!) : setQty(i.line_id!, i.quantity - 1))}><Minus className="size-3" /></Button>
-                  <span className="w-6 text-center text-sm">{i.quantity}</span>
-                  <Button size="icon" variant="outline" className="size-7" onClick={() => setQty(i.line_id!, i.quantity + 1)}><Plus className="size-3" /></Button>
-                </div>
-                <div className="w-20 text-right font-medium">{brl(lineTotal)}</div>
               </div>
             );
           })}
         </CardContent>
       </Card>
+
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between"><CardTitle className="text-base">Endereço de entrega</CardTitle><Button variant="ghost" size="sm" asChild><Link to="/enderecos"><MapPin className="mr-1 size-4" /> Gerenciar</Link></Button></CardHeader>
