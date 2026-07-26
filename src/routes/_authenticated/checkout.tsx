@@ -12,6 +12,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Minus, Plus, ShoppingBag, MapPin } from "lucide-react";
 import { MpPaymentDialog, type MpMode } from "@/components/MpPaymentDialog";
+import { EmptyState } from "@/components/ui-states";
+
 
 export const Route = createFileRoute("/_authenticated/checkout")({ component: Page });
 
