@@ -43,13 +43,17 @@ function Page() {
 
   if (!state.storeId || state.items.length === 0) {
     return (
-      <div className="mx-auto max-w-md p-10 text-center">
-        <ShoppingBag className="mx-auto size-8 text-muted-foreground" />
-        <p className="mt-2 font-medium">Seu carrinho está vazio</p>
-        <Button asChild className="mt-4"><Link to="/">Escolher uma loja</Link></Button>
+      <div className="mx-auto max-w-md px-4 py-10">
+        <EmptyState
+          icon={<ShoppingBag className="size-6" />}
+          title="Seu carrinho está vazio"
+          description="Escolha uma loja aberta e monte seu pedido em poucos toques."
+          action={<Button asChild><Link to="/">Escolher uma loja</Link></Button>}
+        />
       </div>
     );
   }
+
 
   const deliveryFee = Number(store?.delivery_fee ?? 0);
   const total = subtotal + deliveryFee;
