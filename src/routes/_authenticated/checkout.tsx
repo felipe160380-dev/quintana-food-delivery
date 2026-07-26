@@ -185,27 +185,34 @@ function Page() {
               <Input type="number" placeholder="Ex: 100" value={changeFor} onChange={(e) => setChangeFor(e.target.value)} />
             </div>
           )}
-          {method === "pix" && <p className="rounded-md bg-accent/40 p-2 text-xs">O QR Code Pix será enviado pela loja no chat do pedido. (Integração Mercado Pago em breve.)</p>}
-          {method === "card_online" && <p className="rounded-md bg-accent/40 p-2 text-xs">Pagamento com cartão pelo app requer configuração do Mercado Pago. Enquanto isso, escolha Pix ou pagamento na entrega.</p>}
+          {method === "pix" && <p className="rounded-lg bg-accent/40 p-2.5 text-xs leading-relaxed">Você verá o QR Code Pix na próxima etapa e a confirmação é automática.</p>}
+          {method === "card_online" && <p className="rounded-lg bg-accent/40 p-2.5 text-xs leading-relaxed">Pagamento seguro com cartão dentro do app, na próxima etapa.</p>}
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader><CardTitle className="text-base">Observações</CardTitle></CardHeader>
-        <CardContent className="pt-0"><Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Ex: sem cebola, deixar na portaria..." /></CardContent>
+        <CardContent className="pt-0"><Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Ex: sem cebola, deixar na portaria..." rows={3} /></CardContent>
       </Card>
 
       <Card>
-        <CardContent className="space-y-1 pt-6 text-sm">
-          <div className="flex justify-between"><span>Subtotal</span><span>{brl(subtotal)}</span></div>
-          <div className="flex justify-between"><span>Taxa de entrega</span><span>{deliveryFee > 0 ? brl(deliveryFee) : "Grátis"}</span></div>
-          <div className="mt-2 flex justify-between border-t pt-2 text-base font-bold"><span>Total</span><span>{brl(total)}</span></div>
+        <CardContent className="space-y-1.5 pt-6 text-sm">
+          <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span className="tabular-nums">{brl(subtotal)}</span></div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Taxa de entrega</span>
+            <span className="tabular-nums">{deliveryFee > 0 ? brl(deliveryFee) : <span className="font-semibold text-success">Grátis</span>}</span>
+          </div>
+          <div className="mt-2 flex justify-between border-t pt-2 text-base font-bold"><span>Total</span><span className="tabular-nums">{brl(total)}</span></div>
         </CardContent>
       </Card>
 
-      <Button size="lg" className="w-full" onClick={placeOrder} disabled={placing || !addrId}>
-        {placing ? "Enviando..." : `Fazer pedido — ${brl(total)}`}
-      </Button>
+      <div className="sticky bottom-16 z-20 -mx-4 border-t bg-background/95 px-4 py-3 backdrop-blur sm:bottom-0">
+        <Button size="lg" className="w-full" onClick={placeOrder} disabled={placing || !addrId}>
+          {placing ? "Enviando pedido..." : `Fazer pedido · ${brl(total)}`}
+        </Button>
+        {!addrId && <p className="mt-1.5 text-center text-xs text-muted-foreground">Selecione um endereço de entrega para continuar.</p>}
+      </div>
+
 
       {payDialog && (
         <MpPaymentDialog
