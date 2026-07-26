@@ -21,6 +21,8 @@ type Msg = { id: string; body: string; sender_id: string; created_at: string };
 
 function Page() {
   const { id } = Route.useParams();
+  const { novo } = Route.useSearch();
+
   const [order, setOrder] = useState<any>(null);
   const [items, setItems] = useState<any[]>([]);
   const [messages, setMessages] = useState<Msg[]>([]);
