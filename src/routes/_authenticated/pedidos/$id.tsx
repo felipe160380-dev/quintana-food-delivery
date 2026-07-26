@@ -160,32 +160,36 @@ function Page() {
             })}
           </div>
           <div className="border-t pt-2 text-xs text-muted-foreground">Pagamento: <span className="font-medium text-foreground">{paymentMethodLabel[order.payment_method]}</span></div>
-          <div className="flex justify-between text-base font-bold"><span>Total</span><span>{brl(Number(order.total))}</span></div>
-          {order.status === "out_for_delivery" && order.delivery_code && order.customer_id === me && (
-            <div className="rounded-lg border-2 border-primary bg-primary/5 p-3 text-center">
+          <div className="flex justify-between text-base font-bold"><span>Total</span><span className="tabular-nums">{brl(Number(order.total))}</span></div>
+          {order.status === "out_for_delivery" && order.delivery_code && isCustomer && (
+            <div className="rounded-xl border-2 border-primary bg-primary/5 p-3 text-center">
               <div className="text-xs font-semibold uppercase text-muted-foreground">Código de entrega</div>
               <div className="my-1 font-mono text-3xl tracking-widest text-primary">{order.delivery_code}</div>
               <div className="text-xs text-muted-foreground">Informe estes 4 dígitos ao entregador na chegada.</div>
             </div>
           )}
-          {order.notes && <div className="rounded bg-muted p-2 text-xs"><b>Obs:</b> {order.notes}</div>}
+          {order.notes && <div className="rounded-lg bg-muted p-2.5 text-xs leading-relaxed"><b>Obs:</b> {order.notes}</div>}
         </CardContent>
       </Card>
-      {order.status === "delivered" && me && order.customer_id === me && (
+      {order.status === "delivered" && isCustomer && (
         <>
-          <ReviewBox orderId={order.id} storeId={order.store_id} customerId={me} />
+          <ReviewBox orderId={order.id} storeId={order.store_id} customerId={me!} />
           <CourierRating orderId={order.id} initial={order.courier_rating} />
         </>
       )}
-
 
       <Card>
         <CardHeader><CardTitle className="text-base">Chat com a loja</CardTitle></CardHeader>
         <CardContent className="p-0">
           <div ref={listRef} className="max-h-80 space-y-2 overflow-y-auto p-4">
             {messages.length === 0 ? (
-              <div className="py-6 text-center text-xs text-muted-foreground">Envie uma mensagem para a loja se precisar de ajuda.</div>
+              <div className="flex flex-col items-center gap-1.5 py-8 text-center">
+                <MessageCircle className="size-6 text-muted-foreground" />
+                <div className="text-sm font-medium">Nenhuma mensagem ainda</div>
+                <p className="text-xs text-muted-foreground">Fale com a loja se precisar de ajuda com o pedido.</p>
+              </div>
             ) : messages.map((m) => (
+
               <div key={m.id} className={`flex ${m.sender_id === me ? "justify-end" : "justify-start"}`}>
                 <div className={`max-w-[80%] rounded-2xl px-3 py-1.5 text-sm ${m.sender_id === me ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
                   <div>{m.body}</div>
