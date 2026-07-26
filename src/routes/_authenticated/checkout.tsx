@@ -108,12 +108,12 @@ function Page() {
 
     clear();
     toast.success("Pedido enviado!");
-    nav({ to: "/pedidos/$id", params: { id: order!.id } });
+    nav({ to: "/pedidos/$id", params: { id: order!.id }, search: { novo: true } });
   };
 
   return (
     <div className="mx-auto max-w-2xl space-y-4 px-4 py-6">
-      <h1 className="text-2xl font-bold">Finalizar pedido</h1>
+      <h1 className="text-2xl font-bold tracking-tight">Finalizar pedido</h1>
 
       <Card>
         <CardHeader><CardTitle className="text-base">{store?.name}</CardTitle></CardHeader>
@@ -224,14 +224,14 @@ function Page() {
             setPayDialog(null);
             clear();
             toast.success("Pedido confirmado!");
-            nav({ to: "/pedidos/$id", params: { id } });
+            nav({ to: "/pedidos/$id", params: { id }, search: { novo: true } });
           }}
           onClose={() => {
             const id = payDialog.orderId;
             setPayDialog(null);
             clear();
             toast.message("Você pode concluir o pagamento na tela do pedido.");
-            nav({ to: "/pedidos/$id", params: { id } });
+            nav({ to: "/pedidos/$id", params: { id }, search: { novo: true } });
           }}
         />
       )}
