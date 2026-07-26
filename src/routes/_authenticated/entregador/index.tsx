@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { brl, orderStatusLabel } from "@/lib/format";
 import { toast } from "sonner";
 import { Bike, Package } from "lucide-react";
+import { EmptyState, RowSkeleton } from "@/components/ui-states";
 
 export const Route = createFileRoute("/_authenticated/entregador/")({ component: Page });
 
@@ -72,16 +73,21 @@ function Page() {
       <Button variant="outline" className="mt-2 ml-2" onClick={() => nav({ to: "/auth" })}>Ir para login</Button>
     </div>
   );
-  if (!me) return <div className="p-10 text-center text-muted-foreground">Carregando...</div>;
+  if (!me) return (
+    <div className="mx-auto max-w-3xl space-y-3 px-4 py-6">
+      <div className="h-8 w-40 animate-pulse rounded bg-muted" />
+      {Array.from({ length: 3 }).map((_, i) => <RowSkeleton key={i} />)}
+    </div>
+  );
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-6">
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-5 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Entregas</h1>
+          <h1 className="truncate text-2xl font-bold tracking-tight">Entregas</h1>
           <p className="text-sm text-muted-foreground">Fique disponível para receber pedidos prontos.</p>
         </div>
-        <div className="flex items-center gap-2 rounded-lg border bg-card p-2">
+        <div className="flex shrink-0 items-center gap-2 rounded-xl border bg-card p-2">
           <Bike className="size-4 text-primary" />
           <span className="text-sm">{available ? "Disponível" : "Indisponível"}</span>
           <Switch checked={available} onCheckedChange={async (v) => {
@@ -105,9 +111,17 @@ function Page() {
       <section>
         <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Pedidos prontos para retirada</h2>
         {!available ? (
-          <Card className="p-6 text-center text-sm text-muted-foreground">Ative a disponibilidade para ver pedidos prontos.</Card>
+          <EmptyState
+            icon={<Bike className="size-6" />}
+            title="Você está indisponível"
+            description="Ative a disponibilidade acima para receber pedidos prontos para retirada."
+          />
         ) : ready.length === 0 ? (
-          <Card className="p-6 text-center text-sm text-muted-foreground"><Package className="mx-auto mb-2 size-6" /> Nenhum pedido pronto no momento.</Card>
+          <EmptyState
+            icon={<Package className="size-6" />}
+            title="Nenhum pedido pronto agora"
+            description="Assim que uma loja liberar um pedido, ele aparece aqui automaticamente."
+          />
         ) : (
           <div className="space-y-2">
             {ready.map((o) => <OrderCard key={o.id} o={o} onUpdate={load} />)}
@@ -145,7 +159,7 @@ function OrderCard({ o, mine, onUpdate }: { o: any; mine?: boolean; onUpdate: ()
   };
 
   return (
-    <Card className="p-3">
+    <Card className="p-3 transition-shadow hover:shadow-md">
       <div className="flex items-start gap-3">
         <div className="size-12 shrink-0 overflow-hidden rounded-lg bg-muted">
           {o.store?.logo_url && <img src={o.store.logo_url} className="h-full w-full object-cover" alt="" />}
