@@ -65,23 +65,81 @@ function Page() {
     setText("");
   };
 
-  if (!order) return <div className="p-10 text-center text-muted-foreground">Carregando...</div>;
+  if (!order) {
+    return (
+      <div className="mx-auto max-w-2xl space-y-4 px-4 py-6">
+        <div className="h-8 w-32 animate-pulse rounded bg-muted" />
+        <Card className="space-y-3 p-4">
+          <div className="h-4 w-1/3 animate-pulse rounded bg-muted" />
+          <div className="h-3 w-1/4 animate-pulse rounded bg-muted" />
+          <div className="h-24 w-full animate-pulse rounded bg-muted" />
+        </Card>
+      </div>
+    );
+  }
 
   const addr = order.address_snapshot ?? {};
+  const isCustomer = !!me && order.customer_id === me;
 
   return (
     <div className="mx-auto max-w-2xl space-y-4 px-4 py-6">
-      <Button variant="ghost" size="sm" asChild><Link to="/pedidos"><ArrowLeft className="mr-1 size-4" /> Meus pedidos</Link></Button>
+      <Button variant="ghost" size="sm" asChild className="-ml-2">
+        <Link to="/pedidos"><ArrowLeft className="mr-1 size-4" /> Meus pedidos</Link>
+      </Button>
+
+      {novo && (
+        <Card className="animate-fade-in border-success/40 bg-success/5 p-5 text-center">
+          <div className="mx-auto grid size-12 place-items-center rounded-full bg-success text-success-foreground">
+            <CheckCircle2 className="size-6" />
+          </div>
+          <h1 className="mt-3 text-lg font-bold">Pedido realizado!</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            A loja já recebeu seu pedido e vai confirmar em instantes.
+          </p>
+          <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+            <div className="rounded-xl border bg-card p-2">
+              <div className="text-[10px] uppercase text-muted-foreground">Pedido</div>
+              <div className="text-sm font-semibold">#{id.slice(0, 8)}</div>
+            </div>
+            <div className="rounded-xl border bg-card p-2">
+              <div className="text-[10px] uppercase text-muted-foreground">Valor</div>
+              <div className="text-sm font-semibold tabular-nums">{brl(Number(order.total))}</div>
+            </div>
+            <div className="rounded-xl border bg-card p-2">
+              <div className="text-[10px] uppercase text-muted-foreground">Estimativa</div>
+              <div className="inline-flex items-center gap-1 text-sm font-semibold">
+                <Timer className="size-3.5" /> ~{order.store?.prep_time_min ?? 30} min
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+            <Button className="flex-1" onClick={() => document.getElementById("acompanhamento")?.scrollIntoView({ behavior: "smooth" })}>
+              Acompanhar pedido
+            </Button>
+            <Button variant="outline" className="flex-1" asChild>
+              <Link to="/"><Home className="mr-1.5 size-4" /> Voltar para a Home</Link>
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      <Card id="acompanhamento">
+        <CardHeader><CardTitle className="text-base">Acompanhamento</CardTitle></CardHeader>
+        <CardContent className="pt-0"><OrderTimeline status={order.status} /></CardContent>
+      </Card>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle className="text-base">{order.store?.name}</CardTitle>
+        <CardHeader className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+          <div className="min-w-0">
+            <CardTitle className="truncate text-base">{order.store?.name}</CardTitle>
             <div className="text-xs text-muted-foreground">Pedido #{id.slice(0, 8)}</div>
           </div>
-          <Badge>{orderStatusLabel[order.status] ?? order.status}</Badge>
+          <Badge variant={order.status === "cancelled" ? "destructive" : "default"}>
+            {orderStatusLabel[order.status] ?? order.status}
+          </Badge>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
+
           <div>
             <div className="mb-1 flex items-center gap-1 text-xs font-semibold uppercase text-muted-foreground"><MapPin className="size-3" /> Entrega em</div>
             <div>{addr.street}{addr.number ? `, ${addr.number}` : ""} — {[addr.neighborhood, addr.city].filter(Boolean).join(", ")}</div>
