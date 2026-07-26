@@ -36,6 +36,20 @@ export const Route = createFileRoute("/loja/$slug")({
 
 type Product = { id: string; name: string; description: string | null; price: number; promo_price: number | null; image_url: string | null; category: string | null; is_available: boolean; is_paused: boolean; stock: number | null };
 
+type Hours = Record<string, { open: string; close: string; closed?: boolean }>;
+
+/** Rótulo do horário de hoje (somente exibição). */
+function todayHoursLabel(hours: unknown): string | null {
+  if (!hours || typeof hours !== "object") return null;
+  const keys = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+  const day = (hours as Hours)[keys[new Date().getDay()]];
+  if (!day) return null;
+  if (day.closed) return "Fechado hoje";
+  if (!day.open || !day.close) return null;
+  return `Hoje ${day.open}–${day.close}`;
+}
+
+
 function StorePage() {
   const { store } = Route.useLoaderData();
   const [products, setProducts] = useState<Product[]>([]);
@@ -45,6 +59,8 @@ function StorePage() {
   const { add, count } = useCart();
   const { roles } = useAuth();
   const shopper = primaryRole(roles) === "customer";
+  const hoursToday = todayHoursLabel(store.hours);
+
 
   useEffect(() => { setFav(isFavorite(store.id)); }, [store.id]);
 
