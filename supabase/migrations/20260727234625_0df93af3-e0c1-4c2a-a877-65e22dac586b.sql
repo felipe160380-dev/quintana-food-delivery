@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.notify_store_on_payment() FROM authenticated;
