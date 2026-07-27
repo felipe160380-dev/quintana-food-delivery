@@ -65,7 +65,8 @@ function Page() {
         .eq("store_id", store.id).is("read_at", null);
       setUnread(n ?? 0);
       const { count: p } = await sb.from("orders").select("id", { count: "exact", head: true })
-        .eq("store_id", store.id).eq("status", "pending");
+        .eq("store_id", store.id).eq("status", "pending").or(PAID_OR_OFFLINE);
+
       setPendingCount(p ?? 0);
     };
     refresh();
