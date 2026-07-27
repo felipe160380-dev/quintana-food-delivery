@@ -65,7 +65,8 @@ function Page() {
         .eq("store_id", store.id).is("read_at", null);
       setUnread(n ?? 0);
       const { count: p } = await sb.from("orders").select("id", { count: "exact", head: true })
-        .eq("store_id", store.id).eq("status", "pending");
+        .eq("store_id", store.id).eq("status", "pending").or(PAID_OR_OFFLINE);
+
       setPendingCount(p ?? 0);
     };
     refresh();
@@ -241,7 +242,7 @@ function DashboardTab({ store }: { store: any }) {
     const load = async () => {
       const startDay = new Date(); startDay.setHours(0, 0, 0, 0);
       const startMonth = new Date(startDay.getFullYear(), startDay.getMonth(), 1);
-      const { data: orders } = await sb.from("orders").select("id,status,total,subtotal,created_at,customer_id,payment_method").eq("store_id", store.id);
+      const { data: orders } = await sb.from("orders").select("id,status,total,subtotal,created_at,customer_id,payment_method").eq("store_id", store.id).or(PAID_OR_OFFLINE);
       const arr = orders ?? [];
       const today = arr.filter((o: any) => new Date(o.created_at) >= startDay);
       const done = today.filter((o: any) => o.status === "delivered");
@@ -597,14 +598,18 @@ function AddonsEditor({ productId }: { productId: string }) {
 const nextStatus: Record<string, string | null> = {
   pending: "accepted", accepted: "preparing", preparing: "ready", ready: "out_for_delivery", out_for_delivery: "delivered",
 };
+/** Pedidos com pagamento online só aparecem para a loja após confirmação do pagamento. */
+export const PAID_OR_OFFLINE =
+  "payment_status.eq.paid,payment_method.in.(cash_on_delivery,card_on_delivery)";
 function OrdersTab({ storeId }: { storeId: string }) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [orders, setOrders] = useState<any[]>([]);
   const [tab, setTab] = useState<"active" | "history">("active");
   const load = async () => {
-    const { data } = await sb.from("orders").select("*").eq("store_id", storeId).order("created_at", { ascending: false });
+    const { data } = await sb.from("orders").select("*").eq("store_id", storeId).or(PAID_OR_OFFLINE).order("created_at", { ascending: false });
     setOrders(data ?? []);
   };
+
   useEffect(() => {
     load();
     const ch = sb.channel(`store-orders:${storeId}`)

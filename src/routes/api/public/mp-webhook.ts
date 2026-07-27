@@ -66,12 +66,18 @@ export const Route = createFileRoute("/api/public/mp-webhook")({
 
         // Atualiza o pedido conforme o status mudar.
         if (orderId) {
+          const patch =
+            status === "refunded"
+              ? { payment_status: status, status: "cancelled" as const }
+              : { payment_status: status };
+
           const { error: oErr } = await supabaseAdmin
             .from("orders")
-            .update({ payment_status: status })
+            .update(patch)
             .eq("id", orderId);
           if (oErr) console.error("mp-webhook orders update error", oErr.message);
         }
+
 
         return new Response("ok", { status: 200 });
       },

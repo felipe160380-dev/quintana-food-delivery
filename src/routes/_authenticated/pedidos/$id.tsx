@@ -160,6 +160,12 @@ function Page() {
             })}
           </div>
           <div className="border-t pt-2 text-xs text-muted-foreground">Pagamento: <span className="font-medium text-foreground">{paymentMethodLabel[order.payment_method]}</span></div>
+          {["pix", "card_online"].includes(order.payment_method) && order.payment_status !== "paid" && order.status !== "cancelled" && (
+            <div className="rounded-lg border border-primary/40 bg-primary/5 p-2.5 text-xs leading-relaxed">
+              Aguardando confirmação do pagamento. A loja recebe o pedido assim que o pagamento for aprovado.
+            </div>
+          )}
+
           <div className="flex justify-between text-base font-bold"><span>Total</span><span className="tabular-nums">{brl(Number(order.total))}</span></div>
           {order.status === "out_for_delivery" && order.delivery_code && isCustomer && (
             <div className="rounded-xl border-2 border-primary bg-primary/5 p-3 text-center">
