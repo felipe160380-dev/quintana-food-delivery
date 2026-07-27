@@ -66,12 +66,16 @@ export const Route = createFileRoute("/api/public/mp-webhook")({
 
         // Atualiza o pedido conforme o status mudar.
         if (orderId) {
+          const patch: Record<string, unknown> = { payment_status: status };
+          // Estorno cancela o pedido caso ainda não tenha sido entregue.
+          if (status === "refunded") patch.status = "cancelled";
           const { error: oErr } = await supabaseAdmin
             .from("orders")
-            .update({ payment_status: status })
+            .update(patch)
             .eq("id", orderId);
           if (oErr) console.error("mp-webhook orders update error", oErr.message);
         }
+
 
         return new Response("ok", { status: 200 });
       },
