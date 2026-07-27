@@ -597,14 +597,18 @@ function AddonsEditor({ productId }: { productId: string }) {
 const nextStatus: Record<string, string | null> = {
   pending: "accepted", accepted: "preparing", preparing: "ready", ready: "out_for_delivery", out_for_delivery: "delivered",
 };
+/** Pedidos com pagamento online só aparecem para a loja após confirmação do pagamento. */
+export const PAID_OR_OFFLINE =
+  "payment_status.eq.paid,payment_method.in.(cash_on_delivery,card_on_delivery)";
 function OrdersTab({ storeId }: { storeId: string }) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [orders, setOrders] = useState<any[]>([]);
   const [tab, setTab] = useState<"active" | "history">("active");
   const load = async () => {
-    const { data } = await sb.from("orders").select("*").eq("store_id", storeId).order("created_at", { ascending: false });
+    const { data } = await sb.from("orders").select("*").eq("store_id", storeId).or(PAID_OR_OFFLINE).order("created_at", { ascending: false });
     setOrders(data ?? []);
   };
+
   useEffect(() => {
     load();
     const ch = sb.channel(`store-orders:${storeId}`)
