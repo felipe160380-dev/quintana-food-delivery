@@ -242,7 +242,7 @@ function DashboardTab({ store }: { store: any }) {
     const load = async () => {
       const startDay = new Date(); startDay.setHours(0, 0, 0, 0);
       const startMonth = new Date(startDay.getFullYear(), startDay.getMonth(), 1);
-      const { data: orders } = await sb.from("orders").select("id,status,total,subtotal,created_at,customer_id,payment_method").eq("store_id", store.id);
+      const { data: orders } = await sb.from("orders").select("id,status,total,subtotal,created_at,customer_id,payment_method").eq("store_id", store.id).or(PAID_OR_OFFLINE);
       const arr = orders ?? [];
       const today = arr.filter((o: any) => new Date(o.created_at) >= startDay);
       const done = today.filter((o: any) => o.status === "delivered");
