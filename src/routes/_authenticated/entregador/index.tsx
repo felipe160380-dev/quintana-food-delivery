@@ -145,6 +145,7 @@ function Page() {
 function OrderCard({ o, mine, onUpdate }: { o: any; mine?: boolean; onUpdate: () => void }) {
   const [code, setCode] = useState("");
   const addr = o.address_snapshot ?? {};
+  const myPos = useCourierPosition(o.id, !!mine && o.status === "out_for_delivery");
   const accept = async () => {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
