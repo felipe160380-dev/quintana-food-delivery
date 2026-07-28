@@ -678,7 +678,32 @@ function OrdersTab({ storeId, store }: { storeId: string; store?: any }) {
           )}
         </div>
       ))}
+      <TrackingDialog order={tracking} store={store} onClose={() => setTracking(null)} />
     </div>
+  );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function TrackingDialog({ order, store, onClose }: { order: any; store?: any; onClose: () => void }) {
+  const pos = useCourierPosition(order?.id ?? null, !!order);
+  const addr = order?.address_snapshot ?? {};
+  return (
+    <Dialog open={!!order} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Acompanhar entrega {order ? `#${order.id.slice(0, 8)}` : ""}</DialogTitle>
+        </DialogHeader>
+        {order && (
+          <DeliveryMap
+            className="h-64"
+            label="Entregador a caminho"
+            courier={pos ? { lat: pos.latitude, lng: pos.longitude } : null}
+            destination={addr.latitude && addr.longitude ? { lat: Number(addr.latitude), lng: Number(addr.longitude) } : null}
+            store={store?.latitude && store?.longitude ? { lat: Number(store.latitude), lng: Number(store.longitude) } : null}
+          />
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
 
