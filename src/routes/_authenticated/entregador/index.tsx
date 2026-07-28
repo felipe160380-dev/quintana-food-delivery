@@ -9,6 +9,9 @@ import { brl, orderStatusLabel } from "@/lib/format";
 import { toast } from "sonner";
 import { Bike, Package } from "lucide-react";
 import { EmptyState, RowSkeleton } from "@/components/ui-states";
+import { DeliveryMap } from "@/components/DeliveryMap";
+import { useCourierPosition } from "@/hooks/use-order-tracking";
+import { useCourierLocationShare } from "@/hooks/use-courier-location-share";
 
 export const Route = createFileRoute("/_authenticated/entregador/")({ component: Page });
 
