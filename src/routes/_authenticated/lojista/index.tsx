@@ -604,7 +604,9 @@ const nextStatus: Record<string, string | null> = {
 /** Pedidos com pagamento online só aparecem para a loja após confirmação do pagamento. */
 export const PAID_OR_OFFLINE =
   "payment_status.eq.paid,payment_method.in.(cash_on_delivery,card_on_delivery)";
-function OrdersTab({ storeId }: { storeId: string }) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function OrdersTab({ storeId, store }: { storeId: string; store?: any }) {
+  const [tracking, setTracking] = useState<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [orders, setOrders] = useState<any[]>([]);
   const [tab, setTab] = useState<"active" | "history">("active");
