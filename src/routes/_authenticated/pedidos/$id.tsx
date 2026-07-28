@@ -10,6 +10,8 @@ import { ArrowLeft, Send, MapPin, CheckCircle2, Timer, Home, MessageCircle } fro
 import { toast } from "sonner";
 import { ReviewBox } from "@/components/ReviewBox";
 import { OrderTimeline } from "@/components/OrderTimeline";
+import { DeliveryMap } from "@/components/DeliveryMap";
+import { useCourierPosition, useOrderEvents } from "@/hooks/use-order-tracking";
 
 export const Route = createFileRoute("/_authenticated/pedidos/$id")({
   validateSearch: (search: Record<string, unknown>) => ({ novo: search.novo === true || search.novo === "1" }),
