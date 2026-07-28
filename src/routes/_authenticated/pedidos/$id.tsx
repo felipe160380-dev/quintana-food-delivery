@@ -60,6 +60,10 @@ function Page() {
 
   useEffect(() => { listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" }); }, [messages]);
 
+  const events = useOrderEvents(id);
+  const courierPos = useCourierPosition(id, order?.status === "out_for_delivery");
+
+
   const send = async () => {
     if (!text.trim() || !me) return;
     const { error } = await supabase.from("messages").insert({ order_id: id, sender_id: me, body: text.trim() });
