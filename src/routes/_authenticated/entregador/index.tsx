@@ -187,16 +187,25 @@ function OrderCard({ o, mine, onUpdate }: { o: any; mine?: boolean; onUpdate: ()
         </div>
       </div>
       {mine && o.status === "out_for_delivery" && (
-        <div className="mt-3 flex items-center gap-2 border-t pt-3">
-          <input
-            value={code}
-            onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 4))}
-            placeholder="Código"
-            inputMode="numeric"
-            className="w-24 rounded-md border bg-background px-3 py-2 text-center text-lg font-mono tracking-widest"
+        <div className="mt-3 space-y-3 border-t pt-3">
+          <DeliveryMap
+            className="h-44"
+            label="Rota até o cliente"
+            courier={myPos ? { lat: myPos.latitude, lng: myPos.longitude } : null}
+            destination={addr.latitude && addr.longitude ? { lat: Number(addr.latitude), lng: Number(addr.longitude) } : null}
+            store={o.store?.latitude && o.store?.longitude ? { lat: Number(o.store.latitude), lng: Number(o.store.longitude) } : null}
           />
-          <Button size="sm" onClick={confirmDeliver}>Confirmar entrega</Button>
-          <span className="text-xs text-muted-foreground">Peça ao cliente os 4 dígitos.</span>
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 4))}
+              placeholder="Código"
+              inputMode="numeric"
+              className="w-24 rounded-md border bg-background px-3 py-2 text-center text-lg font-mono tracking-widest"
+            />
+            <Button size="sm" onClick={confirmDeliver}>Confirmar entrega</Button>
+            <span className="text-xs text-muted-foreground">Peça ao cliente os 4 dígitos.</span>
+          </div>
         </div>
       )}
     </Card>
