@@ -10,6 +10,8 @@ import { ArrowLeft, Send, MapPin, CheckCircle2, Timer, Home, MessageCircle } fro
 import { toast } from "sonner";
 import { ReviewBox } from "@/components/ReviewBox";
 import { OrderTimeline } from "@/components/OrderTimeline";
+import { DeliveryMap } from "@/components/DeliveryMap";
+import { useCourierPosition, useOrderEvents } from "@/hooks/use-order-tracking";
 
 export const Route = createFileRoute("/_authenticated/pedidos/$id")({
   validateSearch: (search: Record<string, unknown>) => ({ novo: search.novo === true || search.novo === "1" }),
@@ -36,7 +38,7 @@ function Page() {
 
   useEffect(() => {
     const load = async () => {
-      const { data: o } = await supabase.from("orders").select("*, store:stores(name,logo_url,phone)").eq("id", id).maybeSingle();
+      const { data: o } = await supabase.from("orders").select("*, store:stores(name,logo_url,phone,latitude,longitude,prep_time_min)").eq("id", id).maybeSingle();
       setOrder(o);
       const { data: it } = await supabase.from("order_items").select("*, addons:order_item_addons(*)").eq("order_id", id);
       setItems(it ?? []);
@@ -57,6 +59,10 @@ function Page() {
   }, [id]);
 
   useEffect(() => { listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" }); }, [messages]);
+
+  const events = useOrderEvents(id);
+  const courierPos = useCourierPosition(id, order?.status === "out_for_delivery");
+
 
   const send = async () => {
     if (!text.trim() || !me) return;
@@ -125,7 +131,17 @@ function Page() {
 
       <Card id="acompanhamento">
         <CardHeader><CardTitle className="text-base">Acompanhamento</CardTitle></CardHeader>
-        <CardContent className="pt-0"><OrderTimeline status={order.status} /></CardContent>
+        <CardContent className="space-y-4 pt-0">
+          {order.status === "out_for_delivery" && (
+            <DeliveryMap
+              label="Entrega em andamento"
+              courier={courierPos ? { lat: courierPos.latitude, lng: courierPos.longitude } : null}
+              destination={addr.latitude && addr.longitude ? { lat: Number(addr.latitude), lng: Number(addr.longitude) } : null}
+              store={order.store?.latitude && order.store?.longitude ? { lat: Number(order.store.latitude), lng: Number(order.store.longitude) } : null}
+            />
+          )}
+          <OrderTimeline status={order.status} events={events} />
+        </CardContent>
       </Card>
 
       <Card>

@@ -12,6 +12,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { ImageUpload } from "@/components/ImageUpload";
 import { LocationPicker, type PickedLocation } from "@/components/LocationPicker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DeliveryMap } from "@/components/DeliveryMap";
+import { useCourierPosition } from "@/hooks/use-order-tracking";
 import { brl, orderStatusLabel, slugify } from "@/lib/format";
 import { toast } from "sonner";
 import {
@@ -153,7 +156,7 @@ function Page() {
         </TabsList>
 
         <TabsContent value="dashboard" className="mt-4"><DashboardTab store={store} /></TabsContent>
-        <TabsContent value="orders" className="mt-4"><OrdersTab storeId={store.id} /></TabsContent>
+        <TabsContent value="orders" className="mt-4"><OrdersTab storeId={store.id} store={store} /></TabsContent>
         <TabsContent value="menu" className="mt-4"><MenuTab storeId={store.id} /></TabsContent>
         <TabsContent value="store" className="mt-4"><StoreEdit store={store} onSaved={load} /></TabsContent>
         <TabsContent value="finance" className="mt-4"><FinanceTab store={store} /></TabsContent>
@@ -601,7 +604,9 @@ const nextStatus: Record<string, string | null> = {
 /** Pedidos com pagamento online só aparecem para a loja após confirmação do pagamento. */
 export const PAID_OR_OFFLINE =
   "payment_status.eq.paid,payment_method.in.(cash_on_delivery,card_on_delivery)";
-function OrdersTab({ storeId }: { storeId: string }) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function OrdersTab({ storeId, store }: { storeId: string; store?: any }) {
+  const [tracking, setTracking] = useState<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [orders, setOrders] = useState<any[]>([]);
   const [tab, setTab] = useState<"active" | "history">("active");
@@ -648,6 +653,9 @@ function OrdersTab({ storeId }: { storeId: string }) {
                       </div>
                       <div className="flex flex-col items-end gap-1">
                         <Button asChild size="sm" variant="outline"><Link to="/pedidos/$id" params={{ id: o.id }}>Abrir</Link></Button>
+                        {o.status === "out_for_delivery" && (
+                          <Button size="sm" variant="secondary" onClick={() => setTracking(o)}>Acompanhar entrega</Button>
+                        )}
                         {next && !["cancelled", "delivered"].includes(o.status) && (
                           <Button size="sm" onClick={async () => {
                             const { error } = await sb.from("orders").update({ status: next }).eq("id", o.id);
@@ -670,7 +678,32 @@ function OrdersTab({ storeId }: { storeId: string }) {
           )}
         </div>
       ))}
+      <TrackingDialog order={tracking} store={store} onClose={() => setTracking(null)} />
     </div>
+  );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function TrackingDialog({ order, store, onClose }: { order: any; store?: any; onClose: () => void }) {
+  const pos = useCourierPosition(order?.id ?? null, !!order);
+  const addr = order?.address_snapshot ?? {};
+  return (
+    <Dialog open={!!order} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Acompanhar entrega {order ? `#${order.id.slice(0, 8)}` : ""}</DialogTitle>
+        </DialogHeader>
+        {order && (
+          <DeliveryMap
+            className="h-64"
+            label="Entregador a caminho"
+            courier={pos ? { lat: pos.latitude, lng: pos.longitude } : null}
+            destination={addr.latitude && addr.longitude ? { lat: Number(addr.latitude), lng: Number(addr.longitude) } : null}
+            store={store?.latitude && store?.longitude ? { lat: Number(store.latitude), lng: Number(store.longitude) } : null}
+          />
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
 

@@ -9,6 +9,9 @@ import { brl, orderStatusLabel } from "@/lib/format";
 import { toast } from "sonner";
 import { Bike, Package } from "lucide-react";
 import { EmptyState, RowSkeleton } from "@/components/ui-states";
+import { DeliveryMap } from "@/components/DeliveryMap";
+import { useCourierPosition } from "@/hooks/use-order-tracking";
+import { useCourierLocationShare } from "@/hooks/use-courier-location-share";
 
 export const Route = createFileRoute("/_authenticated/entregador/")({ component: Page });
 
@@ -41,7 +44,7 @@ function Page() {
 
     const { data: r } = await supabase.from("orders").select("*, store:stores(name,logo_url,address_line,latitude,longitude)").eq("status", "ready").eq("city_id", c.city_id).is("courier_id", null).order("created_at");
     setReady(r ?? []);
-    const { data: m } = await supabase.from("orders").select("*, store:stores(name,logo_url)").eq("courier_id", u.user.id).in("status", ["ready", "out_for_delivery"]).order("created_at");
+    const { data: m } = await supabase.from("orders").select("*, store:stores(name,logo_url,address_line,latitude,longitude)").eq("courier_id", u.user.id).in("status", ["ready", "out_for_delivery"]).order("created_at");
     setMine(m ?? []);
   };
 
@@ -53,6 +56,13 @@ function Page() {
     return () => { supabase.removeChannel(ch); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Transmite a posição do entregador enquanto houver entregas em rota.
+  useCourierLocationShare(
+    me?.user?.id ?? null,
+    mine.filter((o) => o.status === "out_for_delivery").map((o) => o.id),
+  );
+
 
   if (blocked) return (
     <div className="mx-auto max-w-md p-10 text-center">
@@ -135,6 +145,7 @@ function Page() {
 function OrderCard({ o, mine, onUpdate }: { o: any; mine?: boolean; onUpdate: () => void }) {
   const [code, setCode] = useState("");
   const addr = o.address_snapshot ?? {};
+  const myPos = useCourierPosition(o.id, !!mine && o.status === "out_for_delivery");
   const accept = async () => {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
@@ -176,16 +187,25 @@ function OrderCard({ o, mine, onUpdate }: { o: any; mine?: boolean; onUpdate: ()
         </div>
       </div>
       {mine && o.status === "out_for_delivery" && (
-        <div className="mt-3 flex items-center gap-2 border-t pt-3">
-          <input
-            value={code}
-            onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 4))}
-            placeholder="Código"
-            inputMode="numeric"
-            className="w-24 rounded-md border bg-background px-3 py-2 text-center text-lg font-mono tracking-widest"
+        <div className="mt-3 space-y-3 border-t pt-3">
+          <DeliveryMap
+            className="h-44"
+            label="Rota até o cliente"
+            courier={myPos ? { lat: myPos.latitude, lng: myPos.longitude } : null}
+            destination={addr.latitude && addr.longitude ? { lat: Number(addr.latitude), lng: Number(addr.longitude) } : null}
+            store={o.store?.latitude && o.store?.longitude ? { lat: Number(o.store.latitude), lng: Number(o.store.longitude) } : null}
           />
-          <Button size="sm" onClick={confirmDeliver}>Confirmar entrega</Button>
-          <span className="text-xs text-muted-foreground">Peça ao cliente os 4 dígitos.</span>
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 4))}
+              placeholder="Código"
+              inputMode="numeric"
+              className="w-24 rounded-md border bg-background px-3 py-2 text-center text-lg font-mono tracking-widest"
+            />
+            <Button size="sm" onClick={confirmDeliver}>Confirmar entrega</Button>
+            <span className="text-xs text-muted-foreground">Peça ao cliente os 4 dígitos.</span>
+          </div>
         </div>
       )}
     </Card>
