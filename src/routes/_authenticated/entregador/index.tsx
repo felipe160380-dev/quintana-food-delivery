@@ -44,7 +44,7 @@ function Page() {
 
     const { data: r } = await supabase.from("orders").select("*, store:stores(name,logo_url,address_line,latitude,longitude)").eq("status", "ready").eq("city_id", c.city_id).is("courier_id", null).order("created_at");
     setReady(r ?? []);
-    const { data: m } = await supabase.from("orders").select("*, store:stores(name,logo_url)").eq("courier_id", u.user.id).in("status", ["ready", "out_for_delivery"]).order("created_at");
+    const { data: m } = await supabase.from("orders").select("*, store:stores(name,logo_url,address_line,latitude,longitude)").eq("courier_id", u.user.id).in("status", ["ready", "out_for_delivery"]).order("created_at");
     setMine(m ?? []);
   };
 
@@ -56,6 +56,13 @@ function Page() {
     return () => { supabase.removeChannel(ch); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Transmite a posição do entregador enquanto houver entregas em rota.
+  useCourierLocationShare(
+    me?.user?.id ?? null,
+    mine.filter((o) => o.status === "out_for_delivery").map((o) => o.id),
+  );
+
 
   if (blocked) return (
     <div className="mx-auto max-w-md p-10 text-center">
