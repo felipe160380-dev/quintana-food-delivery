@@ -653,6 +653,9 @@ function OrdersTab({ storeId, store }: { storeId: string; store?: any }) {
                       </div>
                       <div className="flex flex-col items-end gap-1">
                         <Button asChild size="sm" variant="outline"><Link to="/pedidos/$id" params={{ id: o.id }}>Abrir</Link></Button>
+                        {o.status === "out_for_delivery" && (
+                          <Button size="sm" variant="secondary" onClick={() => setTracking(o)}>Acompanhar entrega</Button>
+                        )}
                         {next && !["cancelled", "delivered"].includes(o.status) && (
                           <Button size="sm" onClick={async () => {
                             const { error } = await sb.from("orders").update({ status: next }).eq("id", o.id);
