@@ -156,7 +156,7 @@ function Page() {
         </TabsList>
 
         <TabsContent value="dashboard" className="mt-4"><DashboardTab store={store} /></TabsContent>
-        <TabsContent value="orders" className="mt-4"><OrdersTab storeId={store.id} /></TabsContent>
+        <TabsContent value="orders" className="mt-4"><OrdersTab storeId={store.id} store={store} /></TabsContent>
         <TabsContent value="menu" className="mt-4"><MenuTab storeId={store.id} /></TabsContent>
         <TabsContent value="store" className="mt-4"><StoreEdit store={store} onSaved={load} /></TabsContent>
         <TabsContent value="finance" className="mt-4"><FinanceTab store={store} /></TabsContent>
