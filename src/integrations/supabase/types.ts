@@ -186,6 +186,82 @@ export type Database = {
           },
         ]
       }
+      order_courier_locations: {
+        Row: {
+          accuracy: number | null
+          courier_id: string
+          created_at: string
+          heading: number | null
+          latitude: number
+          longitude: number
+          order_id: string
+          speed: number | null
+          updated_at: string
+        }
+        Insert: {
+          accuracy?: number | null
+          courier_id: string
+          created_at?: string
+          heading?: number | null
+          latitude: number
+          longitude: number
+          order_id: string
+          speed?: number | null
+          updated_at?: string
+        }
+        Update: {
+          accuracy?: number | null
+          courier_id?: string
+          created_at?: string
+          heading?: number | null
+          latitude?: number
+          longitude?: number
+          order_id?: string
+          speed?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_courier_locations_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_events: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          meta: Json | null
+          order_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: string
+          meta?: Json | null
+          order_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          meta?: Json | null
+          order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_item_addons: {
         Row: {
           created_at: string
