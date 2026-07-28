@@ -34,11 +34,26 @@ export function useLiveNotifications() {
       const isMerchant = roles?.some((r) => r.role === "merchant");
       const isCourier = roles?.some((r) => r.role === "courier");
 
+      const statusMsg: Record<string, string> = {
+        accepted: "A loja confirmou seu pedido 🎉",
+        preparing: "Seu pedido está sendo preparado 👨‍🍳",
+        ready: "Pedido pronto, aguardando entregador 📦",
+        out_for_delivery: "Saiu para entrega — acompanhe no mapa 🛵",
+        delivered: "Pedido entregue. Bom apetite! ✅",
+        cancelled: "Seu pedido foi cancelado ❌",
+      };
+
       // Customer: any of my orders changed
       const c1 = supabase.channel(`notif-customer-${userId}`)
         .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orders", filter: `customer_id=eq.${userId}` }, (p) => {
           const oldRow = p.old as any; const row = p.new as any;
-          if (oldRow?.status !== row?.status) notify("Pedido atualizado", `Status: ${row.status}`);
+          if (oldRow?.status !== row?.status) {
+            notify("Pedido atualizado", statusMsg[row.status] ?? `Status: ${row.status}`);
+          } else if (oldRow?.payment_status !== row?.payment_status && row?.payment_status === "paid") {
+            notify("Pagamento confirmado", "A loja já recebeu seu pedido.");
+          } else if (oldRow?.courier_id !== row?.courier_id && row?.courier_id) {
+            notify("Entregador a caminho", "Um entregador aceitou seu pedido.");
+          }
         })
         .subscribe();
       channels.push(c1);
