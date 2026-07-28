@@ -38,7 +38,7 @@ function Page() {
 
   useEffect(() => {
     const load = async () => {
-      const { data: o } = await supabase.from("orders").select("*, store:stores(name,logo_url,phone)").eq("id", id).maybeSingle();
+      const { data: o } = await supabase.from("orders").select("*, store:stores(name,logo_url,phone,latitude,longitude,prep_time_min)").eq("id", id).maybeSingle();
       setOrder(o);
       const { data: it } = await supabase.from("order_items").select("*, addons:order_item_addons(*)").eq("order_id", id);
       setItems(it ?? []);
