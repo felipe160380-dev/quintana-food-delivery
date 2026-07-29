@@ -159,7 +159,7 @@ function StorePage() {
 
 
         {/* Menu */}
-        <div className="mt-6 space-y-7">
+        <div className="mt-4 space-y-6">
           {loading ? (
             <div className="space-y-3">
               {Array.from({ length: 4 }).map((_, i) => (
