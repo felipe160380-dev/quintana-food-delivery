@@ -90,15 +90,15 @@ function StorePage() {
 
   return (
     <div className="pb-28">
-      {/* Banner */}
-      <div className="relative h-36 w-full overflow-hidden bg-gradient-to-br from-orange-300 to-primary sm:h-48">
+      {/* Banner (mais baixo, estilo iFood) */}
+      <div className="relative h-24 w-full overflow-hidden bg-gradient-to-br from-orange-300 to-primary sm:h-36">
         {store.cover_url && <img src={store.cover_url} alt={`Capa da loja ${store.name}`} className="h-full w-full object-cover" />}
         <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-black/10" />
-        <div className="absolute inset-x-0 top-0 flex items-center justify-between p-3">
-          <Button asChild variant="secondary" size="sm" className="shadow-sm">
+        <div className="absolute inset-x-0 top-0 flex items-center justify-between gap-2 p-3">
+          <Button asChild variant="secondary" size="sm" className="shrink-0 shadow-sm">
             <Link to="/"><ArrowLeft className="mr-1 size-4" /> Voltar</Link>
           </Button>
-          <div className="flex gap-2">
+          <div className="flex shrink-0 gap-2">
             <Button
               variant="secondary" size="icon" className="size-9 shadow-sm" aria-label="Compartilhar" onClick={share}
             >
@@ -115,46 +115,48 @@ function StorePage() {
         </div>
       </div>
 
-      {/* Cabeçalho da loja — logo parcialmente sobre o banner, sem cortar */}
-      <div className="mx-auto max-w-3xl px-4">
-        <Card className="-mt-10 p-4 shadow-lg sm:-mt-12">
-          <div className="flex items-start gap-4">
-            <div className="-mt-12 size-24 shrink-0 overflow-hidden rounded-2xl border-4 border-card bg-muted shadow-lg sm:-mt-14">
+      {/* Cabeçalho da loja — logo parcialmente sobre o banner, sempre visível */}
+      <div className="relative z-10 mx-auto max-w-3xl px-4">
+        <Card className="-mt-6 p-3 shadow-lg sm:-mt-8 sm:p-4">
+          <div className="flex items-start gap-3 sm:gap-4">
+            <div className="-mt-10 size-16 shrink-0 overflow-hidden rounded-2xl border-4 border-card bg-muted shadow-lg sm:-mt-12 sm:size-20">
               {store.logo_url
                 ? <img src={store.logo_url} className="h-full w-full object-cover" alt={`Logo ${store.name}`} />
-                : <div className="grid h-full w-full place-items-center text-primary"><StoreIcon className="size-8" /></div>}
+                : <div className="grid h-full w-full place-items-center text-primary"><StoreIcon className="size-7" /></div>}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="min-w-0 truncate text-xl font-bold leading-tight sm:text-2xl">{store.name}</h1>
-                <Badge className={store.is_online ? "bg-success text-success-foreground" : ""} variant={store.is_online ? "default" : "secondary"}>
+              <div className="flex min-w-0 items-center gap-2">
+                <h1 className="min-w-0 truncate text-lg font-bold leading-tight sm:text-2xl">{store.name}</h1>
+                <Badge className={`shrink-0 ${store.is_online ? "bg-success text-success-foreground" : ""}`} variant={store.is_online ? "default" : "secondary"}>
                   {store.is_online ? "Aberta" : "Fechada"}
                 </Badge>
               </div>
-              <p className="mt-0.5 truncate text-sm text-muted-foreground">{store.category ?? "Restaurante"}</p>
-              <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
-                <StoreRating storeId={store.id} />
-                <span className="inline-flex items-center gap-1"><Timer className="size-3.5 shrink-0" /> {store.prep_time_min} min</span>
-                <span className="inline-flex items-center gap-1">
-                  <Truck className="size-3.5 shrink-0" />
-                  {Number(store.delivery_fee) > 0 ? brl(Number(store.delivery_fee)) : <span className="font-semibold text-success">Entrega grátis</span>}
-                </span>
-                {Number(store.min_order) > 0 && (
-                  <span className="inline-flex items-center gap-1"><Receipt className="size-3.5 shrink-0" /> Mín. {brl(Number(store.min_order))}</span>
-                )}
-                {hoursToday && (
-                  <span className="inline-flex items-center gap-1">
-                    <Clock className="size-3.5 shrink-0" /> {hoursToday}
-                  </span>
-                )}
-
-              </div>
-              {store.description && (
-                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{store.description}</p>
-              )}
+              <p className="mt-0.5 truncate text-xs text-muted-foreground sm:text-sm">{store.category ?? "Restaurante"}</p>
             </div>
           </div>
+
+          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted-foreground">
+            <StoreRating storeId={store.id} />
+            <span className="inline-flex items-center gap-1"><Timer className="size-3.5 shrink-0" /> {store.prep_time_min} min</span>
+            <span className="inline-flex items-center gap-1">
+              <Truck className="size-3.5 shrink-0" />
+              {Number(store.delivery_fee) > 0 ? brl(Number(store.delivery_fee)) : <span className="font-semibold text-success">Entrega grátis</span>}
+            </span>
+            {Number(store.min_order) > 0 && (
+              <span className="inline-flex items-center gap-1"><Receipt className="size-3.5 shrink-0" /> Mín. {brl(Number(store.min_order))}</span>
+            )}
+            {hoursToday && (
+              <span className="inline-flex items-center gap-1">
+                <Clock className="size-3.5 shrink-0" /> {hoursToday}
+              </span>
+            )}
+          </div>
+
+          {store.description && (
+            <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-muted-foreground">{store.description}</p>
+          )}
         </Card>
+
 
         {/* Menu */}
         <div className="mt-6 space-y-7">
