@@ -14,7 +14,9 @@ import { DeliveryMap } from "@/components/DeliveryMap";
 import { useCourierPosition, useOrderEvents } from "@/hooks/use-order-tracking";
 
 export const Route = createFileRoute("/_authenticated/pedidos/$id")({
-  validateSearch: (search: Record<string, unknown>) => ({ novo: search.novo === true || search.novo === "1" }),
+  validateSearch: (search: Record<string, unknown>): { novo?: boolean } =>
+    search.novo === true || search.novo === "1" ? { novo: true } : {},
+
   component: Page,
 });
 
