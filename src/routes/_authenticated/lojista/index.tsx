@@ -112,17 +112,17 @@ function Page() {
           )}
         </div>
       )}
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold">{store.name}</h1>
-          <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
+      <div className="mb-4 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 sm:flex sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="truncate text-xl font-bold sm:text-2xl">{store.name}</h1>
+          <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             <Badge variant={approvalVariant[store.approval_status] ?? "secondary"}>{approvalLabel[store.approval_status] ?? store.approval_status}</Badge>
             {isApproved && <Badge variant={store.is_online ? "default" : "secondary"}>{store.is_online ? "Online" : "Offline"}</Badge>}
             <Link to="/loja/$slug" params={{ slug: store.slug }} className="text-primary hover:underline">Ver como cliente →</Link>
           </div>
         </div>
-        <div className="flex items-center gap-2 rounded-lg border bg-card p-2">
-          <span className="text-sm">{store.is_online ? "No ar" : "Fora do ar"}</span>
+        <div className="flex shrink-0 items-center gap-2 rounded-lg border bg-card p-2">
+          <span className="hidden text-sm sm:inline">{store.is_online ? "No ar" : "Fora do ar"}</span>
           <Switch
             checked={store.is_online}
             disabled={!isApproved}
@@ -135,6 +135,7 @@ function Page() {
           />
         </div>
       </div>
+
 
 
       <Tabs defaultValue="dashboard">
