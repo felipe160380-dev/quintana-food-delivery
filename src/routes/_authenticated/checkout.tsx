@@ -112,8 +112,9 @@ function Page() {
   };
 
   return (
-    <div className="mx-auto max-w-2xl space-y-4 px-4 py-6">
+    <div className="mx-auto max-w-2xl space-y-4 px-4 pb-40 pt-6 sm:pb-32">
       <h1 className="text-2xl font-bold tracking-tight">Finalizar pedido</h1>
+
 
       <Card>
         <CardHeader className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
@@ -223,12 +224,16 @@ function Page() {
         </CardContent>
       </Card>
 
-      <div className="sticky bottom-16 z-20 -mx-4 border-t bg-background/95 px-4 py-3 backdrop-blur sm:bottom-0">
-        <Button size="lg" className="w-full" onClick={placeOrder} disabled={placing || !addrId}>
-          {placing ? "Enviando pedido..." : `Fazer pedido · ${brl(total)}`}
-        </Button>
-        {!addrId && <p className="mt-1.5 text-center text-xs text-muted-foreground">Selecione um endereço de entrega para continuar.</p>}
+      {/* Barra de ação fixa: sempre visível, acima da navegação inferior e da safe-area. */}
+      <div className="action-bar bottom-nav border-t bg-background/95 backdrop-blur sm:bottom-0">
+        <div className="mx-auto max-w-2xl px-4 py-3">
+          <Button size="lg" className="h-12 w-full text-base" onClick={placeOrder} disabled={placing || !addrId}>
+            {placing ? "Enviando pedido..." : `Fazer pedido · ${brl(total)}`}
+          </Button>
+          {!addrId && <p className="mt-1.5 text-center text-xs text-muted-foreground">Selecione um endereço de entrega para continuar.</p>}
+        </div>
       </div>
+
 
 
       {payDialog && (

@@ -104,7 +104,7 @@ function AdminPanel() {
       </header>
 
       <Tabs defaultValue="dashboard">
-        <TabsList className="grid grid-cols-3 md:grid-cols-7 mb-4">
+        <TabsList className="tabs-scroll mb-4 h-auto gap-1 p-1">
           <TabsTrigger value="dashboard">Visão</TabsTrigger>
           <TabsTrigger value="couriers"><Bike className="w-4 h-4 mr-1" />Entregadores</TabsTrigger>
           <TabsTrigger value="stores"><StoreIcon className="w-4 h-4 mr-1" />Lojas</TabsTrigger>

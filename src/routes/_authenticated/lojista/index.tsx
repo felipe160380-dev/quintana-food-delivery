@@ -501,8 +501,9 @@ function ProductDialog({ product, onClose }: { product: any; onClose: () => void
   const isNew = !product.id;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-black/40 sm:items-center" onClick={onClose}>
-      <div className="my-4 w-full max-w-lg rounded-t-2xl bg-card p-4 sm:rounded-2xl" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-4" onClick={onClose}>
+      <div className="sheet-panel safe-bottom max-w-lg rounded-t-2xl bg-card p-4 sm:rounded-2xl" onClick={(e) => e.stopPropagation()}>
+
         <h3 className="mb-3 text-lg font-bold">{isNew ? "Novo produto" : "Editar produto"}</h3>
         <form className="space-y-3" onSubmit={async (e) => {
           e.preventDefault();
