@@ -283,13 +283,14 @@ function DashboardTab({ store }: { store: any }) {
           <CardHeader><CardTitle className="text-base">⚠️ Pedidos aguardando confirmação</CardTitle></CardHeader>
           <CardContent className="space-y-2">
             {pending.map((o) => (
-              <div key={o.id} className="flex items-center justify-between rounded-lg border p-2">
-                <div>
-                  <div className="font-medium">#{o.id.slice(0, 8)}</div>
-                  <div className="text-xs text-muted-foreground">{brl(Number(o.total))} • {new Date(o.created_at).toLocaleTimeString("pt-BR")}</div>
+              <div key={o.id} className="flex items-center justify-between gap-3 rounded-lg border p-2">
+                <div className="min-w-0">
+                  <div className="truncate font-medium">#{o.id.slice(0, 8)}</div>
+                  <div className="truncate text-xs text-muted-foreground">{brl(Number(o.total))} • {new Date(o.created_at).toLocaleTimeString("pt-BR")}</div>
                 </div>
-                <Button size="sm" asChild><Link to="/pedidos/$id" params={{ id: o.id }}>Abrir</Link></Button>
+                <Button size="sm" asChild className="shrink-0"><Link to="/pedidos/$id" params={{ id: o.id }}>Abrir</Link></Button>
               </div>
+
             ))}
           </CardContent>
         </Card>
@@ -373,7 +374,7 @@ function StoreEdit({ store, onSaved }: { store: any; onSaved: () => void }) {
       <Card><CardHeader><CardTitle className="text-base">Endereço da loja</CardTitle></CardHeader><CardContent><LocationPicker value={loc} onChange={setLoc} /></CardContent></Card>
 
       <Card><CardHeader><CardTitle className="text-base">Entrega</CardTitle></CardHeader>
-      <CardContent className="grid gap-4 sm:grid-cols-4">
+      <CardContent className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <div className="space-y-1.5"><Label>Taxa entrega (R$)</Label><Input type="number" step="0.01" value={form.delivery_fee} onChange={(e) => setForm({ ...form, delivery_fee: e.target.value })} /></div>
         <div className="space-y-1.5"><Label>Pedido mín. (R$)</Label><Input type="number" step="0.01" value={form.min_order} onChange={(e) => setForm({ ...form, min_order: e.target.value })} /></div>
         <div className="space-y-1.5"><Label>Raio (km)</Label><Input type="number" step="0.5" value={form.delivery_radius_km} onChange={(e) => setForm({ ...form, delivery_radius_km: e.target.value })} /></div>
@@ -583,11 +584,12 @@ function AddonsEditor({ productId }: { productId: string }) {
           </div>
         ))}
       </div>
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <Input placeholder="Nome (ex: Bacon)" value={name} onChange={(e) => setName(e.target.value)} className="col-span-2" />
         <Input placeholder="Preço" type="number" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} />
         <Input placeholder="Máx" type="number" value={maxQty} onChange={(e) => setMaxQty(e.target.value)} />
       </div>
+
       <div className="flex items-center justify-between">
         <label className="flex items-center gap-2 text-xs"><Switch checked={isRequired} onCheckedChange={setIsRequired} /> Obrigatório</label>
         <Button size="sm" type="button" onClick={async () => {
@@ -864,13 +866,14 @@ function ReviewsTab({ storeId }: { storeId: string }) {
 
   return (
     <div className="space-y-3">
-      <Card><CardContent className="flex items-center justify-between pt-6">
-        <div>
+      <Card><CardContent className="flex items-center justify-between gap-3 pt-6">
+        <div className="min-w-0">
           <div className="text-sm text-muted-foreground">Nota média</div>
           <div className="text-3xl font-bold">{avg ? avg.toFixed(1) : "—"}★</div>
         </div>
-        <div className="text-sm text-muted-foreground">{reviews.length} avaliações</div>
+        <div className="shrink-0 text-right text-sm text-muted-foreground">{reviews.length} avaliações</div>
       </CardContent></Card>
+
       {reviews.length === 0 ? <Card className="p-6 text-center text-sm text-muted-foreground">Nenhuma avaliação ainda.</Card> : reviews.map((r) => (
         <Card key={r.id} className="p-3">
           <div className="flex items-center gap-2 text-sm">
