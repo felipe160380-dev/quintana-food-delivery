@@ -139,7 +139,7 @@ function Page() {
 
 
       <Tabs defaultValue="dashboard">
-        <TabsList className="flex w-full flex-wrap justify-start gap-1 bg-muted/40 p-1">
+        <TabsList className="tabs-scroll h-auto gap-1 bg-muted/40 p-1">
           <TabsTrigger value="dashboard"><LayoutDashboard className="mr-1 size-4" />Dashboard</TabsTrigger>
           <TabsTrigger value="orders" className="relative">
             <ClipboardList className="mr-1 size-4" />Pedidos
@@ -166,17 +166,18 @@ function Page() {
         <TabsContent value="notifs" className="mt-4"><NotificationsTab storeId={store.id} /></TabsContent>
       </Tabs>
 
-      <div className="fixed inset-x-0 bottom-14 z-30 border-t bg-card/95 px-4 py-2 text-xs backdrop-blur sm:bottom-0">
-        <div className="mx-auto flex max-w-5xl items-center justify-between">
-          <span className="flex items-center gap-1">
-            <span className={`size-2 rounded-full ${store.is_online ? "bg-emerald-500" : "bg-muted-foreground"}`} />
-            {store.is_online ? "Loja no ar" : "Loja fora do ar"}
+      <div className="action-bar border-t bg-card/95 px-4 py-2 text-xs backdrop-blur">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3">
+          <span className="flex min-w-0 items-center gap-1">
+            <span className={`size-2 shrink-0 rounded-full ${store.is_online ? "bg-success" : "bg-muted-foreground"}`} />
+            <span className="truncate">{store.is_online ? "Loja no ar" : "Loja fora do ar"}</span>
           </span>
-          <span className="text-muted-foreground">
+          <span className="shrink-0 text-muted-foreground">
             {th?.closed || !th ? "Fechado hoje" : `Hoje: ${th.open} – ${th.close}`}
           </span>
         </div>
       </div>
+
     </div>
   );
 }
