@@ -98,13 +98,14 @@ function Page() {
           <p className="text-sm text-muted-foreground">Fique disponível para receber pedidos prontos.</p>
         </div>
         <div className="flex shrink-0 items-center gap-2 rounded-xl border bg-card p-2">
-          <Bike className="size-4 text-primary" />
-          <span className="text-sm">{available ? "Disponível" : "Indisponível"}</span>
+          <Bike className="size-4 shrink-0 text-primary" />
+          <span className="hidden text-sm sm:inline">{available ? "Disponível" : "Indisponível"}</span>
           <Switch checked={available} onCheckedChange={async (v) => {
             await supabase.from("couriers").update({ is_available: v, last_seen_at: new Date().toISOString() }).eq("id", me.user.id);
             setAvailable(v);
           }} />
         </div>
+
       </div>
 
       {mine.length > 0 && (
@@ -175,17 +176,25 @@ function OrderCard({ o, mine, onUpdate }: { o: any; mine?: boolean; onUpdate: ()
         <div className="size-12 shrink-0 overflow-hidden rounded-lg bg-muted">
           {o.store?.logo_url && <img src={o.store.logo_url} className="h-full w-full object-cover" alt="" />}
         </div>
-        <div className="flex-1">
-          <div className="flex items-center gap-2"><div className="font-medium">{o.store?.name}</div><Badge>{orderStatusLabel[o.status]}</Badge></div>
-          <div className="text-xs text-muted-foreground">Retirar: {o.store?.address_line ?? "—"}</div>
-          <div className="text-xs text-muted-foreground">Entregar: {addr.street}{addr.number ? `, ${addr.number}` : ""}</div>
-          <div className="mt-1 text-sm font-semibold">{brl(Number(o.total))}</div>
+        <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 items-center gap-2">
+            <div className="truncate font-medium">{o.store?.name}</div>
+            <Badge className="shrink-0">{orderStatusLabel[o.status]}</Badge>
+          </div>
+          <div className="truncate text-xs text-muted-foreground">Retirar: {o.store?.address_line ?? "—"}</div>
+          <div className="truncate text-xs text-muted-foreground">Entregar: {addr.street}{addr.number ? `, ${addr.number}` : ""}</div>
+          <div className="mt-1 text-sm font-semibold tabular-nums">{brl(Number(o.total))}</div>
+          <div className="mt-2 flex flex-wrap gap-2 sm:hidden">
+            <Button asChild size="sm" variant="outline"><Link to="/pedidos/$id" params={{ id: o.id }}>Abrir</Link></Button>
+            {!mine && <Button size="sm" onClick={accept}>Aceitar</Button>}
+          </div>
         </div>
-        <div className="flex flex-col items-end gap-1">
+        <div className="hidden shrink-0 flex-col items-end gap-1 sm:flex">
           <Button asChild size="sm" variant="outline"><Link to="/pedidos/$id" params={{ id: o.id }}>Abrir</Link></Button>
           {!mine && <Button size="sm" onClick={accept}>Aceitar</Button>}
         </div>
       </div>
+
       {mine && o.status === "out_for_delivery" && (
         <div className="mt-3 space-y-3 border-t pt-3">
           <DeliveryMap
