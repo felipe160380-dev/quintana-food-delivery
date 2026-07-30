@@ -253,12 +253,15 @@ function StorePage() {
         )}
 
         {shopper && count > 0 && (
-          <div className="fixed inset-x-0 bottom-16 z-30 mx-auto max-w-md px-4 sm:bottom-4">
-            <Button asChild className="w-full animate-fade-in shadow-xl" size="lg">
-              <Link to="/checkout"><ShoppingBag className="mr-2 size-4" /> Ver carrinho ({count})</Link>
-            </Button>
+          <div className="action-bar bottom-nav px-4 sm:bottom-4">
+            <div className="mx-auto max-w-md">
+              <Button asChild className="h-12 w-full animate-fade-in text-base shadow-xl" size="lg">
+                <Link to="/checkout"><ShoppingBag className="mr-2 size-4" /> Ver carrinho ({count})</Link>
+              </Button>
+            </div>
           </div>
         )}
+
       </div>
     </div>
   );
@@ -298,11 +301,12 @@ function ProductDialog({
   const missing = addons.some((a) => a.is_required && !(picked[a.id] ?? 0));
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center sm:p-4" onClick={onClose}>
       <div
-        className="max-h-[92vh] w-full max-w-md animate-scale-in overflow-y-auto rounded-t-3xl bg-card p-4 shadow-2xl sm:rounded-3xl"
+        className="sheet-panel max-w-md animate-scale-in rounded-t-3xl bg-card p-4 shadow-2xl sm:rounded-3xl"
         onClick={(e) => e.stopPropagation()}
       >
+
         {product.image_url && (
           <img src={product.image_url} alt={product.name} className="mb-3 h-40 w-full rounded-2xl object-cover" />
         )}
@@ -345,7 +349,7 @@ function ProductDialog({
           <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Ex: tirar cebola, sem gelo…" rows={2} />
         </div>
 
-        <div className="sticky bottom-0 mt-5 flex items-center gap-3 bg-card pt-2">
+        <div className="safe-bottom sticky bottom-0 -mx-4 mt-5 flex items-center gap-3 border-t bg-card px-4 pt-3">
           <div className="flex items-center gap-1 rounded-full border p-1">
             <Button size="icon" variant="ghost" className="size-8 rounded-full" aria-label="Diminuir" onClick={() => setQty((q) => Math.max(1, q - 1))}><Minus className="size-3.5" /></Button>
             <span className="w-6 text-center text-sm font-semibold tabular-nums">{qty}</span>

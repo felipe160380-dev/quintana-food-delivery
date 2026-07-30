@@ -167,7 +167,7 @@ function Page() {
               const addSum = (i.addons ?? []).reduce((s: number, a: any) => s + Number(a.price) * a.quantity, 0);
               return (
                 <div key={i.id}>
-                  <div className="flex justify-between"><span>{i.quantity}× {i.product_name}</span><span>{brl((Number(i.unit_price) + addSum) * i.quantity)}</span></div>
+                  <div className="flex justify-between gap-3"><span className="min-w-0 break-words">{i.quantity}× {i.product_name}</span><span className="shrink-0 tabular-nums">{brl((Number(i.unit_price) + addSum) * i.quantity)}</span></div>
                   {(i.addons ?? []).length > 0 && (
                     <ul className="ml-4 mt-0.5 text-xs text-muted-foreground">
                       {(i.addons ?? []).map((a: any) => <li key={a.id}>+ {a.quantity}× {a.name} ({brl(Number(a.price))})</li>)}
@@ -215,7 +215,7 @@ function Page() {
             ) : messages.map((m) => (
 
               <div key={m.id} className={`flex ${m.sender_id === me ? "justify-end" : "justify-start"}`}>
-                <div className={`max-w-[80%] rounded-2xl px-3 py-1.5 text-sm ${m.sender_id === me ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
+                <div className={`max-w-[80%] break-words rounded-2xl px-3 py-1.5 text-sm ${m.sender_id === me ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
                   <div>{m.body}</div>
                   <div className={`mt-0.5 text-[10px] ${m.sender_id === me ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
                     {new Date(m.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}

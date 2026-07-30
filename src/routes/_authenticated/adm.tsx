@@ -104,7 +104,7 @@ function AdminPanel() {
       </header>
 
       <Tabs defaultValue="dashboard">
-        <TabsList className="grid grid-cols-3 md:grid-cols-7 mb-4">
+        <TabsList className="tabs-scroll mb-4 h-auto gap-1 p-1">
           <TabsTrigger value="dashboard">Visão</TabsTrigger>
           <TabsTrigger value="couriers"><Bike className="w-4 h-4 mr-1" />Entregadores</TabsTrigger>
           <TabsTrigger value="stores"><StoreIcon className="w-4 h-4 mr-1" />Lojas</TabsTrigger>
@@ -400,12 +400,13 @@ function OrdersTab() {
       </div>
       {items.map((o) => (
         <Card key={o.id}>
-          <CardContent className="p-4 flex items-center justify-between gap-3">
-            <div>
+          <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
+            <div className="min-w-0">
               <p className="font-mono text-xs">#{o.id.slice(0, 8)}</p>
-              <p className="text-sm">R$ {Number(o.total).toFixed(2)} · {o.payment_method} · <Badge>{o.status}</Badge></p>
+              <p className="flex flex-wrap items-center gap-1 text-sm">R$ {Number(o.total).toFixed(2)} · {o.payment_method} · <Badge>{o.status}</Badge></p>
               <p className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleString("pt-BR")}</p>
             </div>
+
             {!["delivered", "cancelled"].includes(o.status) && (
               <Button size="sm" variant="destructive" onClick={() => cancel(o.id)}>Cancelar</Button>
             )}

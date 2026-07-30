@@ -112,17 +112,17 @@ function Page() {
           )}
         </div>
       )}
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold">{store.name}</h1>
-          <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
+      <div className="mb-4 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 sm:flex sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="truncate text-xl font-bold sm:text-2xl">{store.name}</h1>
+          <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             <Badge variant={approvalVariant[store.approval_status] ?? "secondary"}>{approvalLabel[store.approval_status] ?? store.approval_status}</Badge>
             {isApproved && <Badge variant={store.is_online ? "default" : "secondary"}>{store.is_online ? "Online" : "Offline"}</Badge>}
             <Link to="/loja/$slug" params={{ slug: store.slug }} className="text-primary hover:underline">Ver como cliente →</Link>
           </div>
         </div>
-        <div className="flex items-center gap-2 rounded-lg border bg-card p-2">
-          <span className="text-sm">{store.is_online ? "No ar" : "Fora do ar"}</span>
+        <div className="flex shrink-0 items-center gap-2 rounded-lg border bg-card p-2">
+          <span className="hidden text-sm sm:inline">{store.is_online ? "No ar" : "Fora do ar"}</span>
           <Switch
             checked={store.is_online}
             disabled={!isApproved}
@@ -137,8 +137,9 @@ function Page() {
       </div>
 
 
+
       <Tabs defaultValue="dashboard">
-        <TabsList className="flex w-full flex-wrap justify-start gap-1 bg-muted/40 p-1">
+        <TabsList className="tabs-scroll h-auto gap-1 bg-muted/40 p-1">
           <TabsTrigger value="dashboard"><LayoutDashboard className="mr-1 size-4" />Dashboard</TabsTrigger>
           <TabsTrigger value="orders" className="relative">
             <ClipboardList className="mr-1 size-4" />Pedidos
@@ -165,17 +166,18 @@ function Page() {
         <TabsContent value="notifs" className="mt-4"><NotificationsTab storeId={store.id} /></TabsContent>
       </Tabs>
 
-      <div className="fixed inset-x-0 bottom-14 z-30 border-t bg-card/95 px-4 py-2 text-xs backdrop-blur sm:bottom-0">
-        <div className="mx-auto flex max-w-5xl items-center justify-between">
-          <span className="flex items-center gap-1">
-            <span className={`size-2 rounded-full ${store.is_online ? "bg-emerald-500" : "bg-muted-foreground"}`} />
-            {store.is_online ? "Loja no ar" : "Loja fora do ar"}
+      <div className="action-bar border-t bg-card/95 px-4 py-2 text-xs backdrop-blur">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3">
+          <span className="flex min-w-0 items-center gap-1">
+            <span className={`size-2 shrink-0 rounded-full ${store.is_online ? "bg-success" : "bg-muted-foreground"}`} />
+            <span className="truncate">{store.is_online ? "Loja no ar" : "Loja fora do ar"}</span>
           </span>
-          <span className="text-muted-foreground">
+          <span className="shrink-0 text-muted-foreground">
             {th?.closed || !th ? "Fechado hoje" : `Hoje: ${th.open} – ${th.close}`}
           </span>
         </div>
       </div>
+
     </div>
   );
 }
@@ -281,13 +283,14 @@ function DashboardTab({ store }: { store: any }) {
           <CardHeader><CardTitle className="text-base">⚠️ Pedidos aguardando confirmação</CardTitle></CardHeader>
           <CardContent className="space-y-2">
             {pending.map((o) => (
-              <div key={o.id} className="flex items-center justify-between rounded-lg border p-2">
-                <div>
-                  <div className="font-medium">#{o.id.slice(0, 8)}</div>
-                  <div className="text-xs text-muted-foreground">{brl(Number(o.total))} • {new Date(o.created_at).toLocaleTimeString("pt-BR")}</div>
+              <div key={o.id} className="flex items-center justify-between gap-3 rounded-lg border p-2">
+                <div className="min-w-0">
+                  <div className="truncate font-medium">#{o.id.slice(0, 8)}</div>
+                  <div className="truncate text-xs text-muted-foreground">{brl(Number(o.total))} • {new Date(o.created_at).toLocaleTimeString("pt-BR")}</div>
                 </div>
-                <Button size="sm" asChild><Link to="/pedidos/$id" params={{ id: o.id }}>Abrir</Link></Button>
+                <Button size="sm" asChild className="shrink-0"><Link to="/pedidos/$id" params={{ id: o.id }}>Abrir</Link></Button>
               </div>
+
             ))}
           </CardContent>
         </Card>
@@ -371,7 +374,7 @@ function StoreEdit({ store, onSaved }: { store: any; onSaved: () => void }) {
       <Card><CardHeader><CardTitle className="text-base">Endereço da loja</CardTitle></CardHeader><CardContent><LocationPicker value={loc} onChange={setLoc} /></CardContent></Card>
 
       <Card><CardHeader><CardTitle className="text-base">Entrega</CardTitle></CardHeader>
-      <CardContent className="grid gap-4 sm:grid-cols-4">
+      <CardContent className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <div className="space-y-1.5"><Label>Taxa entrega (R$)</Label><Input type="number" step="0.01" value={form.delivery_fee} onChange={(e) => setForm({ ...form, delivery_fee: e.target.value })} /></div>
         <div className="space-y-1.5"><Label>Pedido mín. (R$)</Label><Input type="number" step="0.01" value={form.min_order} onChange={(e) => setForm({ ...form, min_order: e.target.value })} /></div>
         <div className="space-y-1.5"><Label>Raio (km)</Label><Input type="number" step="0.5" value={form.delivery_radius_km} onChange={(e) => setForm({ ...form, delivery_radius_km: e.target.value })} /></div>
@@ -501,8 +504,9 @@ function ProductDialog({ product, onClose }: { product: any; onClose: () => void
   const isNew = !product.id;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-black/40 sm:items-center" onClick={onClose}>
-      <div className="my-4 w-full max-w-lg rounded-t-2xl bg-card p-4 sm:rounded-2xl" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-4" onClick={onClose}>
+      <div className="sheet-panel safe-bottom max-w-lg rounded-t-2xl bg-card p-4 sm:rounded-2xl" onClick={(e) => e.stopPropagation()}>
+
         <h3 className="mb-3 text-lg font-bold">{isNew ? "Novo produto" : "Editar produto"}</h3>
         <form className="space-y-3" onSubmit={async (e) => {
           e.preventDefault();
@@ -580,11 +584,12 @@ function AddonsEditor({ productId }: { productId: string }) {
           </div>
         ))}
       </div>
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <Input placeholder="Nome (ex: Bacon)" value={name} onChange={(e) => setName(e.target.value)} className="col-span-2" />
         <Input placeholder="Preço" type="number" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} />
         <Input placeholder="Máx" type="number" value={maxQty} onChange={(e) => setMaxQty(e.target.value)} />
       </div>
+
       <div className="flex items-center justify-between">
         <label className="flex items-center gap-2 text-xs"><Switch checked={isRequired} onCheckedChange={setIsRequired} /> Obrigatório</label>
         <Button size="sm" type="button" onClick={async () => {
@@ -861,13 +866,14 @@ function ReviewsTab({ storeId }: { storeId: string }) {
 
   return (
     <div className="space-y-3">
-      <Card><CardContent className="flex items-center justify-between pt-6">
-        <div>
+      <Card><CardContent className="flex items-center justify-between gap-3 pt-6">
+        <div className="min-w-0">
           <div className="text-sm text-muted-foreground">Nota média</div>
           <div className="text-3xl font-bold">{avg ? avg.toFixed(1) : "—"}★</div>
         </div>
-        <div className="text-sm text-muted-foreground">{reviews.length} avaliações</div>
+        <div className="shrink-0 text-right text-sm text-muted-foreground">{reviews.length} avaliações</div>
       </CardContent></Card>
+
       {reviews.length === 0 ? <Card className="p-6 text-center text-sm text-muted-foreground">Nenhuma avaliação ainda.</Card> : reviews.map((r) => (
         <Card key={r.id} className="p-3">
           <div className="flex items-center gap-2 text-sm">
