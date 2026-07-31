@@ -22,17 +22,31 @@ export function BottomNav() {
   const { roles } = useAuth();
   const role = primaryRole(roles);
 
-  if (pathname.startsWith("/auth") || pathname.startsWith("/adm-login")) return null;
+  const hidden =
+    pathname.startsWith("/auth") || pathname.startsWith("/adm-login") || role !== "customer";
+
+  // Fonte única de verdade: marca no <body> que existe navegação inferior.
+  // As barras de ação fixas (`action-bar`) se posicionam a partir disso.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    if (hidden) {
+      delete document.body.dataset.bottomNav;
+      return;
+    }
+    document.body.dataset.bottomNav = "1";
+    return () => { delete document.body.dataset.bottomNav; };
+  }, [hidden]);
 
   // Perfis operacionais usam a navegação do próprio painel (evita duplicidade).
-  if (role !== "customer") return null;
+  if (hidden) return null;
 
   return (
     <>
       {/* Espaçador: garante que nenhum conteúdo fique atrás da barra fixa. */}
-      <div className="h-nav safe-bottom sm:hidden" aria-hidden />
+      <div style={{ height: "var(--qf-nav-h)" }} aria-hidden />
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 backdrop-blur sm:hidden">
         <ul className="mx-auto grid max-w-6xl grid-cols-4">
+
           {CUSTOMER.map((it) => {
             const active = it.to === "/" ? pathname === "/" : pathname.startsWith(it.to);
             const Icon = it.icon;
