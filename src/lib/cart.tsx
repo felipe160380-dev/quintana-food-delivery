@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
-export type CartAddon = { name: string; price: number; quantity: number };
+export type CartAddon = { addon_id?: string; name: string; price: number; quantity: number };
 export type CartItem = {
   product_id: string;
   product_name: string;

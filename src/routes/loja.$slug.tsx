@@ -89,7 +89,7 @@ function StorePage() {
   };
 
   return (
-    <div className="pb-28">
+    <div className="pad-action-bar">
       {/* Banner (mais baixo, estilo iFood) */}
       <div className="relative h-24 w-full overflow-hidden bg-gradient-to-br from-orange-300 to-primary sm:h-36">
         {store.cover_url && <img src={store.cover_url} alt={`Capa da loja ${store.name}`} className="h-full w-full object-cover" />}
@@ -253,7 +253,7 @@ function StorePage() {
         )}
 
         {shopper && count > 0 && (
-          <div className="action-bar bottom-nav px-4 sm:bottom-4">
+          <div className="action-bar px-4">
             <div className="mx-auto max-w-md">
               <Button asChild className="h-12 w-full animate-fade-in text-base shadow-xl" size="lg">
                 <Link to="/checkout"><ShoppingBag className="mr-2 size-4" /> Ver carrinho ({count})</Link>
@@ -291,7 +291,8 @@ function ProductDialog({
 
   const chosen: CartAddon[] = addons
     .filter((a) => (picked[a.id] ?? 0) > 0)
-    .map((a) => ({ name: a.name, price: Number(a.price), quantity: picked[a.id]! }));
+    .map((a) => ({ addon_id: a.id, name: a.name, price: Number(a.price), quantity: picked[a.id]! }));
+
 
   const addonsSum = chosen.reduce((s, a) => s + a.price * a.quantity, 0);
   const effectivePrice = Number(product.promo_price ?? product.price);

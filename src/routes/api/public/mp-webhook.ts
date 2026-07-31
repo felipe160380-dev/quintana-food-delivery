@@ -24,11 +24,15 @@ export const Route = createFileRoute("/api/public/mp-webhook")({
           "@/lib/mercadopago.server"
         );
 
-        // Se o secret existir, valida assinatura (padrão oficial MP).
-        if (secret) {
-          const ok = await verifyMpSignature({ xSignature, xRequestId, dataId, secret });
-          if (!ok) return new Response("Invalid signature", { status: 401 });
+        // Assinatura é obrigatória: sem segredo configurado ou sem assinatura
+        // válida, a requisição é sempre recusada.
+        if (!secret) {
+          console.error("mp-webhook: MP_WEBHOOK_SECRET não configurado — requisição recusada");
+          return new Response("Webhook not configured", { status: 401 });
         }
+        const ok = await verifyMpSignature({ xSignature, xRequestId, dataId, secret });
+        if (!ok) return new Response("Invalid signature", { status: 401 });
+
 
         // Só nos interessa notificação de pagamento.
         const topic =

@@ -142,23 +142,46 @@
 
 /* ---- Utilitários compartilhados de layout ---- */
 
-/* Altura da barra inferior de navegação (mobile) + safe-area. */
+/* Fonte única de verdade do rodapé fixo.
+   --qf-nav-h  = espaço ocupado pela navegação inferior (0 quando ela não existe)
+   --qf-bar-safe = safe-area que a barra de ação precisa aplicar por conta própria
+   (quando a navegação existe, ela já cobre a safe-area). */
+:root {
+  --qf-safe-b: max(env(safe-area-inset-bottom), 0.25rem);
+  --qf-nav-h: 0px;
+  --qf-bar-safe: max(env(safe-area-inset-bottom), 0.25rem);
+}
+@media (max-width: 639.98px) {
+  body[data-bottom-nav="1"] {
+    --qf-nav-h: calc(3.25rem + var(--qf-safe-b));
+    --qf-bar-safe: 0px;
+  }
+}
+
+/* Altura da barra inferior de navegação (mobile). */
 @theme {
-  --spacing-nav: 3.75rem;
+  --spacing-nav: 3.25rem;
 }
 
 @utility safe-bottom {
   padding-bottom: max(env(safe-area-inset-bottom), 0.25rem);
 }
 
-/* Barra de ação fixa no rodapé (carrinho, checkout, painéis). */
+/* Barra de ação fixa no rodapé (carrinho, checkout, painéis).
+   Sempre acima da navegação inferior — nunca disputa o mesmo espaço. */
 @utility action-bar {
   position: fixed;
   inset-inline: 0;
-  bottom: 0;
-  z-index: 35;
-  padding-bottom: max(env(safe-area-inset-bottom), 0.5rem);
+  bottom: var(--qf-nav-h);
+  z-index: 45;
+  padding-bottom: calc(0.5rem + var(--qf-bar-safe));
 }
+
+/* Espaço inferior das páginas que possuem barra de ação fixa. */
+@utility pad-action-bar {
+  padding-bottom: calc(var(--qf-nav-h) + 8rem);
+}
+
 
 /* Painel de modal/bottom-sheet: nunca maior que a tela, sempre rolável. */
 @utility sheet-panel {
