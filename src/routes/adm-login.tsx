@@ -30,15 +30,13 @@ function AdmLogin() {
               e.preventDefault();
               setLoading(true);
               try {
-                const r = await fetch("/api/public/admin-ensure", {
-                  method: "POST",
-                  headers: { "content-type": "application/json" },
-                  body: JSON.stringify({ username, password }),
-                });
-                const j = await r.json();
-                if (!r.ok || !j.ok) throw new Error("Credenciais inválidas");
-                const { data, error } = await supabase.auth.signInWithPassword({ email: j.email, password });
-                if (error || !data.user) throw new Error(error?.message ?? "Falha no login");
+                // Login direto na autenticação: nenhuma credencial fica no código.
+                // A conta de administrador é criada manualmente no backend.
+                const email = username.includes("@")
+                  ? username.trim()
+                  : `${username.trim()}@quintanafood.internal`;
+                const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+                if (error || !data.user) throw new Error("Credenciais inválidas");
                 toast.success("Bem-vindo, administrador");
                 nav({ to: "/adm" });
               } catch (err: any) {
@@ -48,6 +46,7 @@ function AdmLogin() {
               }
             }}
           >
+
             <div className="space-y-1.5">
               <Label>Usuário</Label>
               <Input value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="username" required />
