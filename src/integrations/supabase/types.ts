@@ -1004,6 +1004,17 @@ export type Database = {
         Returns: undefined
       }
       courier_resubmit: { Args: never; Returns: undefined }
+      create_order: {
+        Args: {
+          _address: Json
+          _change_for: number
+          _items: Json
+          _notes: string
+          _payment_method: Database["public"]["Enums"]["payment_method"]
+          _store_id: string
+        }
+        Returns: string
+      }
       delete_my_account: { Args: never; Returns: undefined }
       has_role: {
         Args: {
