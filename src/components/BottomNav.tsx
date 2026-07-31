@@ -1,4 +1,6 @@
+import { useEffect } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
+
 import { Home, ClipboardList, MapPin, ShoppingBag } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { useAuth } from "@/hooks/use-auth";
