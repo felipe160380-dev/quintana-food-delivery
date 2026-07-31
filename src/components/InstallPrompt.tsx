@@ -25,7 +25,11 @@ export function InstallPrompt() {
   if (!visible || !evt) return null;
 
   return (
-    <div className="fixed bottom-20 left-1/2 z-40 w-[min(92vw,420px)] -translate-x-1/2 rounded-2xl border bg-card p-3 shadow-xl sm:bottom-4">
+    <div
+      className="fixed left-1/2 z-30 w-[min(92vw,420px)] -translate-x-1/2 rounded-2xl border bg-card p-3 shadow-xl"
+      style={{ bottom: "calc(var(--qf-nav-h) + 5.5rem)" }}
+    >
+
       <div className="flex items-start gap-3">
         <img src="/icon-192.png" alt="" className="size-10 rounded-xl" width={40} height={40} />
         <div className="flex-1">
