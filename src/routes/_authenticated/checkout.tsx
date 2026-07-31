@@ -77,7 +77,7 @@ function Page() {
       _store_id: state.storeId!,
       _address: addr as any,
       _payment_method: method,
-      _change_for: method === "cash_on_delivery" && changeFor ? Number(changeFor) : null,
+      _change_for: (method === "cash_on_delivery" && changeFor ? Number(changeFor) : null) as unknown as number,
       _notes: notes,
       _items: state.items.map((i) => ({
         product_id: i.product_id,
