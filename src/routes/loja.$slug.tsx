@@ -253,7 +253,7 @@ function StorePage() {
         )}
 
         {shopper && count > 0 && (
-          <div className="action-bar bottom-nav px-4 sm:bottom-4">
+          <div className="action-bar px-4">
             <div className="mx-auto max-w-md">
               <Button asChild className="h-12 w-full animate-fade-in text-base shadow-xl" size="lg">
                 <Link to="/checkout"><ShoppingBag className="mr-2 size-4" /> Ver carrinho ({count})</Link>
