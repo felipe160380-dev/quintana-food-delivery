@@ -89,7 +89,7 @@ function StorePage() {
   };
 
   return (
-    <div className="pb-28">
+    <div className="pad-action-bar">
       {/* Banner (mais baixo, estilo iFood) */}
       <div className="relative h-24 w-full overflow-hidden bg-gradient-to-br from-orange-300 to-primary sm:h-36">
         {store.cover_url && <img src={store.cover_url} alt={`Capa da loja ${store.name}`} className="h-full w-full object-cover" />}
