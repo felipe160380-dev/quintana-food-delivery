@@ -69,47 +69,39 @@ function Page() {
     const addr = addrs.find((a) => a.id === addrId);
     if (!addr) return toast.error("Selecione um endereço de entrega");
     if (subtotal < Number(store?.min_order ?? 0)) return toast.error(`Pedido mínimo ${brl(Number(store.min_order))}`);
-    if (!store?.city_id) return toast.error("Loja sem cidade cadastrada");
     setPlacing(true);
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) { setPlacing(false); return; }
-    const { data: order, error } = await supabase.from("orders").insert({
-      customer_id: u.user.id, store_id: state.storeId!,
-      city_id: store.city_id as string,
-      address_snapshot: addr,
-      subtotal, delivery_fee: deliveryFee, total,
-      payment_method: method,
-      change_for: method === "cash_on_delivery" && changeFor ? Number(changeFor) : null,
-      notes,
-    }).select("id").single();
-    if (error) { setPlacing(false); return toast.error(error.message); }
 
-    const inserted: { id: string; addons?: any[] }[] = [];
-    for (const i of state.items) {
-      const { data: oi, error: e } = await supabase.from("order_items").insert({
-        order_id: order!.id, product_id: i.product_id, product_name: i.product_name,
-        unit_price: i.unit_price, quantity: i.quantity,
-      }).select("id").single();
-      if (e) { setPlacing(false); return toast.error(e.message); }
-      if (i.addons?.length) {
-        await supabase.from("order_item_addons").insert(
-          i.addons.map((a) => ({ order_item_id: oi!.id, name: a.name, price: a.price, quantity: a.quantity })),
-        );
-      }
-      inserted.push({ id: oi!.id });
-    }
+    // O pedido inteiro (itens + adicionais) é criado numa única transação no
+    // servidor, que recalcula todos os preços a partir do banco.
+    const { data: orderId, error } = await supabase.rpc("create_order", {
+      _store_id: state.storeId!,
+      _address: addr as any,
+      _payment_method: method,
+      _change_for: method === "cash_on_delivery" && changeFor ? Number(changeFor) : null,
+      _notes: notes,
+      _items: state.items.map((i) => ({
+        product_id: i.product_id,
+        quantity: i.quantity,
+        notes: i.notes ?? null,
+        addons: (i.addons ?? [])
+          .filter((a) => a.addon_id)
+          .map((a) => ({ addon_id: a.addon_id, quantity: a.quantity })),
+      })) as any,
+    });
     setPlacing(false);
+    if (error || !orderId) return toast.error(error?.message ?? "Não foi possível criar o pedido");
 
     if (method === "pix" || method === "card_online") {
       // Abre pagamento Mercado Pago; carrinho só é limpo após confirmação/fechamento.
-      setPayDialog({ orderId: order!.id, amount: total, mode: method === "pix" ? "pix" : "card" });
+      setPayDialog({ orderId, amount: total, mode: method === "pix" ? "pix" : "card" });
       return;
     }
 
     clear();
     toast.success("Pedido enviado!");
-    nav({ to: "/pedidos/$id", params: { id: order!.id }, search: { novo: true } });
+    nav({ to: "/pedidos/$id", params: { id: orderId }, search: { novo: true } });
   };
+
 
   return (
     <div className="mx-auto max-w-2xl space-y-4 px-4 pb-40 pt-6 sm:pb-32">
