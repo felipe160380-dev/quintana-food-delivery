@@ -104,7 +104,7 @@ function Page() {
 
 
   return (
-    <div className="mx-auto max-w-2xl space-y-4 px-4 pb-40 pt-6 sm:pb-32">
+    <div className="mx-auto max-w-2xl space-y-4 px-4 pt-6 pad-action-bar">
       <h1 className="text-2xl font-bold tracking-tight">Finalizar pedido</h1>
 
 
@@ -217,7 +217,7 @@ function Page() {
       </Card>
 
       {/* Barra de ação fixa: sempre visível, acima da navegação inferior e da safe-area. */}
-      <div className="action-bar bottom-nav border-t bg-background/95 backdrop-blur sm:bottom-0">
+      <div className="action-bar border-t bg-background/95 backdrop-blur">
         <div className="mx-auto max-w-2xl px-4 py-3">
           <Button size="lg" className="h-12 w-full text-base" onClick={placeOrder} disabled={placing || !addrId}>
             {placing ? "Enviando pedido..." : `Fazer pedido · ${brl(total)}`}
