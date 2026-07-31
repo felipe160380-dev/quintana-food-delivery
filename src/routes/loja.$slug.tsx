@@ -291,7 +291,8 @@ function ProductDialog({
 
   const chosen: CartAddon[] = addons
     .filter((a) => (picked[a.id] ?? 0) > 0)
-    .map((a) => ({ name: a.name, price: Number(a.price), quantity: picked[a.id]! }));
+    .map((a) => ({ addon_id: a.id, name: a.name, price: Number(a.price), quantity: picked[a.id]! }));
+
 
   const addonsSum = chosen.reduce((s, a) => s + a.price * a.quantity, 0);
   const effectivePrice = Number(product.promo_price ?? product.price);
