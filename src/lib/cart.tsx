@@ -1,4 +1,5 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export type CartAddon = { addon_id?: string; name: string; price: number; quantity: number };
 export type CartItem = {
@@ -16,9 +17,12 @@ type CartState = {
   storeId: string | null;
   storeName: string | null;
   items: CartItem[];
+  /** Dono do carrinho: user.id do cliente logado ou "guest". */
+  owner?: string;
 };
 
-const empty: CartState = { storeId: null, storeName: null, items: [] };
+const GUEST = "guest";
+const empty: CartState = { storeId: null, storeName: null, items: [], owner: GUEST };
 const KEY = "qf.cart.v2";
 
 function addonsTotal(a?: CartAddon[]) {
@@ -48,12 +52,31 @@ const Ctx = createContext<{
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<CartState>(empty);
+  const owner = useRef<string>(GUEST);
 
+  // Carrega e valida o dono do carrinho; troca de conta/logout limpa tudo.
   useEffect(() => {
-    try {
-      const raw = typeof window !== "undefined" ? localStorage.getItem(KEY) : null;
-      if (raw) setState(JSON.parse(raw));
-    } catch {}
+    if (typeof window === "undefined") return;
+
+    const applyOwner = (next: string) => {
+      owner.current = next;
+      setState((prev) => {
+        if ((prev.owner ?? GUEST) === next) return prev;
+        return { ...empty, owner: next };
+      });
+    };
+
+    let raw: string | null = null;
+    try { raw = localStorage.getItem(KEY); } catch { /* storage indisponível */ }
+    if (raw) {
+      try { setState({ ...empty, ...(JSON.parse(raw) as CartState) }); } catch { /* json inválido */ }
+    }
+
+    supabase.auth.getSession().then(({ data }) => applyOwner(data.session?.user?.id ?? GUEST));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) =>
+      applyOwner(session?.user?.id ?? GUEST),
+    );
+    return () => sub.subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
@@ -74,22 +97,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setState((prev) => {
           if (prev.storeId && prev.storeId !== storeId) {
             if (!confirm("Seu carrinho tem itens de outra loja. Deseja esvaziar e adicionar esse item?")) return prev;
-            return { storeId, storeName, items: [withId] };
+            return { storeId, storeName, items: [withId], owner: owner.current };
           }
-          return { storeId, storeName, items: [...prev.items, withId] };
+          return { storeId, storeName, items: [...prev.items, withId], owner: owner.current };
         });
       },
       remove: (line_id: string) =>
         setState((prev) => {
           const items = prev.items.filter((i) => i.line_id !== line_id);
-          return items.length ? { ...prev, items } : empty;
+          return items.length ? { ...prev, items } : { ...empty, owner: owner.current };
         }),
       setQty: (line_id: string, qty: number) =>
         setState((prev) => ({
           ...prev,
           items: prev.items.map((i) => (i.line_id === line_id ? { ...i, quantity: Math.max(1, qty) } : i)),
         })),
-      clear: () => setState(empty),
+      clear: () => setState({ ...empty, owner: owner.current }),
     };
   }, [state]);
 

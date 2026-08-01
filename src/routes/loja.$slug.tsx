@@ -236,33 +236,35 @@ function StorePage() {
           )}
         </div>
 
-        {selected && (
-          <ProductDialog
-            product={selected}
-            onClose={() => setSelected(null)}
-            onAdd={(qty, addons, notes) => {
-              add(store.id, store.name, {
-                product_id: selected.id, product_name: selected.name,
-                unit_price: Number(selected.promo_price ?? selected.price), quantity: qty,
-                image_url: selected.image_url, addons, notes,
-              });
-              toast.success(`${selected.name} adicionado ao carrinho`);
-              setSelected(null);
-            }}
-          />
-        )}
-
-        {shopper && count > 0 && (
-          <div className="action-bar px-4">
-            <div className="mx-auto max-w-md">
-              <Button asChild className="h-12 w-full animate-fade-in text-base shadow-xl" size="lg">
-                <Link to="/checkout"><ShoppingBag className="mr-2 size-4" /> Ver carrinho ({count})</Link>
-              </Button>
-            </div>
-          </div>
-        )}
-
       </div>
+
+      {/* Fora do contexto de empilhamento (relative z-10) do cabeçalho:
+          garante que o popup e a barra de ação fiquem acima da navegação inferior. */}
+      {selected && (
+        <ProductDialog
+          product={selected}
+          onClose={() => setSelected(null)}
+          onAdd={(qty, addons, notes) => {
+            add(store.id, store.name, {
+              product_id: selected.id, product_name: selected.name,
+              unit_price: Number(selected.promo_price ?? selected.price), quantity: qty,
+              image_url: selected.image_url, addons, notes,
+            });
+            toast.success(`${selected.name} adicionado ao carrinho`);
+            setSelected(null);
+          }}
+        />
+      )}
+
+      {shopper && count > 0 && (
+        <div className="action-bar px-4">
+          <div className="mx-auto max-w-md">
+            <Button asChild className="h-12 w-full animate-fade-in text-base shadow-xl" size="lg">
+              <Link to="/checkout"><ShoppingBag className="mr-2 size-4" /> Ver carrinho ({count})</Link>
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
