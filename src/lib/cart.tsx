@@ -1,4 +1,5 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export type CartAddon = { addon_id?: string; name: string; price: number; quantity: number };
 export type CartItem = {
@@ -16,9 +17,12 @@ type CartState = {
   storeId: string | null;
   storeName: string | null;
   items: CartItem[];
+  /** Dono do carrinho: user.id do cliente logado ou "guest". */
+  owner?: string;
 };
 
-const empty: CartState = { storeId: null, storeName: null, items: [] };
+const GUEST = "guest";
+const empty: CartState = { storeId: null, storeName: null, items: [], owner: GUEST };
 const KEY = "qf.cart.v2";
 
 function addonsTotal(a?: CartAddon[]) {
