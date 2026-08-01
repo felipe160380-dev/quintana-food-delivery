@@ -209,7 +209,7 @@ function Home() {
                     <Badge className="absolute right-2 top-2 bg-success text-success-foreground shadow-sm">Aberto</Badge>
                   </div>
                   <div className="flex gap-3 px-3 pb-3">
-                    <div className="-mt-8 size-16 shrink-0 overflow-hidden rounded-2xl border-4 border-card bg-muted shadow-md">
+                    <div className="relative z-10 -mt-8 size-16 shrink-0 overflow-hidden rounded-2xl border-4 border-card bg-muted shadow-md">
                       {s.logo_url ? (
                         <img src={s.logo_url} alt={`Logo ${s.name}`} loading="lazy" className="h-full w-full object-cover" />
                       ) : (
