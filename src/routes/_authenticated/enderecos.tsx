@@ -102,7 +102,7 @@ function AddressForm({ onSaved }: { onSaved: () => void }) {
         is_default: (count ?? 0) === 0,
       });
       setSaving(false);
-      if (error) return toast.error(error.message);
+      if (error) { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); }
       toast.success("Endereço salvo");
       onSaved();
     }}>

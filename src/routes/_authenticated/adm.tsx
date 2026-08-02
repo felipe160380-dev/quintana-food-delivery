@@ -264,7 +264,7 @@ function CouriersTab() {
     const patch: any = { approval_status: next, approval_note: next === "rejected" ? note ?? null : null };
     if (next === "approved") patch.approved_at = new Date().toISOString();
     const { error } = await supabase.from("couriers").update(patch).eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); }
     toast.success("Status atualizado");
     load();
   }
@@ -316,7 +316,7 @@ function StoresTab() {
     if (next === "approved") patch.approved_at = new Date().toISOString();
     if (next !== "approved") patch.is_online = false;
     const { error } = await supabase.from("stores").update(patch).eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); }
     toast.success("Status atualizado"); load();
   }
   async function toggle(s: StoreRow) {
@@ -324,14 +324,14 @@ function StoresTab() {
       toast.error("Só é possível ativar lojas aprovadas."); return;
     }
     const { error } = await supabase.from("stores").update({ is_online: !s.is_online }).eq("id", s.id);
-    if (error) return toast.error(error.message);
+    if (error) { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); }
     toast.success(!s.is_online ? "Loja ativada" : "Loja desativada");
     load();
   }
   async function remove(s: StoreRow) {
     if (!confirm(`Excluir loja "${s.name}"? Esta ação é irreversível.`)) return;
     const { error } = await supabase.from("stores").delete().eq("id", s.id);
-    if (error) return toast.error(error.message);
+    if (error) { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); }
     toast.success("Loja excluída"); load();
   }
   const filtered = items.filter((s) => !q || s.name.toLowerCase().includes(q.toLowerCase()) || s.slug.includes(q.toLowerCase()));
@@ -387,7 +387,7 @@ function OrdersTab() {
   async function cancel(id: string) {
     if (!confirm("Cancelar este pedido?")) return;
     const { error } = await supabase.from("orders").update({ status: "cancelled" }).eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); }
     toast.success("Pedido cancelado"); load();
   }
   const statuses = ["all", "pending", "confirmed", "preparing", "ready", "on_the_way", "delivered", "cancelled"];
@@ -434,10 +434,10 @@ function UsersTab() {
   async function toggleRole(userId: string, role: string, has: boolean) {
     if (has) {
       const { error } = await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", role as any);
-      if (error) return toast.error(error.message);
+      if (error) { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); }
     } else {
       const { error } = await supabase.from("user_roles").insert({ user_id: userId, role: role as any });
-      if (error) return toast.error(error.message);
+      if (error) { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); }
     }
     toast.success("Papéis atualizados"); load();
   }
@@ -487,7 +487,7 @@ function WithdrawalsTab() {
     const patch: any = { status: newStatus };
     if (newStatus === "paid" || newStatus === "rejected") patch.processed_at = new Date().toISOString();
     const { error } = await supabase.from("store_withdrawals").update(patch).eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); }
     toast.success("Saque atualizado"); load();
   }
   return (
@@ -559,21 +559,21 @@ function CitiesTab() {
     const slug = slugifyCity(`${name}-${state}`);
     const { error } = await supabase.from("cities").insert({ name: name.trim(), state: state.trim().toUpperCase(), slug });
     setSaving(false);
-    if (error) return toast.error(error.message);
+    if (error) { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); }
     toast.success("Cidade cadastrada");
     setName(""); setState("SP"); load();
   };
 
   const toggle = async (row: CityRow) => {
     const { error } = await supabase.from("cities").update({ is_active: !row.is_active }).eq("id", row.id);
-    if (error) return toast.error(error.message);
+    if (error) { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); }
     load();
   };
 
   const remove = async (row: CityRow) => {
     if (!confirm(`Remover a cidade ${row.name}? Só é possível se não houver lojas, entregadores ou pedidos vinculados.`)) return;
     const { error } = await supabase.from("cities").delete().eq("id", row.id);
-    if (error) return toast.error(error.message);
+    if (error) { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); }
     toast.success("Cidade removida");
     load();
   };

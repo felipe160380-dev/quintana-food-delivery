@@ -128,7 +128,7 @@ function Page() {
             disabled={!isApproved}
             onCheckedChange={async (v) => {
               const { error } = await sb.from("stores").update({ is_online: v }).eq("id", store.id);
-              if (error) return toast.error(error.message);
+              if (error) { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); }
               toast.success(v ? "Loja no ar!" : "Loja pausada");
               load();
             }}
@@ -213,7 +213,7 @@ function StoreCreate({ onCreated }: { onCreated: () => void }) {
             const slug = `${base}-${Math.random().toString(36).slice(2, 6)}`;
             const { error } = await sb.from("stores").insert({ owner_id: u.user.id, name, slug, cnpj, city_id: cityId });
             setSaving(false);
-            if (error) return toast.error(error.message);
+            if (error) { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); }
             toast.success("Loja criada! Complete os dados para ficar online.");
             onCreated();
           }}>
@@ -352,7 +352,7 @@ function StoreEdit({ store, onSaved }: { store: any; onSaved: () => void }) {
       };
       const { error } = await sb.from("stores").update(patch).eq("id", store.id);
       setSaving(false);
-      if (error) return toast.error(error.message);
+      if (error) { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); }
       toast.success("Dados salvos");
       onSaved();
     }}>
@@ -524,7 +524,7 @@ function ProductDialog({ product, onClose }: { product: any; onClose: () => void
             ? await sb.from("products").insert(payload)
             : await sb.from("products").update(payload).eq("id", product.id);
           setSaving(false);
-          if (error) return toast.error(error.message);
+          if (error) { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); }
           onClose();
         }}>
           <ImageUpload bucket="product-assets" value={f.image_url} onChange={(v) => setF({ ...f, image_url: v })} />
@@ -664,7 +664,7 @@ function OrdersTab({ storeId, store }: { storeId: string; store?: any }) {
                         {next && !["cancelled", "delivered"].includes(o.status) && (
                           <Button size="sm" onClick={async () => {
                             const { error } = await sb.from("orders").update({ status: next }).eq("id", o.id);
-                            if (error) return toast.error(error.message);
+                            if (error) { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); }
                             toast.success("Status atualizado");
                           }}>Marcar {orderStatusLabel[next]}</Button>
                         )}
@@ -776,7 +776,7 @@ function FinanceTab({ store }: { store: any }) {
       }
     }
     setSaving(false);
-    if (error) return toast.error(error.message);
+    if (error) { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); }
     toast.success("Saque solicitado!");
     setAmount("");
     load();
@@ -902,7 +902,7 @@ function ReplyForm({ review, onSaved }: { review: any; onSaved: () => void }) {
       setSaving(true);
       const { error } = await sb.from("store_reviews").update({ reply: text, replied_at: new Date().toISOString() }).eq("id", review.id);
       setSaving(false);
-      if (error) return toast.error(error.message);
+      if (error) { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); }
       onSaved();
     }}>
       <Input value={text} onChange={(e) => setText(e.target.value)} placeholder="Responder ao cliente..." />
