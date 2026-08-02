@@ -40,7 +40,7 @@ function AdmLogin() {
                 toast.success("Bem-vindo, administrador");
                 nav({ to: "/adm" });
               } catch (err: any) {
-                toast.error(err.message ?? "Falha");
+                { console.error(err); toast.error("Credenciais inválidas."); }
               } finally {
                 setLoading(false);
               }

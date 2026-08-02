@@ -84,7 +84,7 @@ function PixBox({ orderId, onPaid }: { orderId: string; onPaid: () => void }) {
         if (!mounted) return;
         setQr({ code: res.qr_code, base64: res.qr_code_base64, url: res.ticket_url });
       } catch (e: any) {
-        toast.error(e?.message ?? "Erro ao gerar Pix");
+        { console.error(e); toast.error("Não foi possível gerar o Pix. Tente novamente."); }
       } finally {
         if (mounted) setLoading(false);
       }
@@ -206,7 +206,7 @@ function CardBox({
         setForm((f) => ({ ...f, email: f.email || data.user?.email || "" }));
       });
       setReady(true);
-    })().catch((e) => toast.error(e?.message ?? "Erro ao iniciar cartão"));
+    })().catch((e) => { console.error(e); toast.error("Não foi possível iniciar o pagamento com cartão. Tente novamente."); });
   }, [runKey]);
 
   const installmentsOpts = useMemo(() => [1, 2, 3, 4, 5, 6], []);
@@ -258,10 +258,10 @@ function CardBox({
         toast.message("Pagamento em análise. Avisaremos quando for aprovado.");
         onPaid();
       } else {
-        toast.error(`Pagamento recusado: ${res.status_detail ?? res.mp_status}`);
+        { console.error("MP recusado:", res.status_detail ?? res.mp_status); toast.error("Pagamento recusado. Verifique os dados do cartão ou escolha outra forma de pagamento."); }
       }
     } catch (e: any) {
-      toast.error(e?.message ?? "Erro no pagamento");
+      { console.error(e); toast.error("Não foi possível concluir o pagamento. Tente novamente."); }
     } finally {
       setSubmitting(false);
     }
