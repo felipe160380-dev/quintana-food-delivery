@@ -138,7 +138,7 @@ export function AppHeader() {
                     if (!confirm("Excluir sua conta permanentemente? Esta ação não pode ser desfeita.")) return;
                     const { supabase } = await import("@/integrations/supabase/client");
                     const { error } = await supabase.rpc("delete_my_account");
-                    if (error) { alert(error.message); return; }
+                    if (error) { console.error(error); alert("Não foi possível excluir a conta. Tente novamente."); return; }
                     await signOut();
                     nav({ to: "/" });
                   }}
