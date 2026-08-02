@@ -73,7 +73,7 @@ function Page() {
           className="mt-4"
           onClick={async () => {
             const { error } = await supabase.rpc("courier_resubmit");
-            if (error) return toast.error(error.message);
+            if (error) { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); }
             toast.success("Cadastro reenviado. Aguarde nova análise.");
             setRejected(false);
             load();
@@ -151,7 +151,7 @@ function OrderCard({ o, mine, onUpdate }: { o: any; mine?: boolean; onUpdate: ()
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
     const { error } = await supabase.from("orders").update({ courier_id: u.user.id, status: "out_for_delivery" }).eq("id", o.id);
-    if (error) return toast.error(error.message);
+    if (error) { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); }
     toast.success("Entrega aceita!");
     onUpdate();
   };
@@ -164,7 +164,7 @@ function OrderCard({ o, mine, onUpdate }: { o: any; mine?: boolean; onUpdate: ()
       lat = pos.coords.latitude; lng = pos.coords.longitude;
     } catch {}
     const { error } = await supabase.rpc("confirm_delivery", { _order_id: o.id, _code: code, _lat: lat ?? 0, _lng: lng ?? 0 });
-    if (error) return toast.error(error.message);
+    if (error) { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); }
     toast.success("Entrega confirmada!");
     setCode("");
     onUpdate();

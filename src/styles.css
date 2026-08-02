@@ -182,6 +182,16 @@
   padding-bottom: calc(var(--qf-nav-h) + 8rem);
 }
 
+/* Elemento flutuante (banners, prompts) — sempre acima da navegação e da
+   barra de ação, nunca disputando o mesmo espaço que elas. */
+@utility floating-bottom {
+  position: fixed;
+  bottom: calc(var(--qf-nav-h) + var(--qf-floating-offset, 5.5rem));
+  z-index: 30;
+}
+
+
+
 
 /* Painel de modal/bottom-sheet: nunca maior que a tela, sempre rolável. */
 @utility sheet-panel {

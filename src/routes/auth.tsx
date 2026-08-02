@@ -132,13 +132,13 @@ function SignIn({ onDone }: { onDone: (r: Role) => void }) {
         e.preventDefault();
         setLoading(true);
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error || !data.user) { setLoading(false); return toast.error(error?.message ?? "Falha no login"); }
+        if (error || !data.user) { setLoading(false); { console.error(error); return toast.error("E-mail ou senha inválidos."); } }
         try {
           await ensureRoleAndRedirect(data.user.id, role);
         } catch (err: any) {
           await supabase.auth.signOut();
           setLoading(false);
-          return toast.error(err.message);
+          { console.error(err); return toast.error("Não foi possível entrar. Tente novamente."); }
         }
         setLoading(false);
         toast.success("Bem-vindo!");
@@ -202,7 +202,7 @@ function SignUp({ onDone }: { onDone: (r: Role) => void }) {
           email, password,
           options: { data: { full_name: fullName, phone }, emailRedirectTo: window.location.origin },
         });
-        if (error || !data.user) { setLoading(false); return toast.error(error?.message ?? "Erro"); }
+        if (error || !data.user) { setLoading(false); { console.error(error); return toast.error("Não foi possível criar a conta. Verifique os dados e tente novamente."); } }
 
         if (role !== "customer") {
           await supabase.from("user_roles").insert({ user_id: data.user.id, role });

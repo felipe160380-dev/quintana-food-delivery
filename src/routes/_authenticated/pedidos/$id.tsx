@@ -69,7 +69,7 @@ function Page() {
   const send = async () => {
     if (!text.trim() || !me) return;
     const { error } = await supabase.from("messages").insert({ order_id: id, sender_id: me, body: text.trim() });
-    if (error) return toast.error(error.message);
+    if (error) { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); }
     setText("");
   };
 
@@ -261,7 +261,7 @@ function CourierRating({ orderId, initial }: { orderId: string; initial: number 
         disabled={rating < 1}
         onClick={async () => {
           const { error } = await supabase.rpc("rate_courier", { _order_id: orderId, _rating: rating, _comment: comment || "" });
-          if (error) return toast.error(error.message);
+          if (error) { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); }
           toast.success("Obrigado pela avaliação!");
           setSaved(true);
         }}

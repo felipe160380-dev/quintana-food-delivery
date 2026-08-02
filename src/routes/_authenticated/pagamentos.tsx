@@ -120,7 +120,7 @@ function AddDialog({ kind, onClose }: { kind: "pix" | "card"; onClose: () => voi
     else { payload.last4 = number.replace(/\D/g, "").slice(-4); payload.brand = brand || "Cartão"; }
     const { error } = await supabase.from("payment_methods").insert(payload);
     setSaving(false);
-    if (error) return toast.error(error.message);
+    if (error) { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); }
     toast.success("Salvo!");
     onClose();
   };

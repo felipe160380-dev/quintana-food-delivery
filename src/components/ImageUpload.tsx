@@ -27,7 +27,7 @@ export function ImageUpload({
     const ext = file.name.split(".").pop() ?? "jpg";
     const path = `${u.user.id}/${crypto.randomUUID()}.${ext}`;
     const { error } = await supabase.storage.from(bucket).upload(path, file, { upsert: false });
-    if (error) { setUploading(false); return toast.error(error.message); }
+    if (error) { setUploading(false); { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); } }
     const { data: signed } = await supabase.storage.from(bucket).createSignedUrl(path, 60 * 60 * 24 * 365 * 5);
     setUploading(false);
     if (signed?.signedUrl) onChange(signed.signedUrl);

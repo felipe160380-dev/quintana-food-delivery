@@ -54,7 +54,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<CartState>(empty);
   const owner = useRef<string>(GUEST);
 
-  // Carrega e valida o dono do carrinho; troca de conta/logout limpa tudo.
+  // Só liberamos a persistência depois de saber quem é o dono do carrinho.
+  const [hydrated, setHydrated] = useState(false);
+
+  // Primeiro confirmamos quem está logado; só então lemos o carrinho salvo.
+  // Isso evita exibir, mesmo que por um instante, o carrinho de outra conta.
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -66,24 +70,38 @@ export function CartProvider({ children }: { children: ReactNode }) {
       });
     };
 
-    let raw: string | null = null;
-    try { raw = localStorage.getItem(KEY); } catch { /* storage indisponível */ }
-    if (raw) {
-      try { setState({ ...empty, ...(JSON.parse(raw) as CartState) }); } catch { /* json inválido */ }
-    }
+    let first = true;
+    const resolve = (uid: string | undefined) => {
+      const next = uid ?? GUEST;
+      if (!first) {
+        applyOwner(next);
+        return;
+      }
+      first = false;
+      owner.current = next;
+      let raw: string | null = null;
+      try { raw = localStorage.getItem(KEY); } catch { /* storage indisponível */ }
+      let saved: CartState | null = null;
+      if (raw) {
+        try { saved = JSON.parse(raw) as CartState; } catch { /* json inválido */ }
+      }
+      setState(saved && (saved.owner ?? GUEST) === next ? { ...empty, ...saved } : { ...empty, owner: next });
+      setHydrated(true);
+    };
 
-    supabase.auth.getSession().then(({ data }) => applyOwner(data.session?.user?.id ?? GUEST));
+    supabase.auth.getSession().then(({ data }) => resolve(data.session?.user?.id));
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) =>
-      applyOwner(session?.user?.id ?? GUEST),
+      resolve(session?.user?.id),
     );
     return () => sub.subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
+    if (!hydrated) return;
     try {
       if (typeof window !== "undefined") localStorage.setItem(KEY, JSON.stringify(state));
     } catch {}
-  }, [state]);
+  }, [state, hydrated]);
 
   const api = useMemo(() => {
     const subtotal = state.items.reduce((s, i) => s + itemTotal(i), 0);

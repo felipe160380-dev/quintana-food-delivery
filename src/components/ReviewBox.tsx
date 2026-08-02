@@ -33,7 +33,7 @@ export function ReviewBox({ orderId, storeId, customerId }: Props) {
       ? await supabase.from("store_reviews").update({ rating, comment: comment.trim() || null }).eq("id", existing.id).select().maybeSingle()
       : await supabase.from("store_reviews").insert(payload).select().maybeSingle();
     setSaving(false);
-    if (error) return toast.error(error.message);
+    if (error) { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); }
     setExisting(data);
     toast.success(existing ? "Avaliação atualizada!" : "Obrigado pela sua avaliação!");
   };
