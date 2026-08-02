@@ -89,7 +89,7 @@ function Page() {
       })) as any,
     });
     setPlacing(false);
-    if (error || !orderId) { console.error(error); return toast.error(error?.message?.startsWith("Não") || /[À-ÿ]/.test(error?.message ?? "") ? error.message : "Não foi possível criar o pedido. Tente novamente."); }
+    if (error || !orderId) { console.error(error); { const m = error?.message ?? ""; return toast.error(/[À-ÿ]/.test(m) ? m : "Não foi possível criar o pedido. Tente novamente."); } }
 
     if (method === "pix" || method === "card_online") {
       // Abre pagamento Mercado Pago; carrinho só é limpo após confirmação/fechamento.
