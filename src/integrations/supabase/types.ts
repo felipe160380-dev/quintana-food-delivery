@@ -95,6 +95,104 @@ export type Database = {
         }
         Relationships: []
       }
+      courier_wallet_entries: {
+        Row: {
+          courier_id: string
+          created_at: string
+          description: string | null
+          fee: number
+          gross: number
+          id: string
+          kind: string
+          net: number
+          order_id: string | null
+        }
+        Insert: {
+          courier_id: string
+          created_at?: string
+          description?: string | null
+          fee?: number
+          gross?: number
+          id?: string
+          kind: string
+          net: number
+          order_id?: string | null
+        }
+        Update: {
+          courier_id?: string
+          created_at?: string
+          description?: string | null
+          fee?: number
+          gross?: number
+          id?: string
+          kind?: string
+          net?: number
+          order_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courier_wallet_entries_courier_id_fkey"
+            columns: ["courier_id"]
+            isOneToOne: false
+            referencedRelation: "couriers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "courier_wallet_entries_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      courier_withdrawals: {
+        Row: {
+          amount: number
+          courier_id: string
+          fee: number
+          id: string
+          net: number
+          note: string | null
+          pix_key: string
+          processed_at: string | null
+          requested_at: string
+          status: string
+        }
+        Insert: {
+          amount: number
+          courier_id: string
+          fee?: number
+          id?: string
+          net?: number
+          note?: string | null
+          pix_key: string
+          processed_at?: string | null
+          requested_at?: string
+          status?: string
+        }
+        Update: {
+          amount?: number
+          courier_id?: string
+          fee?: number
+          id?: string
+          net?: number
+          note?: string | null
+          pix_key?: string
+          processed_at?: string | null
+          requested_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courier_withdrawals_courier_id_fkey"
+            columns: ["courier_id"]
+            isOneToOne: false
+            referencedRelation: "couriers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       couriers: {
         Row: {
           approval_note: string | null
@@ -108,6 +206,7 @@ export type Database = {
           id: string
           is_available: boolean
           last_seen_at: string | null
+          payout_pix_key: string | null
           updated_at: string
           vehicle: Database["public"]["Enums"]["vehicle_type"]
           vehicle_plate: string | null
@@ -124,6 +223,7 @@ export type Database = {
           id: string
           is_available?: boolean
           last_seen_at?: string | null
+          payout_pix_key?: string | null
           updated_at?: string
           vehicle?: Database["public"]["Enums"]["vehicle_type"]
           vehicle_plate?: string | null
@@ -140,6 +240,7 @@ export type Database = {
           id?: string
           is_available?: boolean
           last_seen_at?: string | null
+          payout_pix_key?: string | null
           updated_at?: string
           vehicle?: Database["public"]["Enums"]["vehicle_type"]
           vehicle_plate?: string | null
@@ -1004,6 +1105,7 @@ export type Database = {
         Returns: undefined
       }
       courier_resubmit: { Args: never; Returns: undefined }
+      courier_wallet_balance: { Args: { _courier_id: string }; Returns: number }
       create_order: {
         Args: {
           _address: Json
