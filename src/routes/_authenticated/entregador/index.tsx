@@ -239,3 +239,212 @@ function OrderCard({ o, mine, onUpdate }: { o: any; mine?: boolean; onUpdate: ()
     </Card>
   );
 }
+
+// ============ Carteira do entregador ============
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const sb = supabase as any;
+
+const WITHDRAWAL_STATUS: Record<string, string> = {
+  pending: "Pendente",
+  processing: "Em processamento",
+  paid: "Pago",
+  rejected: "Recusado",
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function CourierWalletTab({ courier }: { courier: any }) {
+  const courierId = courier.id as string;
+  const [balance, setBalance] = useState(0);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [entries, setEntries] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [withdrawals, setWithdrawals] = useState<any[]>([]);
+  const [pixKey, setPixKey] = useState<string>(courier.payout_pix_key ?? "");
+  const [savedPix, setSavedPix] = useState<string>(courier.payout_pix_key ?? "");
+  const [amount, setAmount] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [savingPix, setSavingPix] = useState(false);
+
+  const load = async () => {
+    const { data: bal } = await sb.rpc("courier_wallet_balance", { _courier_id: courierId });
+    setBalance(Number(bal ?? 0));
+    const { data: e } = await sb.from("courier_wallet_entries").select("*").eq("courier_id", courierId).order("created_at", { ascending: false }).limit(100);
+    setEntries(e ?? []);
+    const { data: w } = await sb.from("courier_withdrawals").select("*").eq("courier_id", courierId).order("requested_at", { ascending: false });
+    setWithdrawals(w ?? []);
+  };
+
+  useEffect(() => {
+    load();
+    const ch = sb.channel(`courier-wallet-${courierId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "courier_wallet_entries", filter: `courier_id=eq.${courierId}` }, load)
+      .on("postgres_changes", { event: "*", schema: "public", table: "courier_withdrawals", filter: `courier_id=eq.${courierId}` }, load)
+      .subscribe();
+    return () => { sb.removeChannel(ch); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [courierId]);
+
+  const startWeek = useMemo(() => {
+    const d = new Date(); const day = d.getDay(); d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - ((day + 6) % 7)); // segunda-feira
+    return d;
+  }, []);
+
+  const earnings = entries.filter((e) => Number(e.net) > 0);
+  const discounts = entries.filter((e) => Number(e.net) < 0);
+  const sum = (list: typeof entries) => list.reduce((s, e) => s + Number(e.net), 0);
+  const today = new Date().toDateString();
+  const earnDay = sum(earnings.filter((e) => new Date(e.created_at).toDateString() === today));
+  const earnWeek = sum(earnings.filter((e) => new Date(e.created_at) >= startWeek));
+  const earnMonth = sum(earnings.filter((e) => {
+    const d = new Date(e.created_at);
+    return d.getMonth() === new Date().getMonth() && d.getFullYear() === new Date().getFullYear();
+  }));
+
+  const withdrawalsThisWeek = withdrawals.filter((w) => new Date(w.requested_at) >= startWeek && w.status !== "rejected");
+  const hasFreeUsed = withdrawalsThisWeek.length >= 1;
+
+  const savePix = async () => {
+    const key = pixKey.trim();
+    if (!key) return toast.error("Informe uma chave PIX válida");
+    setSavingPix(true);
+    const { error } = await sb.from("couriers").update({ payout_pix_key: key }).eq("id", courierId);
+    setSavingPix(false);
+    if (error) { console.error(error); return toast.error("Não foi possível salvar. Tente novamente."); }
+    setSavedPix(key);
+    toast.success("Chave PIX salva!");
+  };
+
+  const requestWithdrawal = async (ev: React.FormEvent) => {
+    ev.preventDefault();
+    const value = Number(amount);
+    if (!value || value <= 0) return toast.error("Informe um valor válido");
+    if (value > balance) return toast.error("Valor acima do saldo disponível");
+    if (!savedPix) return toast.error("Cadastre sua chave PIX antes de solicitar o saque");
+
+    // Prévia apenas informativa: a taxa real é recalculada no servidor.
+    const fee = hasFreeUsed ? Number((value * 0.06).toFixed(2)) : 0;
+    const ok = confirm(
+      hasFreeUsed
+        ? `Você já usou o saque gratuito desta semana. Taxa administrativa de 6% (R$ ${fee.toFixed(2)}), líquido R$ ${(value - fee).toFixed(2)}. Deseja continuar?`
+        : `Solicitar saque de R$ ${value.toFixed(2)} (sem taxa — saque gratuito da semana)?`,
+    );
+    if (!ok) return;
+
+    setSaving(true);
+    const { error } = await sb.from("courier_withdrawals").insert({
+      courier_id: courierId, amount: value, pix_key: savedPix,
+    });
+    setSaving(false);
+    if (error) { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); }
+    toast.success("Saque solicitado!");
+    setAmount("");
+    load();
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <WalletStat label="Saldo disponível" value={brl(balance)} />
+        <WalletStat label="Ganhos hoje" value={brl(earnDay)} />
+        <WalletStat label="Ganhos na semana" value={brl(earnWeek)} />
+        <WalletStat label="Ganhos no mês" value={brl(earnMonth)} />
+      </div>
+
+      <Card>
+        <CardHeader><CardTitle className="text-base">Chave PIX para recebimento</CardTitle></CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="min-w-0 flex-1 space-y-1.5">
+              <Label>Chave PIX</Label>
+              <Input value={pixKey} onChange={(e) => setPixKey(e.target.value)} placeholder="CPF, e-mail, telefone ou aleatória" />
+            </div>
+            <Button type="button" variant="outline" onClick={savePix} disabled={savingPix}>{savingPix ? "Salvando..." : "Salvar chave"}</Button>
+          </div>
+          {!savedPix && <p className="mt-2 text-[11px] text-muted-foreground">Cadastre sua chave PIX para poder solicitar saques.</p>}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle className="text-base">Solicitar saque via PIX</CardTitle></CardHeader>
+        <CardContent>
+          <form className="flex flex-wrap items-end gap-3" onSubmit={requestWithdrawal}>
+            <div className="space-y-1.5">
+              <Label>Valor (R$)</Label>
+              <Input type="number" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} className="w-40" />
+            </div>
+            <div className="text-xs text-muted-foreground">
+              Chave PIX: <span className="font-mono">{savedPix || "— não cadastrada —"}</span>
+            </div>
+            <Button type="submit" disabled={saving || balance <= 0 || !savedPix}>{saving ? "Enviando..." : "Solicitar saque"}</Button>
+          </form>
+          <p className="mt-2 text-[11px] text-muted-foreground">1 saque gratuito por semana. A partir do 2º saque: taxa administrativa de 6%.</p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle className="text-base">Extrato</CardTitle></CardHeader>
+        <CardContent>
+          <Tabs defaultValue="earnings">
+            <TabsList className="tabs-scroll h-auto gap-1 bg-muted/40 p-1">
+              <TabsTrigger value="earnings">Ganhos</TabsTrigger>
+              <TabsTrigger value="discounts">Descontos</TabsTrigger>
+            </TabsList>
+            <TabsContent value="earnings" className="mt-3"><EntryList list={earnings} empty="Nenhum ganho registrado ainda." /></TabsContent>
+            <TabsContent value="discounts" className="mt-3"><EntryList list={discounts} empty="Nenhum desconto registrado." /></TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle className="text-base">Histórico de saques</CardTitle></CardHeader>
+        <CardContent>
+          {withdrawals.length === 0 ? <div className="text-sm text-muted-foreground">Nenhum saque solicitado.</div> : (
+            <div className="space-y-2">
+              {withdrawals.map((w) => (
+                <div key={w.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-2 text-sm">
+                  <div className="min-w-0">
+                    <div className="font-medium">{brl(Number(w.amount))} <span className="text-xs text-muted-foreground">(líquido {brl(Number(w.net))})</span></div>
+                    <div className="truncate text-xs text-muted-foreground">{new Date(w.requested_at).toLocaleString("pt-BR")} • {w.pix_key}</div>
+                  </div>
+                  <Badge variant={w.status === "paid" ? "default" : w.status === "rejected" ? "destructive" : "secondary"}>
+                    {WITHDRAWAL_STATUS[w.status as string] ?? w.status}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function EntryList({ list, empty }: { list: any[]; empty: string }) {
+  if (list.length === 0) return <div className="text-sm text-muted-foreground">{empty}</div>;
+  return (
+    <div className="divide-y">
+      {list.map((e) => (
+        <div key={e.id} className="flex items-center justify-between gap-3 py-2 text-sm">
+          <div className="min-w-0">
+            <div className="truncate">{e.description ?? e.kind}</div>
+            <div className="text-[11px] text-muted-foreground">{new Date(e.created_at).toLocaleString("pt-BR")}</div>
+          </div>
+          <div className={`shrink-0 font-mono font-semibold ${Number(e.net) >= 0 ? "text-emerald-600" : "text-destructive"}`}>
+            {Number(e.net) >= 0 ? "+" : ""}{brl(Number(e.net))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function WalletStat({ label, value }: { label: string; value: string }) {
+  return (
+    <Card className="p-3">
+      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className="mt-1 text-xl font-bold tabular-nums">{value}</div>
+    </Card>
+  );
+}
