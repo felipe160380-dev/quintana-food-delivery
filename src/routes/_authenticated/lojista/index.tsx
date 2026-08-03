@@ -760,29 +760,16 @@ function FinanceTab({ store }: { store: any }) {
     if (!store.payout_pix_key) return toast.error("Cadastre uma chave PIX em Minha Loja → Recebimento");
     if (!store.is_online) return toast.error("Sua loja precisa estar ativa para solicitar saque");
 
+    // Prévia apenas informativa: a taxa real é recalculada no servidor.
     const fee = hasFreeUsed ? Number((value * 0.06).toFixed(2)) : 0;
     if (hasFreeUsed) {
-      const ok = confirm(`Você já usou o saque gratuito desta semana. Será aplicada taxa administrativa de 6% (R$ ${fee.toFixed(2)}). Deseja continuar?`);
+      const ok = confirm(`Você já usou o saque gratuito desta semana. Será aplicada taxa administrativa de 6% (R$ ${fee.toFixed(2)}), líquido R$ ${(value - fee).toFixed(2)}. Deseja continuar?`);
       if (!ok) return;
     }
     setSaving(true);
-    const net = value - fee;
-    const { data: w, error } = await sb.from("store_withdrawals").insert({
-      store_id: store.id, amount: value, fee, net, pix_key: store.payout_pix_key, status: "pending",
-    }).select("id").single();
-    if (!error) {
-      // Debita da carteira imediatamente (reserva do valor)
-      await sb.from("store_wallet_entries").insert({
-        store_id: store.id, kind: "withdrawal", gross: -value, fee, net: -value,
-        description: `Solicitação de saque #${w.id.slice(0, 8)}`,
-      });
-      if (fee > 0) {
-        await sb.from("store_wallet_entries").insert({
-          store_id: store.id, kind: "withdrawal_fee", gross: 0, fee, net: 0,
-          description: "Taxa administrativa (2º+ saque na semana)",
-        });
-      }
-    }
+    const { error } = await sb.from("store_withdrawals").insert({
+      store_id: store.id, amount: value, pix_key: store.payout_pix_key,
+    });
     setSaving(false);
     if (error) { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); }
     toast.success("Saque solicitado!");
