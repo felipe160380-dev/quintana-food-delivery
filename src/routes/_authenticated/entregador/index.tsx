@@ -199,7 +199,10 @@ function OrderCard({ o, mine, onUpdate }: { o: any; mine?: boolean; onUpdate: ()
           </div>
           <div className="truncate text-xs text-muted-foreground">Retirar: {o.store?.address_line ?? "—"}</div>
           <div className="truncate text-xs text-muted-foreground">Entregar: {addr.street}{addr.number ? `, ${addr.number}` : ""}</div>
-          <div className="mt-1 text-sm font-semibold tabular-nums">{brl(Number(o.total))}</div>
+          <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2">
+            <span className="text-base font-bold tabular-nums text-emerald-600">Você ganha: {brl(Number(o.delivery_fee ?? 0))}</span>
+            <span className="text-[11px] text-muted-foreground">Pedido: {brl(Number(o.total))}</span>
+          </div>
           <div className="mt-2 flex flex-wrap gap-2 sm:hidden">
             <Button asChild size="sm" variant="outline"><Link to="/pedidos/$id" params={{ id: o.id }}>Abrir</Link></Button>
             {!mine && <Button size="sm" onClick={accept}>Aceitar</Button>}
