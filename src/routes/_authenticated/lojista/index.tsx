@@ -731,7 +731,15 @@ function FinanceTab({ store }: { store: any }) {
     const { data: w } = await sb.from("store_withdrawals").select("*").eq("store_id", store.id).order("requested_at", { ascending: false });
     setWithdrawals(w ?? []);
   };
-  useEffect(() => { load(); }, [store.id]);
+  useEffect(() => {
+    load();
+    const ch = sb.channel(`store-wallet-${store.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "store_wallet_entries", filter: `store_id=eq.${store.id}` }, load)
+      .on("postgres_changes", { event: "*", schema: "public", table: "store_withdrawals", filter: `store_id=eq.${store.id}` }, load)
+      .subscribe();
+    return () => { sb.removeChannel(ch); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store.id]);
 
   const startWeek = useMemo(() => {
     const d = new Date(); const day = d.getDay(); d.setHours(0, 0, 0, 0);
