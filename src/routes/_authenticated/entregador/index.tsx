@@ -108,37 +108,50 @@ function Page() {
 
       </div>
 
-      {mine.length > 0 && (
-        <section className="mb-6">
-          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Suas entregas ativas</h2>
-          <div className="space-y-2">
-            {mine.map((o) => (
-              <OrderCard key={o.id} o={o} mine onUpdate={load} />
-            ))}
-          </div>
-        </section>
-      )}
+      <Tabs defaultValue="deliveries">
+        <TabsList className="tabs-scroll h-auto gap-1 bg-muted/40 p-1">
+          <TabsTrigger value="deliveries"><Package className="mr-1 size-4" />Entregas</TabsTrigger>
+          <TabsTrigger value="wallet"><Wallet className="mr-1 size-4" />Carteira</TabsTrigger>
+        </TabsList>
 
-      <section>
-        <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Pedidos prontos para retirada</h2>
-        {!available ? (
-          <EmptyState
-            icon={<Bike className="size-6" />}
-            title="Você está indisponível"
-            description="Ative a disponibilidade acima para receber pedidos prontos para retirada."
-          />
-        ) : ready.length === 0 ? (
-          <EmptyState
-            icon={<Package className="size-6" />}
-            title="Nenhum pedido pronto agora"
-            description="Assim que uma loja liberar um pedido, ele aparece aqui automaticamente."
-          />
-        ) : (
-          <div className="space-y-2">
-            {ready.map((o) => <OrderCard key={o.id} o={o} onUpdate={load} />)}
-          </div>
-        )}
-      </section>
+        <TabsContent value="deliveries" className="mt-4">
+          {mine.length > 0 && (
+            <section className="mb-6">
+              <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Suas entregas ativas</h2>
+              <div className="space-y-2">
+                {mine.map((o) => (
+                  <OrderCard key={o.id} o={o} mine onUpdate={load} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          <section>
+            <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Pedidos prontos para retirada</h2>
+            {!available ? (
+              <EmptyState
+                icon={<Bike className="size-6" />}
+                title="Você está indisponível"
+                description="Ative a disponibilidade acima para receber pedidos prontos para retirada."
+              />
+            ) : ready.length === 0 ? (
+              <EmptyState
+                icon={<Package className="size-6" />}
+                title="Nenhum pedido pronto agora"
+                description="Assim que uma loja liberar um pedido, ele aparece aqui automaticamente."
+              />
+            ) : (
+              <div className="space-y-2">
+                {ready.map((o) => <OrderCard key={o.id} o={o} onUpdate={load} />)}
+              </div>
+            )}
+          </section>
+        </TabsContent>
+
+        <TabsContent value="wallet" className="mt-4">
+          <CourierWalletTab courier={me.courier} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
