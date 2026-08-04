@@ -2,6 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { UtensilsCrossed, Instagram, Facebook, Twitter } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { primaryRole } from "@/lib/profile";
+import logo from "@/assets/mipede-logo.png.asset.json";
 
 export function Footer() {
   const { roles } = useAuth();
