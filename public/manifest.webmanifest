@@ -1,6 +1,6 @@
 {
-  "name": "Quintana Food",
-  "short_name": "Quintana",
+  "name": "MiPede",
+  "short_name": "MiPede",
   "description": "Delivery de comida da sua cidade",
   "start_url": "/",
   "display": "standalone",

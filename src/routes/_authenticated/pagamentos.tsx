@@ -85,7 +85,7 @@ function Page() {
       )}
 
       <Card>
-        <CardHeader><CardTitle className="text-base">Pix do QuintanaFood</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">Pix do MiPede</CardTitle></CardHeader>
         <CardContent className="text-sm">
           <p>Se a loja aceita Pix e você quer pagar direto para a plataforma, use a chave:</p>
           <div className="mt-2 rounded-lg border bg-muted/40 p-3 font-mono text-xs">walkerfelipe054@gmail.com</div>

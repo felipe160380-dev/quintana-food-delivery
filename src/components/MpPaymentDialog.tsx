@@ -339,7 +339,7 @@ function CardBox({
       </Button>
       <p className="text-[11px] text-muted-foreground">
         Dados do cartão são enviados diretamente ao Mercado Pago (checkout transparente). O
-        QuintanaFood nunca vê o número completo nem o CVV.
+        MiPede nunca vê o número completo nem o CVV.
       </p>
     </div>
   );

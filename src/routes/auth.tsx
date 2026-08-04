@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
+import logo from "@/assets/mipede-logo.png.asset.json";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,10 +38,8 @@ function AuthPage() {
     <div className="mx-auto grid min-h-[calc(100vh-3.5rem)] max-w-md place-items-center px-4 py-10">
       <div className="w-full">
         <div className="mb-6 flex flex-col items-center text-center">
-          <span className="mb-3 grid size-14 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/30">
-            <UtensilsCrossed className="size-6" />
-          </span>
-          <h1 className="text-2xl font-bold tracking-tight">Bem-vindo à QuintanaFood</h1>
+          <img src={logo.url} alt="MiPede" className="mb-3 h-12 w-auto" />
+          <h1 className="text-2xl font-bold tracking-tight">Bem-vindo ao MiPede</h1>
           <p className="text-sm text-muted-foreground">Escolha como quer entrar no app.</p>
         </div>
         <Card>

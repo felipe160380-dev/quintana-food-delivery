@@ -23,7 +23,7 @@ export const Route = createFileRoute("/api/public/courier-application")({
                 headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
                 body: JSON.stringify({
                   to: admin,
-                  subject: "Novo cadastro de entregador — QuintanaFood",
+                  subject: "Novo cadastro de entregador — MiPede",
                   html: `
                     <h2>Novo entregador aguardando aprovação</h2>
                     <ul>

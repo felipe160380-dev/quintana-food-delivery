@@ -20,9 +20,9 @@ import {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "QuintanaFood — Delivery de comida na sua cidade" },
+      { title: "MiPede — Delivery de comida na sua cidade" },
       { name: "description", content: "Escolha entre as lojas online agora e receba seu pedido em casa com pagamento pelo app ou na entrega." },
-      { property: "og:title", content: "QuintanaFood — Delivery de comida na sua cidade" },
+      { property: "og:title", content: "MiPede — Delivery de comida na sua cidade" },
       { property: "og:description", content: "Escolha entre as lojas online agora e receba seu pedido em casa." },
     ],
   }),

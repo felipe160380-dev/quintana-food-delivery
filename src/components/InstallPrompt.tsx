@@ -31,7 +31,7 @@ export function InstallPrompt() {
       <div className="flex items-start gap-3">
         <img src="/icon-192.png" alt="" className="size-10 rounded-xl" width={40} height={40} />
         <div className="flex-1">
-          <div className="text-sm font-semibold">Instalar Quintana Food</div>
+          <div className="text-sm font-semibold">Instalar MiPede</div>
           <p className="text-xs text-muted-foreground">Acesso rápido pelo ícone no seu celular.</p>
         </div>
         <button

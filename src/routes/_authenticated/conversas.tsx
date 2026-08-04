@@ -12,9 +12,9 @@ export const Route = createFileRoute("/_authenticated/conversas")({
   component: Page,
   head: () => ({
     meta: [
-      { title: "Conversas — QuintanaFood" },
-      { name: "description", content: "Veja o histórico de conversas com as lojas dos seus pedidos no QuintanaFood." },
-      { property: "og:title", content: "Conversas — QuintanaFood" },
+      { title: "Conversas — MiPede" },
+      { name: "description", content: "Veja o histórico de conversas com as lojas dos seus pedidos no MiPede." },
+      { property: "og:title", content: "Conversas — MiPede" },
       { property: "og:description", content: "Histórico de conversas com as lojas dos seus pedidos." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

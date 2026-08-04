@@ -2,6 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { UtensilsCrossed, Instagram, Facebook, Twitter } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { primaryRole } from "@/lib/profile";
+import logo from "@/assets/mipede-logo.png.asset.json";
 
 export function Footer() {
   const { roles } = useAuth();
@@ -16,10 +17,7 @@ export function Footer() {
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-3">
         <div>
           <div className="flex items-center gap-2 font-bold">
-            <span className="grid size-8 place-items-center rounded-xl bg-primary text-primary-foreground">
-              <UtensilsCrossed className="size-4" />
-            </span>
-            <span className="text-lg">Quintana<span className="text-primary">Food</span></span>
+            <img src={logo.url} alt="MiPede" className="h-7 w-auto" />
           </div>
           <p className="mt-2 max-w-xs text-sm leading-relaxed text-muted-foreground">
             Peça comida das melhores lojas da sua região. Rápido, fácil e do jeito que você quer pagar.
@@ -62,7 +60,7 @@ export function Footer() {
       </div>
       <div className="border-t">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-4 py-4 text-xs text-muted-foreground sm:flex-row">
-          <div>© {new Date().getFullYear()} QuintanaFood. Todos os direitos reservados.</div>
+          <div>© {new Date().getFullYear()} MiPede. Todos os direitos reservados.</div>
           <div className="flex gap-4">
             <a href="#" className="transition-colors hover:text-primary">Termos</a>
             <a href="#" className="transition-colors hover:text-primary">Privacidade</a>
