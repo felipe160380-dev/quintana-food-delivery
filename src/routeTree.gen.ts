@@ -18,6 +18,7 @@ import { Route as AuthenticatedTornarSeLojistaRouteImport } from './routes/_auth
 import { Route as AuthenticatedTornarSeEntregadorRouteImport } from './routes/_authenticated/tornar-se-entregador'
 import { Route as AuthenticatedPagamentosRouteImport } from './routes/_authenticated/pagamentos'
 import { Route as AuthenticatedEnderecosRouteImport } from './routes/_authenticated/enderecos'
+import { Route as AuthenticatedConversasRouteImport } from './routes/_authenticated/conversas'
 import { Route as AuthenticatedCheckoutRouteImport } from './routes/_authenticated/checkout'
 import { Route as AuthenticatedAdmRouteImport } from './routes/_authenticated/adm'
 import { Route as AuthenticatedPedidosIndexRouteImport } from './routes/_authenticated/pedidos/index'
@@ -73,6 +74,11 @@ const AuthenticatedEnderecosRoute = AuthenticatedEnderecosRouteImport.update({
   path: '/enderecos',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedConversasRoute = AuthenticatedConversasRouteImport.update({
+  id: '/conversas',
+  path: '/conversas',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedCheckoutRoute = AuthenticatedCheckoutRouteImport.update({
   id: '/checkout',
   path: '/checkout',
@@ -124,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/adm': typeof AuthenticatedAdmRoute
   '/checkout': typeof AuthenticatedCheckoutRoute
+  '/conversas': typeof AuthenticatedConversasRoute
   '/enderecos': typeof AuthenticatedEnderecosRoute
   '/pagamentos': typeof AuthenticatedPagamentosRoute
   '/tornar-se-entregador': typeof AuthenticatedTornarSeEntregadorRoute
@@ -142,6 +149,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/adm': typeof AuthenticatedAdmRoute
   '/checkout': typeof AuthenticatedCheckoutRoute
+  '/conversas': typeof AuthenticatedConversasRoute
   '/enderecos': typeof AuthenticatedEnderecosRoute
   '/pagamentos': typeof AuthenticatedPagamentosRoute
   '/tornar-se-entregador': typeof AuthenticatedTornarSeEntregadorRoute
@@ -162,6 +170,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/adm': typeof AuthenticatedAdmRoute
   '/_authenticated/checkout': typeof AuthenticatedCheckoutRoute
+  '/_authenticated/conversas': typeof AuthenticatedConversasRoute
   '/_authenticated/enderecos': typeof AuthenticatedEnderecosRoute
   '/_authenticated/pagamentos': typeof AuthenticatedPagamentosRoute
   '/_authenticated/tornar-se-entregador': typeof AuthenticatedTornarSeEntregadorRoute
@@ -182,6 +191,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/adm'
     | '/checkout'
+    | '/conversas'
     | '/enderecos'
     | '/pagamentos'
     | '/tornar-se-entregador'
@@ -200,6 +210,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/adm'
     | '/checkout'
+    | '/conversas'
     | '/enderecos'
     | '/pagamentos'
     | '/tornar-se-entregador'
@@ -219,6 +230,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/adm'
     | '/_authenticated/checkout'
+    | '/_authenticated/conversas'
     | '/_authenticated/enderecos'
     | '/_authenticated/pagamentos'
     | '/_authenticated/tornar-se-entregador'
@@ -307,6 +319,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEnderecosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/conversas': {
+      id: '/_authenticated/conversas'
+      path: '/conversas'
+      fullPath: '/conversas'
+      preLoaderRoute: typeof AuthenticatedConversasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/checkout': {
       id: '/_authenticated/checkout'
       path: '/checkout'
@@ -369,6 +388,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdmRoute: typeof AuthenticatedAdmRoute
   AuthenticatedCheckoutRoute: typeof AuthenticatedCheckoutRoute
+  AuthenticatedConversasRoute: typeof AuthenticatedConversasRoute
   AuthenticatedEnderecosRoute: typeof AuthenticatedEnderecosRoute
   AuthenticatedPagamentosRoute: typeof AuthenticatedPagamentosRoute
   AuthenticatedTornarSeEntregadorRoute: typeof AuthenticatedTornarSeEntregadorRoute
@@ -382,6 +402,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdmRoute: AuthenticatedAdmRoute,
   AuthenticatedCheckoutRoute: AuthenticatedCheckoutRoute,
+  AuthenticatedConversasRoute: AuthenticatedConversasRoute,
   AuthenticatedEnderecosRoute: AuthenticatedEnderecosRoute,
   AuthenticatedPagamentosRoute: AuthenticatedPagamentosRoute,
   AuthenticatedTornarSeEntregadorRoute: AuthenticatedTornarSeEntregadorRoute,
@@ -407,13 +428,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
