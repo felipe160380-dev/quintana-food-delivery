@@ -127,6 +127,14 @@ export function AppHeader() {
                     <DropdownMenuItem onClick={() => nav({ to: "/pedidos" })}>
                       <ClipboardList className="mr-2 size-4" /> Meus pedidos
                     </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => nav({ to: "/conversas" })}>
+                      <MessageCircle className="mr-2 size-4" /> Conversas
+                      {unread > 0 && (
+                        <Badge variant="destructive" className="ml-auto size-5 justify-center rounded-full p-0 text-[10px] tabular-nums">
+                          {unread}
+                        </Badge>
+                      )}
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => nav({ to: "/enderecos" })}>
                       <MapPin className="mr-2 size-4" /> Endereços
                     </DropdownMenuItem>
