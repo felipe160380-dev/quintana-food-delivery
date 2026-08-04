@@ -16,10 +16,7 @@ export function Footer() {
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-3">
         <div>
           <div className="flex items-center gap-2 font-bold">
-            <span className="grid size-8 place-items-center rounded-xl bg-primary text-primary-foreground">
-              <UtensilsCrossed className="size-4" />
-            </span>
-            <span className="text-lg">Mi<span className="text-primary">Pede</span></span>
+            <img src={logo.url} alt="MiPede" className="h-7 w-auto" />
           </div>
           <p className="mt-2 max-w-xs text-sm leading-relaxed text-muted-foreground">
             Peça comida das melhores lojas da sua região. Rápido, fácil e do jeito que você quer pagar.
