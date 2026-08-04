@@ -59,10 +59,7 @@ export function AppHeader() {
             to={role === "merchant" ? "/lojista" : role === "courier" ? "/entregador" : role === "admin" ? "/adm" : "/"}
             className="flex min-w-0 items-center gap-2 font-bold"
           >
-            <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground">
-              <UtensilsCrossed className="size-4" />
-            </span>
-            <span className="truncate text-lg tracking-tight">Mi<span className="text-primary">Pede</span></span>
+            <img src={logo.url} alt="MiPede" className="h-7 w-auto shrink-0" />
           </Link>
           {roleLabel && (
             <Badge variant="secondary" className="hidden shrink-0 sm:inline-flex">{roleLabel}</Badge>
