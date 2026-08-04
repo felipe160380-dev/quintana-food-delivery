@@ -16,6 +16,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { primaryRole } from "@/lib/profile";
+import logo from "@/assets/mipede-logo.png.asset.json";
 
 export function AppHeader() {
   const { user, roles, signOut } = useAuth();
