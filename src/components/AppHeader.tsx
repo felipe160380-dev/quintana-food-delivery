@@ -1,7 +1,9 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { ShoppingBag, LogOut, Store, MapPin, ClipboardList, Bike, LogIn, UtensilsCrossed, CreditCard, Shield, LayoutDashboard } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ShoppingBag, LogOut, Store, MapPin, ClipboardList, Bike, LogIn, UtensilsCrossed, CreditCard, Shield, LayoutDashboard, MessageCircle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useCart } from "@/lib/cart";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -20,10 +22,30 @@ export function AppHeader() {
   const { count } = useCart();
   const nav = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  if (pathname.startsWith("/auth") || pathname.startsWith("/adm-login")) return null;
 
   const role = primaryRole(roles);
   const shopper = role === "customer";
+  const [unread, setUnread] = useState(0);
+
+  useEffect(() => {
+    if (!user || !shopper) { setUnread(0); return; }
+    let active = true;
+    const load = async () => {
+      const { data, error } = await supabase.rpc("list_customer_conversations");
+      if (error) { console.error(error); return; }
+      if (!active) return;
+      setUnread((data ?? []).reduce((s: number, c: any) => s + Number(c.unread_count ?? 0), 0));
+    };
+    load();
+    const ch = supabase
+      .channel(`header-unread:${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, () => load())
+      .subscribe();
+    return () => { active = false; supabase.removeChannel(ch); };
+  }, [user?.id, shopper]);
+
+  if (pathname.startsWith("/auth") || pathname.startsWith("/adm-login")) return null;
+
   const initials = (user?.email ?? "?").slice(0, 2).toUpperCase();
 
   const roleLabel =
@@ -104,6 +126,14 @@ export function AppHeader() {
                   <>
                     <DropdownMenuItem onClick={() => nav({ to: "/pedidos" })}>
                       <ClipboardList className="mr-2 size-4" /> Meus pedidos
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => nav({ to: "/conversas" })}>
+                      <MessageCircle className="mr-2 size-4" /> Conversas
+                      {unread > 0 && (
+                        <Badge variant="destructive" className="ml-auto size-5 justify-center rounded-full p-0 text-[10px] tabular-nums">
+                          {unread}
+                        </Badge>
+                      )}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => nav({ to: "/enderecos" })}>
                       <MapPin className="mr-2 size-4" /> Endereços

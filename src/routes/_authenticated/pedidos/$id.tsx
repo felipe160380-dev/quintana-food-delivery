@@ -62,6 +62,14 @@ function Page() {
 
   useEffect(() => { listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" }); }, [messages]);
 
+  useEffect(() => {
+    if (!me || messages.length === 0) return;
+    if (!messages.some((m) => m.sender_id !== me)) return;
+    supabase.rpc("mark_conversation_read", { _order_id: id }).then(({ error }) => {
+      if (error) console.error(error);
+    });
+  }, [id, me, messages.length]);
+
   const events = useOrderEvents(id);
   const courierPos = useCourierPosition(id, order?.status === "out_for_delivery");
 
