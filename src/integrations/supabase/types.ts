@@ -261,6 +261,7 @@ export type Database = {
           created_at: string
           id: string
           order_id: string
+          read_at: string | null
           sender_id: string
         }
         Insert: {
@@ -268,6 +269,7 @@ export type Database = {
           created_at?: string
           id?: string
           order_id: string
+          read_at?: string | null
           sender_id: string
         }
         Update: {
@@ -275,6 +277,7 @@ export type Database = {
           created_at?: string
           id?: string
           order_id?: string
+          read_at?: string | null
           sender_id?: string
         }
         Relationships: [
@@ -1124,6 +1127,26 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      list_customer_conversations: {
+        Args: never
+        Returns: {
+          last_message_at: string
+          last_message_body: string
+          last_message_sender_id: string
+          order_created_at: string
+          order_id: string
+          order_status: Database["public"]["Enums"]["order_status"]
+          order_total: number
+          store_id: string
+          store_logo_url: string
+          store_name: string
+          unread_count: number
+        }[]
+      }
+      mark_conversation_read: {
+        Args: { _order_id: string }
+        Returns: undefined
       }
       rate_courier: {
         Args: { _comment: string; _order_id: string; _rating: number }
