@@ -51,7 +51,7 @@ export const createPixForOrder = createServerFn({ method: "POST" })
     const mp = await createPixPayment({
       orderId: order.id,
       amount: Number(order.total),
-      description: `Pedido QuintanaFood #${order.id.slice(0, 8)}`,
+      description: `Pedido MiPede #${order.id.slice(0, 8)}`,
       payerEmail: email,
     });
     const qr = mp.point_of_interaction?.transaction_data;
@@ -117,7 +117,7 @@ export const createCardForOrder = createServerFn({ method: "POST" })
     const mp = await createCardPayment({
       orderId: order.id,
       amount: Number(order.total),
-      description: `Pedido QuintanaFood #${order.id.slice(0, 8)}`,
+      description: `Pedido MiPede #${order.id.slice(0, 8)}`,
       card: {
         token: data.token,
         installments: data.installments || 1,

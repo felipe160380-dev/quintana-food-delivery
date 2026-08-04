@@ -40,7 +40,7 @@ function AuthPage() {
           <span className="mb-3 grid size-14 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/30">
             <UtensilsCrossed className="size-6" />
           </span>
-          <h1 className="text-2xl font-bold tracking-tight">Bem-vindo à QuintanaFood</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Bem-vindo à MiPede</h1>
           <p className="text-sm text-muted-foreground">Escolha como quer entrar no app.</p>
         </div>
         <Card>

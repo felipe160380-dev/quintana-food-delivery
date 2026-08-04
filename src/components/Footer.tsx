@@ -19,7 +19,7 @@ export function Footer() {
             <span className="grid size-8 place-items-center rounded-xl bg-primary text-primary-foreground">
               <UtensilsCrossed className="size-4" />
             </span>
-            <span className="text-lg">Quintana<span className="text-primary">Food</span></span>
+            <span className="text-lg">Mi<span className="text-primary">Pede</span></span>
           </div>
           <p className="mt-2 max-w-xs text-sm leading-relaxed text-muted-foreground">
             Peça comida das melhores lojas da sua região. Rápido, fácil e do jeito que você quer pagar.
@@ -62,7 +62,7 @@ export function Footer() {
       </div>
       <div className="border-t">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-4 py-4 text-xs text-muted-foreground sm:flex-row">
-          <div>© {new Date().getFullYear()} QuintanaFood. Todos os direitos reservados.</div>
+          <div>© {new Date().getFullYear()} MiPede. Todos os direitos reservados.</div>
           <div className="flex gap-4">
             <a href="#" className="transition-colors hover:text-primary">Termos</a>
             <a href="#" className="transition-colors hover:text-primary">Privacidade</a>

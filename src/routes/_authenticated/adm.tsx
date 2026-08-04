@@ -99,7 +99,7 @@ function AdminPanel() {
         <ShieldCheck className="text-primary" />
         <div>
           <h1 className="text-2xl font-bold">Painel Administrativo</h1>
-          <p className="text-sm text-muted-foreground">QuintanaFood — controle da plataforma</p>
+          <p className="text-sm text-muted-foreground">MiPede — controle da plataforma</p>
         </div>
       </header>
 

@@ -62,7 +62,7 @@ export function AppHeader() {
             <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground">
               <UtensilsCrossed className="size-4" />
             </span>
-            <span className="truncate text-lg tracking-tight">Quintana<span className="text-primary">Food</span></span>
+            <span className="truncate text-lg tracking-tight">Mi<span className="text-primary">Pede</span></span>
           </Link>
           {roleLabel && (
             <Badge variant="secondary" className="hidden shrink-0 sm:inline-flex">{roleLabel}</Badge>
