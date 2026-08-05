@@ -196,6 +196,9 @@ function SignUp({ onDone }: { onDone: (r: Role) => void }) {
       className="space-y-4 pt-4"
       onSubmit={async (e) => {
         e.preventDefault();
+        if (!/^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/.test(email.trim())) {
+          return toast.error("Informe um e-mail válido.");
+        }
         setLoading(true);
         const { data, error } = await supabase.auth.signUp({
           email, password,
