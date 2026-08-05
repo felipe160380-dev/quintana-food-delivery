@@ -27,6 +27,7 @@ import { Route as AuthenticatedEntregadorIndexRouteImport } from './routes/_auth
 import { Route as ApiPublicMpWebhookRouteImport } from './routes/api/public/mp-webhook'
 import { Route as ApiPublicCourierApplicationRouteImport } from './routes/api/public/courier-application'
 import { Route as AuthenticatedPedidosIdRouteImport } from './routes/_authenticated/pedidos/$id'
+import { Route as AuthenticatedAdmUsuarioIdRouteImport } from './routes/_authenticated/adm-usuario.$id'
 import { Route as AuthenticatedAdmLojaIdRouteImport } from './routes/_authenticated/adm-loja.$id'
 import { Route as AuthenticatedAdmEntregadorIdRouteImport } from './routes/_authenticated/adm-entregador.$id'
 
@@ -125,6 +126,12 @@ const AuthenticatedPedidosIdRoute = AuthenticatedPedidosIdRouteImport.update({
   path: '/pedidos/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdmUsuarioIdRoute =
+  AuthenticatedAdmUsuarioIdRouteImport.update({
+    id: '/adm-usuario/$id',
+    path: '/adm-usuario/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdmLojaIdRoute = AuthenticatedAdmLojaIdRouteImport.update({
   id: '/adm-loja/$id',
   path: '/adm-loja/$id',
@@ -151,6 +158,7 @@ export interface FileRoutesByFullPath {
   '/loja/$slug': typeof LojaSlugRoute
   '/adm-entregador/$id': typeof AuthenticatedAdmEntregadorIdRoute
   '/adm-loja/$id': typeof AuthenticatedAdmLojaIdRoute
+  '/adm-usuario/$id': typeof AuthenticatedAdmUsuarioIdRoute
   '/pedidos/$id': typeof AuthenticatedPedidosIdRoute
   '/api/public/courier-application': typeof ApiPublicCourierApplicationRoute
   '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
@@ -172,6 +180,7 @@ export interface FileRoutesByTo {
   '/loja/$slug': typeof LojaSlugRoute
   '/adm-entregador/$id': typeof AuthenticatedAdmEntregadorIdRoute
   '/adm-loja/$id': typeof AuthenticatedAdmLojaIdRoute
+  '/adm-usuario/$id': typeof AuthenticatedAdmUsuarioIdRoute
   '/pedidos/$id': typeof AuthenticatedPedidosIdRoute
   '/api/public/courier-application': typeof ApiPublicCourierApplicationRoute
   '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
@@ -195,6 +204,7 @@ export interface FileRoutesById {
   '/loja/$slug': typeof LojaSlugRoute
   '/_authenticated/adm-entregador/$id': typeof AuthenticatedAdmEntregadorIdRoute
   '/_authenticated/adm-loja/$id': typeof AuthenticatedAdmLojaIdRoute
+  '/_authenticated/adm-usuario/$id': typeof AuthenticatedAdmUsuarioIdRoute
   '/_authenticated/pedidos/$id': typeof AuthenticatedPedidosIdRoute
   '/api/public/courier-application': typeof ApiPublicCourierApplicationRoute
   '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
@@ -218,6 +228,7 @@ export interface FileRouteTypes {
     | '/loja/$slug'
     | '/adm-entregador/$id'
     | '/adm-loja/$id'
+    | '/adm-usuario/$id'
     | '/pedidos/$id'
     | '/api/public/courier-application'
     | '/api/public/mp-webhook'
@@ -239,6 +250,7 @@ export interface FileRouteTypes {
     | '/loja/$slug'
     | '/adm-entregador/$id'
     | '/adm-loja/$id'
+    | '/adm-usuario/$id'
     | '/pedidos/$id'
     | '/api/public/courier-application'
     | '/api/public/mp-webhook'
@@ -261,6 +273,7 @@ export interface FileRouteTypes {
     | '/loja/$slug'
     | '/_authenticated/adm-entregador/$id'
     | '/_authenticated/adm-loja/$id'
+    | '/_authenticated/adm-usuario/$id'
     | '/_authenticated/pedidos/$id'
     | '/api/public/courier-application'
     | '/api/public/mp-webhook'
@@ -407,6 +420,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPedidosIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/adm-usuario/$id': {
+      id: '/_authenticated/adm-usuario/$id'
+      path: '/adm-usuario/$id'
+      fullPath: '/adm-usuario/$id'
+      preLoaderRoute: typeof AuthenticatedAdmUsuarioIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/adm-loja/$id': {
       id: '/_authenticated/adm-loja/$id'
       path: '/adm-loja/$id'
@@ -434,6 +454,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedTornarSeLojistaRoute: typeof AuthenticatedTornarSeLojistaRoute
   AuthenticatedAdmEntregadorIdRoute: typeof AuthenticatedAdmEntregadorIdRoute
   AuthenticatedAdmLojaIdRoute: typeof AuthenticatedAdmLojaIdRoute
+  AuthenticatedAdmUsuarioIdRoute: typeof AuthenticatedAdmUsuarioIdRoute
   AuthenticatedPedidosIdRoute: typeof AuthenticatedPedidosIdRoute
   AuthenticatedEntregadorIndexRoute: typeof AuthenticatedEntregadorIndexRoute
   AuthenticatedLojistaIndexRoute: typeof AuthenticatedLojistaIndexRoute
@@ -450,6 +471,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedTornarSeLojistaRoute: AuthenticatedTornarSeLojistaRoute,
   AuthenticatedAdmEntregadorIdRoute: AuthenticatedAdmEntregadorIdRoute,
   AuthenticatedAdmLojaIdRoute: AuthenticatedAdmLojaIdRoute,
+  AuthenticatedAdmUsuarioIdRoute: AuthenticatedAdmUsuarioIdRoute,
   AuthenticatedPedidosIdRoute: AuthenticatedPedidosIdRoute,
   AuthenticatedEntregadorIndexRoute: AuthenticatedEntregadorIndexRoute,
   AuthenticatedLojistaIndexRoute: AuthenticatedLojistaIndexRoute,
