@@ -28,6 +28,7 @@ import { Route as ApiPublicMpWebhookRouteImport } from './routes/api/public/mp-w
 import { Route as ApiPublicCourierApplicationRouteImport } from './routes/api/public/courier-application'
 import { Route as AuthenticatedPedidosIdRouteImport } from './routes/_authenticated/pedidos/$id'
 import { Route as AuthenticatedAdmLojaIdRouteImport } from './routes/_authenticated/adm-loja.$id'
+import { Route as AuthenticatedAdmEntregadorIdRouteImport } from './routes/_authenticated/adm-entregador.$id'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -129,6 +130,12 @@ const AuthenticatedAdmLojaIdRoute = AuthenticatedAdmLojaIdRouteImport.update({
   path: '/adm-loja/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdmEntregadorIdRoute =
+  AuthenticatedAdmEntregadorIdRouteImport.update({
+    id: '/adm-entregador/$id',
+    path: '/adm-entregador/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -142,6 +149,7 @@ export interface FileRoutesByFullPath {
   '/tornar-se-entregador': typeof AuthenticatedTornarSeEntregadorRoute
   '/tornar-se-lojista': typeof AuthenticatedTornarSeLojistaRoute
   '/loja/$slug': typeof LojaSlugRoute
+  '/adm-entregador/$id': typeof AuthenticatedAdmEntregadorIdRoute
   '/adm-loja/$id': typeof AuthenticatedAdmLojaIdRoute
   '/pedidos/$id': typeof AuthenticatedPedidosIdRoute
   '/api/public/courier-application': typeof ApiPublicCourierApplicationRoute
@@ -162,6 +170,7 @@ export interface FileRoutesByTo {
   '/tornar-se-entregador': typeof AuthenticatedTornarSeEntregadorRoute
   '/tornar-se-lojista': typeof AuthenticatedTornarSeLojistaRoute
   '/loja/$slug': typeof LojaSlugRoute
+  '/adm-entregador/$id': typeof AuthenticatedAdmEntregadorIdRoute
   '/adm-loja/$id': typeof AuthenticatedAdmLojaIdRoute
   '/pedidos/$id': typeof AuthenticatedPedidosIdRoute
   '/api/public/courier-application': typeof ApiPublicCourierApplicationRoute
@@ -184,6 +193,7 @@ export interface FileRoutesById {
   '/_authenticated/tornar-se-entregador': typeof AuthenticatedTornarSeEntregadorRoute
   '/_authenticated/tornar-se-lojista': typeof AuthenticatedTornarSeLojistaRoute
   '/loja/$slug': typeof LojaSlugRoute
+  '/_authenticated/adm-entregador/$id': typeof AuthenticatedAdmEntregadorIdRoute
   '/_authenticated/adm-loja/$id': typeof AuthenticatedAdmLojaIdRoute
   '/_authenticated/pedidos/$id': typeof AuthenticatedPedidosIdRoute
   '/api/public/courier-application': typeof ApiPublicCourierApplicationRoute
@@ -206,6 +216,7 @@ export interface FileRouteTypes {
     | '/tornar-se-entregador'
     | '/tornar-se-lojista'
     | '/loja/$slug'
+    | '/adm-entregador/$id'
     | '/adm-loja/$id'
     | '/pedidos/$id'
     | '/api/public/courier-application'
@@ -226,6 +237,7 @@ export interface FileRouteTypes {
     | '/tornar-se-entregador'
     | '/tornar-se-lojista'
     | '/loja/$slug'
+    | '/adm-entregador/$id'
     | '/adm-loja/$id'
     | '/pedidos/$id'
     | '/api/public/courier-application'
@@ -247,6 +259,7 @@ export interface FileRouteTypes {
     | '/_authenticated/tornar-se-entregador'
     | '/_authenticated/tornar-se-lojista'
     | '/loja/$slug'
+    | '/_authenticated/adm-entregador/$id'
     | '/_authenticated/adm-loja/$id'
     | '/_authenticated/pedidos/$id'
     | '/api/public/courier-application'
@@ -401,6 +414,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdmLojaIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/adm-entregador/$id': {
+      id: '/_authenticated/adm-entregador/$id'
+      path: '/adm-entregador/$id'
+      fullPath: '/adm-entregador/$id'
+      preLoaderRoute: typeof AuthenticatedAdmEntregadorIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -412,6 +432,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPagamentosRoute: typeof AuthenticatedPagamentosRoute
   AuthenticatedTornarSeEntregadorRoute: typeof AuthenticatedTornarSeEntregadorRoute
   AuthenticatedTornarSeLojistaRoute: typeof AuthenticatedTornarSeLojistaRoute
+  AuthenticatedAdmEntregadorIdRoute: typeof AuthenticatedAdmEntregadorIdRoute
   AuthenticatedAdmLojaIdRoute: typeof AuthenticatedAdmLojaIdRoute
   AuthenticatedPedidosIdRoute: typeof AuthenticatedPedidosIdRoute
   AuthenticatedEntregadorIndexRoute: typeof AuthenticatedEntregadorIndexRoute
@@ -427,6 +448,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPagamentosRoute: AuthenticatedPagamentosRoute,
   AuthenticatedTornarSeEntregadorRoute: AuthenticatedTornarSeEntregadorRoute,
   AuthenticatedTornarSeLojistaRoute: AuthenticatedTornarSeLojistaRoute,
+  AuthenticatedAdmEntregadorIdRoute: AuthenticatedAdmEntregadorIdRoute,
   AuthenticatedAdmLojaIdRoute: AuthenticatedAdmLojaIdRoute,
   AuthenticatedPedidosIdRoute: AuthenticatedPedidosIdRoute,
   AuthenticatedEntregadorIndexRoute: AuthenticatedEntregadorIndexRoute,
