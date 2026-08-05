@@ -206,6 +206,7 @@ function StoreCreate({ onCreated }: { onCreated: () => void }) {
           <form className="space-y-4" onSubmit={async (e) => {
             e.preventDefault();
             if (!cityId) return toast.error("Selecione a cidade da loja");
+            if (cnpj.replace(/\D/g, "").length !== 14) return toast.error("CNPJ inválido: informe os 14 dígitos.");
             setSaving(true);
             const { data: u } = await supabase.auth.getUser();
             if (!u.user) return;
