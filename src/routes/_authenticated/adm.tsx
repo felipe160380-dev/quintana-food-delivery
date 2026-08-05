@@ -333,10 +333,17 @@ function StoresTab() {
   const [items, setItems] = useState<StoreRow[]>([]);
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<ApprovalStatus | "all">("pending");
-  useEffect(() => { load(); }, [filter]);
+  const [cityId, setCityId] = useState<string>("all");
+  const [cities, setCities] = useState<CityRow[]>([]);
+  useEffect(() => { load(); }, [filter, cityId]);
+  useEffect(() => {
+    supabase.from("cities").select("id,name,state,slug,is_active,created_at").order("name")
+      .then(({ data }) => setCities((data ?? []) as CityRow[]));
+  }, []);
   async function load() {
-    let query = supabase.from("stores").select("id, name, slug, owner_id, is_online, city, cnpj, approval_status, approval_note, created_at").order("created_at", { ascending: false });
+    let query = supabase.from("stores").select("id, name, slug, owner_id, is_online, city, city_id, cnpj, approval_status, approval_note, created_at").order("created_at", { ascending: false });
     if (filter !== "all") query = query.eq("approval_status", filter);
+    if (cityId !== "all") query = query.eq("city_id", cityId);
     const { data } = await query;
     setItems((data ?? []) as StoreRow[]);
   }
@@ -371,13 +378,23 @@ function StoresTab() {
           <Button key={f.key} size="sm" variant={filter === f.key ? "default" : "outline"} onClick={() => setFilter(f.key)}>{f.label}</Button>
         ))}
       </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs text-muted-foreground">Cidade:</span>
+        <Button size="sm" variant={cityId === "all" ? "default" : "outline"} onClick={() => setCityId("all")}>Todas</Button>
+        {cities.map((c) => (
+          <Button key={c.id} size="sm" variant={cityId === c.id ? "default" : "outline"} onClick={() => setCityId(c.id)}>
+            {c.name}/{c.state}
+          </Button>
+        ))}
+      </div>
       <Input placeholder="Buscar loja..." value={q} onChange={(e) => setQ(e.target.value)} />
       {filtered.map((s) => (
         <Card key={s.id}>
           <CardContent className="p-4 flex flex-col md:flex-row md:items-start md:justify-between gap-3">
             <div className="flex-1">
               <p className="font-semibold">
-                {s.name} <StatusBadge status={s.approval_status} />{" "}
+                <Link to="/adm-loja/$id" params={{ id: s.id }} className="hover:underline">{s.name}</Link>
+                <StatusBadge status={s.approval_status} />{" "}
                 {s.approval_status === "approved" && (
                   <Badge variant={s.is_online ? "default" : "secondary"}>{s.is_online ? "Online" : "Offline"}</Badge>
                 )}
@@ -390,6 +407,7 @@ function StoresTab() {
             <div className="flex flex-col gap-2 items-end">
               <ApprovalActions status={s.approval_status} onSet={async (next, note) => { await setStatus(s.id, next, note); }} />
               <div className="flex gap-2">
+                <Button size="sm" variant="ghost" asChild><Link to="/adm-loja/$id" params={{ id: s.id }}>Detalhes</Link></Button>
                 {s.approval_status === "approved" && (
                   <Button size="sm" variant="outline" onClick={() => toggle(s)}>{s.is_online ? "Desativar" : "Ativar"}</Button>
                 )}
@@ -402,6 +420,7 @@ function StoresTab() {
     </div>
   );
 }
+
 
 function OrdersTab() {
   const [items, setItems] = useState<OrderRow[]>([]);
