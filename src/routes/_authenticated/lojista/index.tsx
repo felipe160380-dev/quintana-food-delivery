@@ -430,6 +430,76 @@ function StoreEdit({ store, onSaved }: { store: any; onSaved: () => void }) {
   );
 }
 
+// ============ Categorias reutilizáveis ============
+type ProductCategory = { id: string; store_id: string; name: string; sort_order: number };
+
+function CategoriesManager({ storeId, categories, onChanged }: { storeId: string; categories: ProductCategory[]; onChanged: () => void }) {
+  const [name, setName] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const create = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const n = name.trim();
+    if (!n) return;
+    setSaving(true);
+    const { error } = await sb.from("product_categories").insert({ store_id: storeId, name: n, sort_order: categories.length });
+    setSaving(false);
+    if (error) { console.error(error); return toast.error("Não foi possível criar a categoria (talvez já exista)."); }
+    setName(""); onChanged();
+  };
+
+  const rename = async (c: ProductCategory) => {
+    const next = prompt("Novo nome da categoria", c.name)?.trim();
+    if (!next || next === c.name) return;
+    const { error } = await sb.from("product_categories").update({ name: next }).eq("id", c.id);
+    if (error) { console.error(error); return toast.error("Não foi possível renomear."); }
+    onChanged();
+  };
+
+  const move = async (c: ProductCategory, dir: -1 | 1) => {
+    const idx = categories.findIndex((x) => x.id === c.id);
+    const other = categories[idx + dir];
+    if (!other) return;
+    await sb.from("product_categories").update({ sort_order: other.sort_order }).eq("id", c.id);
+    await sb.from("product_categories").update({ sort_order: c.sort_order }).eq("id", other.id);
+    onChanged();
+  };
+
+  const remove = async (c: ProductCategory) => {
+    if (!confirm(`Remover a categoria "${c.name}"? Os produtos existentes continuam com o texto atual.`)) return;
+    const { error } = await sb.from("product_categories").delete().eq("id", c.id);
+    if (error) { console.error(error); return toast.error("Não foi possível remover."); }
+    onChanged();
+  };
+
+  return (
+    <Card>
+      <CardHeader><CardTitle className="text-base">Categorias do cardápio</CardTitle></CardHeader>
+      <CardContent className="space-y-3">
+        <form className="flex gap-2" onSubmit={create}>
+          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Pizzas salgadas" />
+          <Button type="submit" disabled={saving}>{saving ? "Salvando..." : "Adicionar"}</Button>
+        </form>
+        {categories.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Nenhuma categoria criada. Crie uma para reutilizar nos produtos.</p>
+        ) : (
+          <div className="space-y-2">
+            {categories.map((c, i) => (
+              <div key={c.id} className="flex items-center gap-2 rounded-lg border p-2">
+                <span className="flex-1 text-sm">{c.name}</span>
+                <Button size="sm" variant="ghost" disabled={i === 0} onClick={() => move(c, -1)}>↑</Button>
+                <Button size="sm" variant="ghost" disabled={i === categories.length - 1} onClick={() => move(c, 1)}>↓</Button>
+                <Button size="sm" variant="ghost" onClick={() => rename(c)}>Renomear</Button>
+                <Button size="sm" variant="ghost" onClick={() => remove(c)}><Trash2 className="size-4" /></Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 // ============ Menu ============
 function MenuTab({ storeId }: { storeId: string }) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
