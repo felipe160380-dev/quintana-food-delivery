@@ -248,10 +248,10 @@ function CouriersTab() {
 
   async function load() {
     setLoading(true);
-    let q = supabase.from("couriers").select("id, document, vehicle, vehicle_plate, approval_status, approval_note, created_at").order("created_at", { ascending: false });
+    let q = supabase.from("couriers").select("id, document, vehicle, vehicle_plate, approval_status, approval_note, is_suspended, created_at").order("created_at", { ascending: false });
     if (filter !== "all") q = q.eq("approval_status", filter);
     const { data } = await q;
-    const rows = (data ?? []) as Courier[];
+    const rows = (data ?? []) as unknown as Courier[];
     if (rows.length) {
       const { data: profs } = await supabase.from("profiles").select("id, full_name, phone").in("id", rows.map((r) => r.id));
       const map = new Map((profs ?? []).map((p: any) => [p.id, p]));
@@ -271,6 +271,16 @@ function CouriersTab() {
     load();
   }
 
+  async function toggleSuspension(c: Courier) {
+    const next = !c.is_suspended;
+    const patch: any = { is_suspended: next };
+    if (next) patch.is_available = false;
+    const { error } = await supabase.from("couriers").update(patch).eq("id", c.id);
+    if (error) { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); }
+    toast.success(next ? "Entregador suspenso" : "Entregador reativado");
+    load();
+  }
+
   return (
     <div className="space-y-3">
       <div className="flex gap-2 flex-wrap">
@@ -285,7 +295,13 @@ function CouriersTab() {
           <Card key={c.id}>
             <CardContent className="p-4 flex flex-col md:flex-row md:items-start md:justify-between gap-3">
               <div className="flex-1">
-                <p className="font-semibold">{c.profile?.full_name ?? "Sem nome"} <StatusBadge status={c.approval_status} /></p>
+                <p className="font-semibold">
+                  <Link to="/adm-entregador/$id" params={{ id: c.id }} className="hover:underline">
+                    {c.profile?.full_name ?? "Sem nome"}
+                  </Link>
+                  <StatusBadge status={c.approval_status} />
+                  {c.is_suspended && <Badge variant="destructive" className="ml-1">Suspenso</Badge>}
+                </p>
                 <p className="text-xs text-muted-foreground">
                   {c.profile?.phone ?? "—"} · CPF {c.document ?? "—"} · {c.vehicle ?? "—"} {c.vehicle_plate ?? ""}
                 </p>
@@ -293,11 +309,22 @@ function CouriersTab() {
                   <p className="text-xs text-destructive mt-1">Motivo: {c.approval_note}</p>
                 )}
               </div>
-              <ApprovalActions status={c.approval_status} onSet={async (next, note) => { await setStatus(c.id, next, note); }} />
+              <div className="flex flex-col items-end gap-2">
+                <ApprovalActions status={c.approval_status} onSet={async (next, note) => { await setStatus(c.id, next, note); }} />
+                <div className="flex gap-2">
+                  {c.approval_status === "approved" && (
+                    <Button size="sm" variant="outline" onClick={() => toggleSuspension(c)}>{c.is_suspended ? "Reativar" : "Suspender"}</Button>
+                  )}
+                  <Button size="sm" variant="ghost" asChild>
+                    <Link to="/adm-entregador/$id" params={{ id: c.id }}>Detalhes</Link>
+                  </Button>
+                </div>
+              </div>
             </CardContent>
           </Card>
         ))}
       </div>
+
     </div>
   );
 }
