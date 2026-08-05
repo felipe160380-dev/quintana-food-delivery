@@ -497,7 +497,9 @@ function UsersTab() {
         <Card key={u.id}>
           <CardContent className="p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
-              <p className="font-semibold">{u.full_name ?? "Sem nome"}</p>
+              <p className="font-semibold">
+                <Link to="/adm-usuario/$id" params={{ id: u.id }} className="hover:underline">{u.full_name ?? "Sem nome"}</Link>
+              </p>
               <p className="text-xs text-muted-foreground">{u.phone ?? "—"}</p>
               <div className="flex gap-1 mt-1 flex-wrap">
                 {u.roles.map((r) => <Badge key={r} variant="secondary">{r}</Badge>)}
