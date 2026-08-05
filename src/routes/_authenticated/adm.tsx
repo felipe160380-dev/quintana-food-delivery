@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -26,6 +26,7 @@ type Courier = {
   vehicle_plate: string | null;
   approval_status: ApprovalStatus;
   approval_note: string | null;
+  is_suspended?: boolean | null;
   created_at: string;
   profile?: { full_name: string | null; phone: string | null } | null;
 };
@@ -37,6 +38,7 @@ type StoreRow = {
   owner_id: string;
   is_online: boolean;
   city: string | null;
+  city_id: string | null;
   cnpj: string | null;
   approval_status: ApprovalStatus;
   approval_note: string | null;
@@ -246,10 +248,10 @@ function CouriersTab() {
 
   async function load() {
     setLoading(true);
-    let q = supabase.from("couriers").select("id, document, vehicle, vehicle_plate, approval_status, approval_note, created_at").order("created_at", { ascending: false });
+    let q = supabase.from("couriers").select("id, document, vehicle, vehicle_plate, approval_status, approval_note, is_suspended, created_at").order("created_at", { ascending: false });
     if (filter !== "all") q = q.eq("approval_status", filter);
     const { data } = await q;
-    const rows = (data ?? []) as Courier[];
+    const rows = (data ?? []) as unknown as Courier[];
     if (rows.length) {
       const { data: profs } = await supabase.from("profiles").select("id, full_name, phone").in("id", rows.map((r) => r.id));
       const map = new Map((profs ?? []).map((p: any) => [p.id, p]));
@@ -269,6 +271,16 @@ function CouriersTab() {
     load();
   }
 
+  async function toggleSuspension(c: Courier) {
+    const next = !c.is_suspended;
+    const patch: any = { is_suspended: next };
+    if (next) patch.is_available = false;
+    const { error } = await supabase.from("couriers").update(patch).eq("id", c.id);
+    if (error) { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); }
+    toast.success(next ? "Entregador suspenso" : "Entregador reativado");
+    load();
+  }
+
   return (
     <div className="space-y-3">
       <div className="flex gap-2 flex-wrap">
@@ -283,7 +295,13 @@ function CouriersTab() {
           <Card key={c.id}>
             <CardContent className="p-4 flex flex-col md:flex-row md:items-start md:justify-between gap-3">
               <div className="flex-1">
-                <p className="font-semibold">{c.profile?.full_name ?? "Sem nome"} <StatusBadge status={c.approval_status} /></p>
+                <p className="font-semibold">
+                  <Link to="/adm-entregador/$id" params={{ id: c.id }} className="hover:underline">
+                    {c.profile?.full_name ?? "Sem nome"}
+                  </Link>
+                  <StatusBadge status={c.approval_status} />
+                  {c.is_suspended && <Badge variant="destructive" className="ml-1">Suspenso</Badge>}
+                </p>
                 <p className="text-xs text-muted-foreground">
                   {c.profile?.phone ?? "—"} · CPF {c.document ?? "—"} · {c.vehicle ?? "—"} {c.vehicle_plate ?? ""}
                 </p>
@@ -291,11 +309,22 @@ function CouriersTab() {
                   <p className="text-xs text-destructive mt-1">Motivo: {c.approval_note}</p>
                 )}
               </div>
-              <ApprovalActions status={c.approval_status} onSet={async (next, note) => { await setStatus(c.id, next, note); }} />
+              <div className="flex flex-col items-end gap-2">
+                <ApprovalActions status={c.approval_status} onSet={async (next, note) => { await setStatus(c.id, next, note); }} />
+                <div className="flex gap-2">
+                  {c.approval_status === "approved" && (
+                    <Button size="sm" variant="outline" onClick={() => toggleSuspension(c)}>{c.is_suspended ? "Reativar" : "Suspender"}</Button>
+                  )}
+                  <Button size="sm" variant="ghost" asChild>
+                    <Link to="/adm-entregador/$id" params={{ id: c.id }}>Detalhes</Link>
+                  </Button>
+                </div>
+              </div>
             </CardContent>
           </Card>
         ))}
       </div>
+
     </div>
   );
 }
@@ -304,10 +333,17 @@ function StoresTab() {
   const [items, setItems] = useState<StoreRow[]>([]);
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<ApprovalStatus | "all">("pending");
-  useEffect(() => { load(); }, [filter]);
+  const [cityId, setCityId] = useState<string>("all");
+  const [cities, setCities] = useState<CityRow[]>([]);
+  useEffect(() => { load(); }, [filter, cityId]);
+  useEffect(() => {
+    supabase.from("cities").select("id,name,state,slug,is_active,created_at").order("name")
+      .then(({ data }) => setCities((data ?? []) as CityRow[]));
+  }, []);
   async function load() {
-    let query = supabase.from("stores").select("id, name, slug, owner_id, is_online, city, cnpj, approval_status, approval_note, created_at").order("created_at", { ascending: false });
+    let query = supabase.from("stores").select("id, name, slug, owner_id, is_online, city, city_id, cnpj, approval_status, approval_note, created_at").order("created_at", { ascending: false });
     if (filter !== "all") query = query.eq("approval_status", filter);
+    if (cityId !== "all") query = query.eq("city_id", cityId);
     const { data } = await query;
     setItems((data ?? []) as StoreRow[]);
   }
@@ -342,13 +378,23 @@ function StoresTab() {
           <Button key={f.key} size="sm" variant={filter === f.key ? "default" : "outline"} onClick={() => setFilter(f.key)}>{f.label}</Button>
         ))}
       </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs text-muted-foreground">Cidade:</span>
+        <Button size="sm" variant={cityId === "all" ? "default" : "outline"} onClick={() => setCityId("all")}>Todas</Button>
+        {cities.map((c) => (
+          <Button key={c.id} size="sm" variant={cityId === c.id ? "default" : "outline"} onClick={() => setCityId(c.id)}>
+            {c.name}/{c.state}
+          </Button>
+        ))}
+      </div>
       <Input placeholder="Buscar loja..." value={q} onChange={(e) => setQ(e.target.value)} />
       {filtered.map((s) => (
         <Card key={s.id}>
           <CardContent className="p-4 flex flex-col md:flex-row md:items-start md:justify-between gap-3">
             <div className="flex-1">
               <p className="font-semibold">
-                {s.name} <StatusBadge status={s.approval_status} />{" "}
+                <Link to="/adm-loja/$id" params={{ id: s.id }} className="hover:underline">{s.name}</Link>
+                <StatusBadge status={s.approval_status} />{" "}
                 {s.approval_status === "approved" && (
                   <Badge variant={s.is_online ? "default" : "secondary"}>{s.is_online ? "Online" : "Offline"}</Badge>
                 )}
@@ -361,6 +407,7 @@ function StoresTab() {
             <div className="flex flex-col gap-2 items-end">
               <ApprovalActions status={s.approval_status} onSet={async (next, note) => { await setStatus(s.id, next, note); }} />
               <div className="flex gap-2">
+                <Button size="sm" variant="ghost" asChild><Link to="/adm-loja/$id" params={{ id: s.id }}>Detalhes</Link></Button>
                 {s.approval_status === "approved" && (
                   <Button size="sm" variant="outline" onClick={() => toggle(s)}>{s.is_online ? "Desativar" : "Ativar"}</Button>
                 )}
@@ -373,6 +420,7 @@ function StoresTab() {
     </div>
   );
 }
+
 
 function OrdersTab() {
   const [items, setItems] = useState<OrderRow[]>([]);
@@ -449,7 +497,9 @@ function UsersTab() {
         <Card key={u.id}>
           <CardContent className="p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
-              <p className="font-semibold">{u.full_name ?? "Sem nome"}</p>
+              <p className="font-semibold">
+                <Link to="/adm-usuario/$id" params={{ id: u.id }} className="hover:underline">{u.full_name ?? "Sem nome"}</Link>
+              </p>
               <p className="text-xs text-muted-foreground">{u.phone ?? "—"}</p>
               <div className="flex gap-1 mt-1 flex-wrap">
                 {u.roles.map((r) => <Badge key={r} variant="secondary">{r}</Badge>)}

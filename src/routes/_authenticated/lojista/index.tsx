@@ -206,6 +206,7 @@ function StoreCreate({ onCreated }: { onCreated: () => void }) {
           <form className="space-y-4" onSubmit={async (e) => {
             e.preventDefault();
             if (!cityId) return toast.error("Selecione a cidade da loja");
+            if (cnpj.replace(/\D/g, "").length !== 14) return toast.error("CNPJ inválido: informe os 14 dígitos.");
             setSaving(true);
             const { data: u } = await supabase.auth.getUser();
             if (!u.user) return;
@@ -338,6 +339,7 @@ function StoreEdit({ store, onSaved }: { store: any; onSaved: () => void }) {
   return (
     <form className="space-y-4" onSubmit={async (e) => {
       e.preventDefault();
+      if (form.cnpj && form.cnpj.replace(/\D/g, "").length !== 14) return toast.error("CNPJ inválido: informe os 14 dígitos.");
       setSaving(true);
       const patch = {
         name: form.name, description: form.description, category: form.category,
@@ -430,6 +432,76 @@ function StoreEdit({ store, onSaved }: { store: any; onSaved: () => void }) {
   );
 }
 
+// ============ Categorias reutilizáveis ============
+type ProductCategory = { id: string; store_id: string; name: string; sort_order: number };
+
+function CategoriesManager({ storeId, categories, onChanged }: { storeId: string; categories: ProductCategory[]; onChanged: () => void }) {
+  const [name, setName] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const create = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const n = name.trim();
+    if (!n) return;
+    setSaving(true);
+    const { error } = await sb.from("product_categories").insert({ store_id: storeId, name: n, sort_order: categories.length });
+    setSaving(false);
+    if (error) { console.error(error); return toast.error("Não foi possível criar a categoria (talvez já exista)."); }
+    setName(""); onChanged();
+  };
+
+  const rename = async (c: ProductCategory) => {
+    const next = prompt("Novo nome da categoria", c.name)?.trim();
+    if (!next || next === c.name) return;
+    const { error } = await sb.from("product_categories").update({ name: next }).eq("id", c.id);
+    if (error) { console.error(error); return toast.error("Não foi possível renomear."); }
+    onChanged();
+  };
+
+  const move = async (c: ProductCategory, dir: -1 | 1) => {
+    const idx = categories.findIndex((x) => x.id === c.id);
+    const other = categories[idx + dir];
+    if (!other) return;
+    await sb.from("product_categories").update({ sort_order: other.sort_order }).eq("id", c.id);
+    await sb.from("product_categories").update({ sort_order: c.sort_order }).eq("id", other.id);
+    onChanged();
+  };
+
+  const remove = async (c: ProductCategory) => {
+    if (!confirm(`Remover a categoria "${c.name}"? Os produtos existentes continuam com o texto atual.`)) return;
+    const { error } = await sb.from("product_categories").delete().eq("id", c.id);
+    if (error) { console.error(error); return toast.error("Não foi possível remover."); }
+    onChanged();
+  };
+
+  return (
+    <Card>
+      <CardHeader><CardTitle className="text-base">Categorias do cardápio</CardTitle></CardHeader>
+      <CardContent className="space-y-3">
+        <form className="flex gap-2" onSubmit={create}>
+          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Pizzas salgadas" />
+          <Button type="submit" disabled={saving}>{saving ? "Salvando..." : "Adicionar"}</Button>
+        </form>
+        {categories.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Nenhuma categoria criada. Crie uma para reutilizar nos produtos.</p>
+        ) : (
+          <div className="space-y-2">
+            {categories.map((c, i) => (
+              <div key={c.id} className="flex items-center gap-2 rounded-lg border p-2">
+                <span className="flex-1 text-sm">{c.name}</span>
+                <Button size="sm" variant="ghost" disabled={i === 0} onClick={() => move(c, -1)}>↑</Button>
+                <Button size="sm" variant="ghost" disabled={i === categories.length - 1} onClick={() => move(c, 1)}>↓</Button>
+                <Button size="sm" variant="ghost" onClick={() => rename(c)}>Renomear</Button>
+                <Button size="sm" variant="ghost" onClick={() => remove(c)}><Trash2 className="size-4" /></Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 // ============ Menu ============
 function MenuTab({ storeId }: { storeId: string }) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -437,15 +509,22 @@ function MenuTab({ storeId }: { storeId: string }) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [editing, setEditing] = useState<any | null>(null);
   const [filter, setFilter] = useState<"all" | "active" | "paused">("all");
+  const [categories, setCategories] = useState<ProductCategory[]>([]);
   const load = async () => {
     const { data } = await sb.from("products").select("*").eq("store_id", storeId).order("category").order("sort_order");
     setItems(data ?? []);
   };
-  useEffect(() => { load(); }, [storeId]);
+  const loadCategories = async () => {
+    const { data } = await sb.from("product_categories").select("id, store_id, name, sort_order").eq("store_id", storeId).order("sort_order").order("name");
+    setCategories((data ?? []) as ProductCategory[]);
+  };
+  useEffect(() => { load(); loadCategories(); }, [storeId]);
   const filtered = items.filter((p) => filter === "all" || (filter === "active" ? !p.is_paused && p.is_available : p.is_paused));
 
   return (
     <div className="space-y-3">
+      <CategoriesManager storeId={storeId} categories={categories} onChanged={loadCategories} />
+
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex gap-1">
           {(["all", "active", "paused"] as const).map((f) => (
@@ -485,13 +564,13 @@ function MenuTab({ storeId }: { storeId: string }) {
           ))}
         </div>
       )}
-      {editing && <ProductDialog product={editing} onClose={() => { setEditing(null); load(); }} />}
+      {editing && <ProductDialog product={editing} categories={categories} onClose={() => { setEditing(null); load(); }} />}
     </div>
   );
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function ProductDialog({ product, onClose }: { product: any; onClose: () => void }) {
+function ProductDialog({ product, categories, onClose }: { product: any; categories: ProductCategory[]; onClose: () => void }) {
   const [f, setF] = useState({
     name: product.name ?? "", description: product.description ?? "", price: String(product.price ?? ""),
     promo_price: product.promo_price != null ? String(product.promo_price) : "",
@@ -533,7 +612,23 @@ function ProductDialog({ product, onClose }: { product: any; onClose: () => void
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5"><Label>Preço "de" (R$)</Label><Input type="number" step="0.01" value={f.price} onChange={(e) => setF({ ...f, price: e.target.value })} required /></div>
             <div className="space-y-1.5"><Label>Preço promocional (opcional)</Label><Input type="number" step="0.01" value={f.promo_price} onChange={(e) => setF({ ...f, promo_price: e.target.value })} /></div>
-            <div className="space-y-1.5"><Label>Categoria</Label><Input value={f.category} onChange={(e) => setF({ ...f, category: e.target.value })} placeholder="Ex: Hambúrgueres" /></div>
+            <div className="space-y-1.5">
+              <Label>Categoria</Label>
+              {categories.length > 0 ? (
+                <Select value={f.category || "__none"} onValueChange={(v) => setF({ ...f, category: v === "__none" ? "" : v })}>
+                  <SelectTrigger><SelectValue placeholder="Selecione a categoria" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none">Sem categoria</SelectItem>
+                    {categories.map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
+                    {f.category && !categories.some((c) => c.name === f.category) && (
+                      <SelectItem value={f.category}>{f.category} (atual)</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input value={f.category} onChange={(e) => setF({ ...f, category: e.target.value })} placeholder="Crie categorias acima para reutilizar" />
+              )}
+            </div>
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1.5"><Label>Estoque</Label><Input type="number" value={f.stock} onChange={(e) => setF({ ...f, stock: e.target.value })} placeholder="Ilimitado" /></div>
               <div className="space-y-1.5"><Label>Alerta ≤</Label><Input type="number" value={f.low_stock_threshold} onChange={(e) => setF({ ...f, low_stock_threshold: e.target.value })} /></div>

@@ -205,8 +205,10 @@ export type Database = {
           document: string | null
           id: string
           is_available: boolean
+          is_suspended: boolean
           last_seen_at: string | null
           payout_pix_key: string | null
+          photo_url: string | null
           updated_at: string
           vehicle: Database["public"]["Enums"]["vehicle_type"]
           vehicle_plate: string | null
@@ -222,8 +224,10 @@ export type Database = {
           document?: string | null
           id: string
           is_available?: boolean
+          is_suspended?: boolean
           last_seen_at?: string | null
           payout_pix_key?: string | null
+          photo_url?: string | null
           updated_at?: string
           vehicle?: Database["public"]["Enums"]["vehicle_type"]
           vehicle_plate?: string | null
@@ -239,8 +243,10 @@ export type Database = {
           document?: string | null
           id?: string
           is_available?: boolean
+          is_suspended?: boolean
           last_seen_at?: string | null
           payout_pix_key?: string | null
+          photo_url?: string | null
           updated_at?: string
           vehicle?: Database["public"]["Enums"]["vehicle_type"]
           vehicle_plate?: string | null
@@ -662,6 +668,41 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_categories: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          sort_order: number
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          sort_order?: number
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          sort_order?: number
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_categories_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
             referencedColumns: ["id"]
           },
         ]
