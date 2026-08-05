@@ -507,15 +507,22 @@ function MenuTab({ storeId }: { storeId: string }) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [editing, setEditing] = useState<any | null>(null);
   const [filter, setFilter] = useState<"all" | "active" | "paused">("all");
+  const [categories, setCategories] = useState<ProductCategory[]>([]);
   const load = async () => {
     const { data } = await sb.from("products").select("*").eq("store_id", storeId).order("category").order("sort_order");
     setItems(data ?? []);
   };
-  useEffect(() => { load(); }, [storeId]);
+  const loadCategories = async () => {
+    const { data } = await sb.from("product_categories").select("id, store_id, name, sort_order").eq("store_id", storeId).order("sort_order").order("name");
+    setCategories((data ?? []) as ProductCategory[]);
+  };
+  useEffect(() => { load(); loadCategories(); }, [storeId]);
   const filtered = items.filter((p) => filter === "all" || (filter === "active" ? !p.is_paused && p.is_available : p.is_paused));
 
   return (
     <div className="space-y-3">
+      <CategoriesManager storeId={storeId} categories={categories} onChanged={loadCategories} />
+
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex gap-1">
           {(["all", "active", "paused"] as const).map((f) => (
