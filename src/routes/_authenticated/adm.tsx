@@ -26,6 +26,7 @@ type Courier = {
   vehicle_plate: string | null;
   approval_status: ApprovalStatus;
   approval_note: string | null;
+  is_suspended?: boolean | null;
   created_at: string;
   profile?: { full_name: string | null; phone: string | null } | null;
 };
@@ -37,6 +38,7 @@ type StoreRow = {
   owner_id: string;
   is_online: boolean;
   city: string | null;
+  city_id: string | null;
   cnpj: string | null;
   approval_status: ApprovalStatus;
   approval_note: string | null;
