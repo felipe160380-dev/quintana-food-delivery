@@ -52,7 +52,7 @@ export function Footer() {
         <div>
           <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Siga a gente</div>
           <div className="flex gap-2">
-            <a href="#" aria-label="Instagram" className="grid size-9 place-items-center rounded-lg border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"><Instagram className="size-4" /></a>
+            <a href="https://www.instagram.com/mipede.app" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="grid size-9 place-items-center rounded-lg border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"><Instagram className="size-4" /></a>
             <a href="#" aria-label="Facebook" className="grid size-9 place-items-center rounded-lg border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"><Facebook className="size-4" /></a>
             <Link to="/adm-login" aria-label="Twitter" className="grid size-9 place-items-center rounded-lg border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"><Twitter className="size-4" /></Link>
           </div>
