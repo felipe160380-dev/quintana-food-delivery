@@ -27,6 +27,7 @@ import { Route as AuthenticatedEntregadorIndexRouteImport } from './routes/_auth
 import { Route as ApiPublicMpWebhookRouteImport } from './routes/api/public/mp-webhook'
 import { Route as ApiPublicCourierApplicationRouteImport } from './routes/api/public/courier-application'
 import { Route as AuthenticatedPedidosIdRouteImport } from './routes/_authenticated/pedidos/$id'
+import { Route as AuthenticatedAdmLojaIdRouteImport } from './routes/_authenticated/adm-loja.$id'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -123,6 +124,11 @@ const AuthenticatedPedidosIdRoute = AuthenticatedPedidosIdRouteImport.update({
   path: '/pedidos/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdmLojaIdRoute = AuthenticatedAdmLojaIdRouteImport.update({
+  id: '/adm-loja/$id',
+  path: '/adm-loja/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -136,6 +142,7 @@ export interface FileRoutesByFullPath {
   '/tornar-se-entregador': typeof AuthenticatedTornarSeEntregadorRoute
   '/tornar-se-lojista': typeof AuthenticatedTornarSeLojistaRoute
   '/loja/$slug': typeof LojaSlugRoute
+  '/adm-loja/$id': typeof AuthenticatedAdmLojaIdRoute
   '/pedidos/$id': typeof AuthenticatedPedidosIdRoute
   '/api/public/courier-application': typeof ApiPublicCourierApplicationRoute
   '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
@@ -155,6 +162,7 @@ export interface FileRoutesByTo {
   '/tornar-se-entregador': typeof AuthenticatedTornarSeEntregadorRoute
   '/tornar-se-lojista': typeof AuthenticatedTornarSeLojistaRoute
   '/loja/$slug': typeof LojaSlugRoute
+  '/adm-loja/$id': typeof AuthenticatedAdmLojaIdRoute
   '/pedidos/$id': typeof AuthenticatedPedidosIdRoute
   '/api/public/courier-application': typeof ApiPublicCourierApplicationRoute
   '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
@@ -176,6 +184,7 @@ export interface FileRoutesById {
   '/_authenticated/tornar-se-entregador': typeof AuthenticatedTornarSeEntregadorRoute
   '/_authenticated/tornar-se-lojista': typeof AuthenticatedTornarSeLojistaRoute
   '/loja/$slug': typeof LojaSlugRoute
+  '/_authenticated/adm-loja/$id': typeof AuthenticatedAdmLojaIdRoute
   '/_authenticated/pedidos/$id': typeof AuthenticatedPedidosIdRoute
   '/api/public/courier-application': typeof ApiPublicCourierApplicationRoute
   '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
@@ -197,6 +206,7 @@ export interface FileRouteTypes {
     | '/tornar-se-entregador'
     | '/tornar-se-lojista'
     | '/loja/$slug'
+    | '/adm-loja/$id'
     | '/pedidos/$id'
     | '/api/public/courier-application'
     | '/api/public/mp-webhook'
@@ -216,6 +226,7 @@ export interface FileRouteTypes {
     | '/tornar-se-entregador'
     | '/tornar-se-lojista'
     | '/loja/$slug'
+    | '/adm-loja/$id'
     | '/pedidos/$id'
     | '/api/public/courier-application'
     | '/api/public/mp-webhook'
@@ -236,6 +247,7 @@ export interface FileRouteTypes {
     | '/_authenticated/tornar-se-entregador'
     | '/_authenticated/tornar-se-lojista'
     | '/loja/$slug'
+    | '/_authenticated/adm-loja/$id'
     | '/_authenticated/pedidos/$id'
     | '/api/public/courier-application'
     | '/api/public/mp-webhook'
@@ -382,6 +394,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPedidosIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/adm-loja/$id': {
+      id: '/_authenticated/adm-loja/$id'
+      path: '/adm-loja/$id'
+      fullPath: '/adm-loja/$id'
+      preLoaderRoute: typeof AuthenticatedAdmLojaIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -393,6 +412,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPagamentosRoute: typeof AuthenticatedPagamentosRoute
   AuthenticatedTornarSeEntregadorRoute: typeof AuthenticatedTornarSeEntregadorRoute
   AuthenticatedTornarSeLojistaRoute: typeof AuthenticatedTornarSeLojistaRoute
+  AuthenticatedAdmLojaIdRoute: typeof AuthenticatedAdmLojaIdRoute
   AuthenticatedPedidosIdRoute: typeof AuthenticatedPedidosIdRoute
   AuthenticatedEntregadorIndexRoute: typeof AuthenticatedEntregadorIndexRoute
   AuthenticatedLojistaIndexRoute: typeof AuthenticatedLojistaIndexRoute
@@ -407,6 +427,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPagamentosRoute: AuthenticatedPagamentosRoute,
   AuthenticatedTornarSeEntregadorRoute: AuthenticatedTornarSeEntregadorRoute,
   AuthenticatedTornarSeLojistaRoute: AuthenticatedTornarSeLojistaRoute,
+  AuthenticatedAdmLojaIdRoute: AuthenticatedAdmLojaIdRoute,
   AuthenticatedPedidosIdRoute: AuthenticatedPedidosIdRoute,
   AuthenticatedEntregadorIndexRoute: AuthenticatedEntregadorIndexRoute,
   AuthenticatedLojistaIndexRoute: AuthenticatedLojistaIndexRoute,
@@ -428,13 +449,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
