@@ -610,7 +610,23 @@ function ProductDialog({ product, categories, onClose }: { product: any; categor
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5"><Label>Preço "de" (R$)</Label><Input type="number" step="0.01" value={f.price} onChange={(e) => setF({ ...f, price: e.target.value })} required /></div>
             <div className="space-y-1.5"><Label>Preço promocional (opcional)</Label><Input type="number" step="0.01" value={f.promo_price} onChange={(e) => setF({ ...f, promo_price: e.target.value })} /></div>
-            <div className="space-y-1.5"><Label>Categoria</Label><Input value={f.category} onChange={(e) => setF({ ...f, category: e.target.value })} placeholder="Ex: Hambúrgueres" /></div>
+            <div className="space-y-1.5">
+              <Label>Categoria</Label>
+              {categories.length > 0 ? (
+                <Select value={f.category || "__none"} onValueChange={(v) => setF({ ...f, category: v === "__none" ? "" : v })}>
+                  <SelectTrigger><SelectValue placeholder="Selecione a categoria" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none">Sem categoria</SelectItem>
+                    {categories.map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
+                    {f.category && !categories.some((c) => c.name === f.category) && (
+                      <SelectItem value={f.category}>{f.category} (atual)</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input value={f.category} onChange={(e) => setF({ ...f, category: e.target.value })} placeholder="Crie categorias acima para reutilizar" />
+              )}
+            </div>
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1.5"><Label>Estoque</Label><Input type="number" value={f.stock} onChange={(e) => setF({ ...f, stock: e.target.value })} placeholder="Ilimitado" /></div>
               <div className="space-y-1.5"><Label>Alerta ≤</Label><Input type="number" value={f.low_stock_threshold} onChange={(e) => setF({ ...f, low_stock_threshold: e.target.value })} /></div>
