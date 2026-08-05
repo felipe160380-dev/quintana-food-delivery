@@ -339,6 +339,7 @@ function StoreEdit({ store, onSaved }: { store: any; onSaved: () => void }) {
   return (
     <form className="space-y-4" onSubmit={async (e) => {
       e.preventDefault();
+      if (form.cnpj && form.cnpj.replace(/\D/g, "").length !== 14) return toast.error("CNPJ inválido: informe os 14 dígitos.");
       setSaving(true);
       const patch = {
         name: form.name, description: form.description, category: form.category,
