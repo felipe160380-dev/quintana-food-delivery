@@ -562,13 +562,13 @@ function MenuTab({ storeId }: { storeId: string }) {
           ))}
         </div>
       )}
-      {editing && <ProductDialog product={editing} onClose={() => { setEditing(null); load(); }} />}
+      {editing && <ProductDialog product={editing} categories={categories} onClose={() => { setEditing(null); load(); }} />}
     </div>
   );
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function ProductDialog({ product, onClose }: { product: any; onClose: () => void }) {
+function ProductDialog({ product, categories, onClose }: { product: any; categories: ProductCategory[]; onClose: () => void }) {
   const [f, setF] = useState({
     name: product.name ?? "", description: product.description ?? "", price: String(product.price ?? ""),
     promo_price: product.promo_price != null ? String(product.promo_price) : "",
