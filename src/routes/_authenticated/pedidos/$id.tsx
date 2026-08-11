@@ -23,18 +23,13 @@ export const Route = createFileRoute("/_authenticated/pedidos/$id")({
 });
 
 
-type Msg = { id: string; body: string; sender_id: string; created_at: string };
-
 function Page() {
   const { id } = Route.useParams();
   const { novo } = Route.useSearch();
 
   const [order, setOrder] = useState<any>(null);
   const [items, setItems] = useState<any[]>([]);
-  const [messages, setMessages] = useState<Msg[]>([]);
-  const [text, setText] = useState("");
   const [me, setMe] = useState<string | null>(null);
-  const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setMe(data.user?.id ?? null));
@@ -46,15 +41,10 @@ function Page() {
       setOrder(o);
       const { data: it } = await supabase.from("order_items").select("*, addons:order_item_addons(*)").eq("order_id", id);
       setItems(it ?? []);
-      const { data: msgs } = await supabase.from("messages").select("*").eq("order_id", id).order("created_at");
-      setMessages((msgs ?? []) as Msg[]);
     };
     load();
 
     const ch = supabase.channel(`order:${id}`)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `order_id=eq.${id}` }, (p) => {
-        setMessages((prev) => [...prev, p.new as Msg]);
-      })
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orders", filter: `id=eq.${id}` }, (p) => {
         setOrder((prev: any) => ({ ...prev, ...(p.new as any) }));
       })
@@ -62,26 +52,9 @@ function Page() {
     return () => { supabase.removeChannel(ch); };
   }, [id]);
 
-  useEffect(() => { listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" }); }, [messages]);
-
-  useEffect(() => {
-    if (!me || messages.length === 0) return;
-    if (!messages.some((m) => m.sender_id !== me)) return;
-    supabase.rpc("mark_conversation_read", { _order_id: id }).then(({ error }) => {
-      if (error) console.error(error);
-    });
-  }, [id, me, messages.length]);
-
   const events = useOrderEvents(id);
   const courierPos = useCourierPosition(id, order?.status === "out_for_delivery");
 
-
-  const send = async () => {
-    if (!text.trim() || !me) return;
-    const { error } = await supabase.from("messages").insert({ order_id: id, sender_id: me, body: text.trim() });
-    if (error) { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); }
-    setText("");
-  };
 
   if (!order) {
     return (
