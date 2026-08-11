@@ -1,14 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { brl, orderStatusLabel, paymentMethodLabel } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ArrowLeft, Send, MapPin, CheckCircle2, Timer, Home, MessageCircle } from "lucide-react";
-import { toast } from "sonner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft, MapPin, CheckCircle2, Timer, Home } from "lucide-react";
 import { ReviewBox } from "@/components/ReviewBox";
+import { OrderChat } from "@/components/OrderChat";
 import { OrderTimeline } from "@/components/OrderTimeline";
 import { DeliveryMap } from "@/components/DeliveryMap";
 import { useCourierPosition, useOrderEvents } from "@/hooks/use-order-tracking";
