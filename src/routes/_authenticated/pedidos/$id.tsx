@@ -211,41 +211,44 @@ function Page() {
       )}
 
       <Card>
-        <CardHeader><CardTitle className="text-base">Chat com a loja</CardTitle></CardHeader>
+        <CardHeader className="flex-row items-center justify-between gap-2 space-y-0">
+          <CardTitle className="text-base">Conversas do pedido</CardTitle>
+          <Link to="/ajuda" className="text-xs font-medium text-primary hover:underline">Precisa de ajuda?</Link>
+        </CardHeader>
         <CardContent className="p-0">
-          <div ref={listRef} className="max-h-80 space-y-2 overflow-y-auto p-4">
-            {messages.length === 0 ? (
-              <div className="flex flex-col items-center gap-1.5 py-8 text-center">
-                <MessageCircle className="size-6 text-muted-foreground" />
-                <div className="text-sm font-medium">Nenhuma mensagem ainda</div>
-                <p className="text-xs text-muted-foreground">Fale com a loja se precisar de ajuda com o pedido.</p>
-              </div>
-            ) : messages.map((m) => (
-
-              <div key={m.id} className={`flex ${m.sender_id === me ? "justify-end" : "justify-start"}`}>
-                <div className={`max-w-[80%] break-words rounded-2xl px-3 py-1.5 text-sm ${m.sender_id === me ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
-                  <div>{m.body}</div>
-                  <div className={`mt-0.5 text-[10px] ${m.sender_id === me ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
-                    {new Date(m.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-                  </div>
+          <Tabs defaultValue="store">
+            <div className="px-4">
+              <TabsList className="w-full">
+                <TabsTrigger value="store" className="flex-1">Loja</TabsTrigger>
+                <TabsTrigger value="courier" className="flex-1" disabled={!order.courier_id}>Entregador</TabsTrigger>
+              </TabsList>
+            </div>
+            <TabsContent value="store" className="mt-2">
+              <OrderChat
+                orderId={id}
+                thread="store"
+                closed={["delivered", "cancelled"].includes(order.status)}
+                emptyHint="Fale com a loja se precisar de ajuda com o pedido."
+              />
+            </TabsContent>
+            <TabsContent value="courier" className="mt-2">
+              {order.courier_id ? (
+                <OrderChat
+                  orderId={id}
+                  thread="courier"
+                  closed={["delivered", "cancelled"].includes(order.status)}
+                  emptyHint="Fale com o entregador sobre a entrega."
+                />
+              ) : (
+                <div className="p-6 text-center text-xs text-muted-foreground">
+                  Nenhum entregador atribuído ainda.
                 </div>
-              </div>
-            ))}
-          </div>
-          <div className="flex gap-2 border-t p-2">
-            {["delivered", "cancelled"].includes(order.status) ? (
-              <div className="w-full py-2 text-center text-xs text-muted-foreground">
-                Chat encerrado — este pedido já foi finalizado.
-              </div>
-            ) : (
-              <>
-                <Input value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} placeholder="Escreva uma mensagem..." />
-                <Button onClick={send} size="icon"><Send className="size-4" /></Button>
-              </>
-            )}
-          </div>
+              )}
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
+
     </div>
   );
 }
