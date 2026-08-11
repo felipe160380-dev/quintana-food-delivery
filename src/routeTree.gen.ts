@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermosRouteImport } from './routes/termos'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AjudaRouteImport } from './routes/ajuda'
@@ -33,6 +34,11 @@ import { Route as AuthenticatedAdmUsuarioIdRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdmLojaIdRouteImport } from './routes/_authenticated/adm-loja.$id'
 import { Route as AuthenticatedAdmEntregadorIdRouteImport } from './routes/_authenticated/adm-entregador.$id'
 
+const TermosRoute = TermosRouteImport.update({
+  id: '/termos',
+  path: '/termos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PrivacidadeRoute = PrivacidadeRouteImport.update({
   id: '/privacidade',
   path: '/privacidade',
@@ -162,6 +168,7 @@ export interface FileRoutesByFullPath {
   '/ajuda': typeof AjudaRoute
   '/auth': typeof AuthRoute
   '/privacidade': typeof PrivacidadeRoute
+  '/termos': typeof TermosRoute
   '/adm': typeof AuthenticatedAdmRoute
   '/checkout': typeof AuthenticatedCheckoutRoute
   '/conversas': typeof AuthenticatedConversasRoute
@@ -186,6 +193,7 @@ export interface FileRoutesByTo {
   '/ajuda': typeof AjudaRoute
   '/auth': typeof AuthRoute
   '/privacidade': typeof PrivacidadeRoute
+  '/termos': typeof TermosRoute
   '/adm': typeof AuthenticatedAdmRoute
   '/checkout': typeof AuthenticatedCheckoutRoute
   '/conversas': typeof AuthenticatedConversasRoute
@@ -212,6 +220,7 @@ export interface FileRoutesById {
   '/ajuda': typeof AjudaRoute
   '/auth': typeof AuthRoute
   '/privacidade': typeof PrivacidadeRoute
+  '/termos': typeof TermosRoute
   '/_authenticated/adm': typeof AuthenticatedAdmRoute
   '/_authenticated/checkout': typeof AuthenticatedCheckoutRoute
   '/_authenticated/conversas': typeof AuthenticatedConversasRoute
@@ -238,6 +247,7 @@ export interface FileRouteTypes {
     | '/ajuda'
     | '/auth'
     | '/privacidade'
+    | '/termos'
     | '/adm'
     | '/checkout'
     | '/conversas'
@@ -262,6 +272,7 @@ export interface FileRouteTypes {
     | '/ajuda'
     | '/auth'
     | '/privacidade'
+    | '/termos'
     | '/adm'
     | '/checkout'
     | '/conversas'
@@ -287,6 +298,7 @@ export interface FileRouteTypes {
     | '/ajuda'
     | '/auth'
     | '/privacidade'
+    | '/termos'
     | '/_authenticated/adm'
     | '/_authenticated/checkout'
     | '/_authenticated/conversas'
@@ -313,6 +325,7 @@ export interface RootRouteChildren {
   AjudaRoute: typeof AjudaRoute
   AuthRoute: typeof AuthRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
+  TermosRoute: typeof TermosRoute
   LojaSlugRoute: typeof LojaSlugRoute
   ApiPublicCourierApplicationRoute: typeof ApiPublicCourierApplicationRoute
   ApiPublicMpWebhookRoute: typeof ApiPublicMpWebhookRoute
@@ -320,6 +333,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/termos': {
+      id: '/termos'
+      path: '/termos'
+      fullPath: '/termos'
+      preLoaderRoute: typeof TermosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/privacidade': {
       id: '/privacidade'
       path: '/privacidade'
@@ -528,6 +548,7 @@ const rootRouteChildren: RootRouteChildren = {
   AjudaRoute: AjudaRoute,
   AuthRoute: AuthRoute,
   PrivacidadeRoute: PrivacidadeRoute,
+  TermosRoute: TermosRoute,
   LojaSlugRoute: LojaSlugRoute,
   ApiPublicCourierApplicationRoute: ApiPublicCourierApplicationRoute,
   ApiPublicMpWebhookRoute: ApiPublicMpWebhookRoute,
