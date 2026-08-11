@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AjudaRouteImport } from './routes/ajuda'
 import { Route as AdmLoginRouteImport } from './routes/adm-login'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
@@ -34,6 +35,11 @@ import { Route as AuthenticatedAdmEntregadorIdRouteImport } from './routes/_auth
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AjudaRoute = AjudaRouteImport.update({
+  id: '/ajuda',
+  path: '/ajuda',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdmLoginRoute = AdmLoginRouteImport.update({
@@ -147,6 +153,7 @@ const AuthenticatedAdmEntregadorIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/adm-login': typeof AdmLoginRoute
+  '/ajuda': typeof AjudaRoute
   '/auth': typeof AuthRoute
   '/adm': typeof AuthenticatedAdmRoute
   '/checkout': typeof AuthenticatedCheckoutRoute
@@ -169,6 +176,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/adm-login': typeof AdmLoginRoute
+  '/ajuda': typeof AjudaRoute
   '/auth': typeof AuthRoute
   '/adm': typeof AuthenticatedAdmRoute
   '/checkout': typeof AuthenticatedCheckoutRoute
@@ -193,6 +201,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/adm-login': typeof AdmLoginRoute
+  '/ajuda': typeof AjudaRoute
   '/auth': typeof AuthRoute
   '/_authenticated/adm': typeof AuthenticatedAdmRoute
   '/_authenticated/checkout': typeof AuthenticatedCheckoutRoute
@@ -217,6 +226,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/adm-login'
+    | '/ajuda'
     | '/auth'
     | '/adm'
     | '/checkout'
@@ -239,6 +249,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/adm-login'
+    | '/ajuda'
     | '/auth'
     | '/adm'
     | '/checkout'
@@ -262,6 +273,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/adm-login'
+    | '/ajuda'
     | '/auth'
     | '/_authenticated/adm'
     | '/_authenticated/checkout'
@@ -286,6 +298,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AdmLoginRoute: typeof AdmLoginRoute
+  AjudaRoute: typeof AjudaRoute
   AuthRoute: typeof AuthRoute
   LojaSlugRoute: typeof LojaSlugRoute
   ApiPublicCourierApplicationRoute: typeof ApiPublicCourierApplicationRoute
@@ -299,6 +312,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ajuda': {
+      id: '/ajuda'
+      path: '/ajuda'
+      fullPath: '/ajuda'
+      preLoaderRoute: typeof AjudaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/adm-login': {
@@ -485,6 +505,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AdmLoginRoute: AdmLoginRoute,
+  AjudaRoute: AjudaRoute,
   AuthRoute: AuthRoute,
   LojaSlugRoute: LojaSlugRoute,
   ApiPublicCourierApplicationRoute: ApiPublicCourierApplicationRoute,
