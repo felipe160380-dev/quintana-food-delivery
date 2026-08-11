@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { UtensilsCrossed, User, Store, Bike } from "lucide-react";
 
 type Role = "customer" | "merchant" | "courier";
@@ -176,6 +177,7 @@ function SignUp({ onDone }: { onDone: (r: Role) => void }) {
   const [vehicle, setVehicle] = useState<"bike" | "motorcycle" | "car" | "foot">("motorcycle");
   const [plate, setPlate] = useState("");
   const [cityId, setCityId] = useState<string>("");
+  const [accepted, setAccepted] = useState(false);
   const [cities, setCities] = useState<{ id: string; name: string; state: string }[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -199,12 +201,17 @@ function SignUp({ onDone }: { onDone: (r: Role) => void }) {
         if (!/^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/.test(email.trim())) {
           return toast.error("Informe um e-mail válido.");
         }
+        if (!accepted) {
+          return toast.error("É preciso aceitar os Termos de Uso e a Política de Privacidade.");
+        }
         setLoading(true);
         const { data, error } = await supabase.auth.signUp({
           email, password,
           options: { data: { full_name: fullName, phone }, emailRedirectTo: window.location.origin },
         });
         if (error || !data.user) { setLoading(false); { console.error(error); return toast.error("Não foi possível criar a conta. Verifique os dados e tente novamente."); } }
+
+        await supabase.from("profiles").update({ terms_accepted_at: new Date().toISOString() }).eq("id", data.user.id);
 
         if (role !== "customer") {
           await supabase.from("user_roles").insert({ user_id: data.user.id, role });
@@ -290,7 +297,16 @@ function SignUp({ onDone }: { onDone: (r: Role) => void }) {
         </div>
       )}
 
-      <Button type="submit" className="w-full" disabled={loading}>{loading ? "Criando..." : "Criar conta"}</Button>
+      <label className="flex cursor-pointer items-start gap-2 rounded-lg border p-3 text-xs leading-relaxed">
+        <Checkbox checked={accepted} onCheckedChange={(v) => setAccepted(v === true)} className="mt-0.5" />
+        <span className="text-muted-foreground">
+          Li e aceito os{" "}
+          <a href="/termos" target="_blank" rel="noopener noreferrer" className="font-medium text-primary hover:underline">Termos de Uso</a>{" "}
+          e a{" "}
+          <a href="/privacidade" target="_blank" rel="noopener noreferrer" className="font-medium text-primary hover:underline">Política de Privacidade</a>.
+        </span>
+      </label>
+      <Button type="submit" className="w-full" disabled={loading || !accepted}>{loading ? "Criando..." : "Criar conta"}</Button>
       <div className="relative py-1 text-center text-xs text-muted-foreground">
         <span className="bg-card px-2">ou</span>
         <div className="absolute inset-x-0 top-1/2 -z-10 border-t" />
