@@ -1,14 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { brl, orderStatusLabel, paymentMethodLabel } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Send, MapPin, CheckCircle2, Timer, Home, MessageCircle } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft, MapPin, CheckCircle2, Timer, Home } from "lucide-react";
 import { toast } from "sonner";
 import { ReviewBox } from "@/components/ReviewBox";
+import { OrderChat } from "@/components/OrderChat";
 import { OrderTimeline } from "@/components/OrderTimeline";
 import { DeliveryMap } from "@/components/DeliveryMap";
 import { useCourierPosition, useOrderEvents } from "@/hooks/use-order-tracking";
@@ -21,18 +23,13 @@ export const Route = createFileRoute("/_authenticated/pedidos/$id")({
 });
 
 
-type Msg = { id: string; body: string; sender_id: string; created_at: string };
-
 function Page() {
   const { id } = Route.useParams();
   const { novo } = Route.useSearch();
 
   const [order, setOrder] = useState<any>(null);
   const [items, setItems] = useState<any[]>([]);
-  const [messages, setMessages] = useState<Msg[]>([]);
-  const [text, setText] = useState("");
   const [me, setMe] = useState<string | null>(null);
-  const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setMe(data.user?.id ?? null));
@@ -44,15 +41,10 @@ function Page() {
       setOrder(o);
       const { data: it } = await supabase.from("order_items").select("*, addons:order_item_addons(*)").eq("order_id", id);
       setItems(it ?? []);
-      const { data: msgs } = await supabase.from("messages").select("*").eq("order_id", id).order("created_at");
-      setMessages((msgs ?? []) as Msg[]);
     };
     load();
 
     const ch = supabase.channel(`order:${id}`)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `order_id=eq.${id}` }, (p) => {
-        setMessages((prev) => [...prev, p.new as Msg]);
-      })
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orders", filter: `id=eq.${id}` }, (p) => {
         setOrder((prev: any) => ({ ...prev, ...(p.new as any) }));
       })
@@ -60,26 +52,9 @@ function Page() {
     return () => { supabase.removeChannel(ch); };
   }, [id]);
 
-  useEffect(() => { listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" }); }, [messages]);
-
-  useEffect(() => {
-    if (!me || messages.length === 0) return;
-    if (!messages.some((m) => m.sender_id !== me)) return;
-    supabase.rpc("mark_conversation_read", { _order_id: id }).then(({ error }) => {
-      if (error) console.error(error);
-    });
-  }, [id, me, messages.length]);
-
   const events = useOrderEvents(id);
   const courierPos = useCourierPosition(id, order?.status === "out_for_delivery");
 
-
-  const send = async () => {
-    if (!text.trim() || !me) return;
-    const { error } = await supabase.from("messages").insert({ order_id: id, sender_id: me, body: text.trim() });
-    if (error) { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); }
-    setText("");
-  };
 
   if (!order) {
     return (
@@ -211,41 +186,44 @@ function Page() {
       )}
 
       <Card>
-        <CardHeader><CardTitle className="text-base">Chat com a loja</CardTitle></CardHeader>
+        <CardHeader className="flex-row items-center justify-between gap-2 space-y-0">
+          <CardTitle className="text-base">Conversas do pedido</CardTitle>
+          <Link to="/ajuda" className="text-xs font-medium text-primary hover:underline">Precisa de ajuda?</Link>
+        </CardHeader>
         <CardContent className="p-0">
-          <div ref={listRef} className="max-h-80 space-y-2 overflow-y-auto p-4">
-            {messages.length === 0 ? (
-              <div className="flex flex-col items-center gap-1.5 py-8 text-center">
-                <MessageCircle className="size-6 text-muted-foreground" />
-                <div className="text-sm font-medium">Nenhuma mensagem ainda</div>
-                <p className="text-xs text-muted-foreground">Fale com a loja se precisar de ajuda com o pedido.</p>
-              </div>
-            ) : messages.map((m) => (
-
-              <div key={m.id} className={`flex ${m.sender_id === me ? "justify-end" : "justify-start"}`}>
-                <div className={`max-w-[80%] break-words rounded-2xl px-3 py-1.5 text-sm ${m.sender_id === me ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
-                  <div>{m.body}</div>
-                  <div className={`mt-0.5 text-[10px] ${m.sender_id === me ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
-                    {new Date(m.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-                  </div>
+          <Tabs defaultValue="store">
+            <div className="px-4">
+              <TabsList className="w-full">
+                <TabsTrigger value="store" className="flex-1">Loja</TabsTrigger>
+                <TabsTrigger value="courier" className="flex-1" disabled={!order.courier_id}>Entregador</TabsTrigger>
+              </TabsList>
+            </div>
+            <TabsContent value="store" className="mt-2">
+              <OrderChat
+                orderId={id}
+                thread="store"
+                closed={["delivered", "cancelled"].includes(order.status)}
+                emptyHint="Fale com a loja se precisar de ajuda com o pedido."
+              />
+            </TabsContent>
+            <TabsContent value="courier" className="mt-2">
+              {order.courier_id ? (
+                <OrderChat
+                  orderId={id}
+                  thread="courier"
+                  closed={["delivered", "cancelled"].includes(order.status)}
+                  emptyHint="Fale com o entregador sobre a entrega."
+                />
+              ) : (
+                <div className="p-6 text-center text-xs text-muted-foreground">
+                  Nenhum entregador atribuído ainda.
                 </div>
-              </div>
-            ))}
-          </div>
-          <div className="flex gap-2 border-t p-2">
-            {["delivered", "cancelled"].includes(order.status) ? (
-              <div className="w-full py-2 text-center text-xs text-muted-foreground">
-                Chat encerrado — este pedido já foi finalizado.
-              </div>
-            ) : (
-              <>
-                <Input value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} placeholder="Escreva uma mensagem..." />
-                <Button onClick={send} size="icon"><Send className="size-4" /></Button>
-              </>
-            )}
-          </div>
+              )}
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
+
     </div>
   );
 }

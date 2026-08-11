@@ -269,6 +269,7 @@ export type Database = {
           order_id: string
           read_at: string | null
           sender_id: string
+          thread: string
         }
         Insert: {
           body: string
@@ -277,6 +278,7 @@ export type Database = {
           order_id: string
           read_at?: string | null
           sender_id: string
+          thread?: string
         }
         Update: {
           body?: string
@@ -285,6 +287,7 @@ export type Database = {
           order_id?: string
           read_at?: string | null
           sender_id?: string
+          thread?: string
         }
         Relationships: [
           {
@@ -776,6 +779,7 @@ export type Database = {
           full_name: string | null
           id: string
           phone: string | null
+          terms_accepted_at: string | null
           updated_at: string
         }
         Insert: {
@@ -784,6 +788,7 @@ export type Database = {
           full_name?: string | null
           id: string
           phone?: string | null
+          terms_accepted_at?: string | null
           updated_at?: string
         }
         Update: {
@@ -792,6 +797,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           phone?: string | null
+          terms_accepted_at?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -1186,7 +1192,7 @@ export type Database = {
         }[]
       }
       mark_conversation_read: {
-        Args: { _order_id: string }
+        Args: { _order_id: string; _thread?: string }
         Returns: undefined
       }
       rate_courier: {

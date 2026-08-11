@@ -62,10 +62,11 @@ export function Footer() {
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-4 py-4 text-xs text-muted-foreground sm:flex-row">
           <div>© {new Date().getFullYear()} MiPede. Todos os direitos reservados.</div>
           <div className="flex gap-4">
-            <a href="#" className="transition-colors hover:text-primary">Termos</a>
-            <a href="#" className="transition-colors hover:text-primary">Privacidade</a>
-            <a href="#" className="transition-colors hover:text-primary">Ajuda</a>
+            <Link to="/termos" className="transition-colors hover:text-primary">Termos de Uso</Link>
+            <Link to="/privacidade" className="transition-colors hover:text-primary">Privacidade</Link>
+            <Link to="/ajuda" className="transition-colors hover:text-primary">Ajuda</Link>
           </div>
+
         </div>
       </div>
     </footer>
