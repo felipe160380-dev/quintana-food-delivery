@@ -236,9 +236,22 @@ function OrderCard({ o, mine, onUpdate }: { o: any; mine?: boolean; onUpdate: ()
           </div>
         </div>
       )}
+
+      {mine && (
+        <div className="mt-3 border-t pt-3">
+          <div className="px-1 text-xs font-semibold text-muted-foreground">Chat com o cliente</div>
+          <OrderChat
+            orderId={o.id}
+            thread="courier"
+            closed={["delivered", "cancelled"].includes(o.status)}
+            emptyHint="Fale com o cliente sobre a entrega."
+          />
+        </div>
+      )}
     </Card>
   );
 }
+
 
 // ============ Carteira do entregador ============
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
