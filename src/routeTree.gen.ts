@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AjudaRouteImport } from './routes/ajuda'
 import { Route as AdmLoginRouteImport } from './routes/adm-login'
@@ -32,6 +33,11 @@ import { Route as AuthenticatedAdmUsuarioIdRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdmLojaIdRouteImport } from './routes/_authenticated/adm-loja.$id'
 import { Route as AuthenticatedAdmEntregadorIdRouteImport } from './routes/_authenticated/adm-entregador.$id'
 
+const PrivacidadeRoute = PrivacidadeRouteImport.update({
+  id: '/privacidade',
+  path: '/privacidade',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -155,6 +161,7 @@ export interface FileRoutesByFullPath {
   '/adm-login': typeof AdmLoginRoute
   '/ajuda': typeof AjudaRoute
   '/auth': typeof AuthRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/adm': typeof AuthenticatedAdmRoute
   '/checkout': typeof AuthenticatedCheckoutRoute
   '/conversas': typeof AuthenticatedConversasRoute
@@ -178,6 +185,7 @@ export interface FileRoutesByTo {
   '/adm-login': typeof AdmLoginRoute
   '/ajuda': typeof AjudaRoute
   '/auth': typeof AuthRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/adm': typeof AuthenticatedAdmRoute
   '/checkout': typeof AuthenticatedCheckoutRoute
   '/conversas': typeof AuthenticatedConversasRoute
@@ -203,6 +211,7 @@ export interface FileRoutesById {
   '/adm-login': typeof AdmLoginRoute
   '/ajuda': typeof AjudaRoute
   '/auth': typeof AuthRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/_authenticated/adm': typeof AuthenticatedAdmRoute
   '/_authenticated/checkout': typeof AuthenticatedCheckoutRoute
   '/_authenticated/conversas': typeof AuthenticatedConversasRoute
@@ -228,6 +237,7 @@ export interface FileRouteTypes {
     | '/adm-login'
     | '/ajuda'
     | '/auth'
+    | '/privacidade'
     | '/adm'
     | '/checkout'
     | '/conversas'
@@ -251,6 +261,7 @@ export interface FileRouteTypes {
     | '/adm-login'
     | '/ajuda'
     | '/auth'
+    | '/privacidade'
     | '/adm'
     | '/checkout'
     | '/conversas'
@@ -275,6 +286,7 @@ export interface FileRouteTypes {
     | '/adm-login'
     | '/ajuda'
     | '/auth'
+    | '/privacidade'
     | '/_authenticated/adm'
     | '/_authenticated/checkout'
     | '/_authenticated/conversas'
@@ -300,6 +312,7 @@ export interface RootRouteChildren {
   AdmLoginRoute: typeof AdmLoginRoute
   AjudaRoute: typeof AjudaRoute
   AuthRoute: typeof AuthRoute
+  PrivacidadeRoute: typeof PrivacidadeRoute
   LojaSlugRoute: typeof LojaSlugRoute
   ApiPublicCourierApplicationRoute: typeof ApiPublicCourierApplicationRoute
   ApiPublicMpWebhookRoute: typeof ApiPublicMpWebhookRoute
@@ -307,6 +320,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/privacidade': {
+      id: '/privacidade'
+      path: '/privacidade'
+      fullPath: '/privacidade'
+      preLoaderRoute: typeof PrivacidadeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -507,6 +527,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdmLoginRoute: AdmLoginRoute,
   AjudaRoute: AjudaRoute,
   AuthRoute: AuthRoute,
+  PrivacidadeRoute: PrivacidadeRoute,
   LojaSlugRoute: LojaSlugRoute,
   ApiPublicCourierApplicationRoute: ApiPublicCourierApplicationRoute,
   ApiPublicMpWebhookRoute: ApiPublicMpWebhookRoute,
