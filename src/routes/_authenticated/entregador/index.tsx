@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { Bike, Package, Wallet } from "lucide-react";
 import { EmptyState, RowSkeleton } from "@/components/ui-states";
 import { DeliveryMap } from "@/components/DeliveryMap";
+import { OrderChat } from "@/components/OrderChat";
 import { useCourierPosition } from "@/hooks/use-order-tracking";
 import { useCourierLocationShare } from "@/hooks/use-courier-location-share";
 
