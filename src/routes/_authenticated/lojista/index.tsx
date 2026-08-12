@@ -448,6 +448,27 @@ function StoreEdit({ store, onSaved }: { store: any; onSaved: () => void }) {
       </CardContent></Card>
 
       <Button type="submit" disabled={saving} className="w-full sm:w-auto">{saving ? "Salvando..." : "Salvar alterações"}</Button>
+
+      <Card className="border-destructive/40">
+        <CardHeader><CardTitle className="text-base text-destructive">Excluir loja</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            A loja sai do ar e deixa de aparecer para os clientes. O histórico de pedidos e a carteira
+            continuam disponíveis. Só é possível excluir quando não houver pedidos em andamento.
+          </p>
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={async () => {
+              if (!confirm(`Excluir a loja "${store.name}"? Ela sairá do ar imediatamente.`)) return;
+              const { error } = await sb.rpc("archive_store", { _store_id: store.id });
+              if (error) { console.error(error); return toast.error(error.message ?? "Não foi possível excluir a loja."); }
+              toast.success("Loja excluída.");
+              onSaved();
+            }}
+          ><Trash2 className="mr-1 size-4" /> Excluir minha loja</Button>
+        </CardContent>
+      </Card>
     </form>
   );
 }
@@ -747,6 +768,9 @@ function OrdersTab({ storeId, store }: { storeId: string; store?: any }) {
 
   const groups: Record<string, typeof orders> = { pending: [], accepted: [], preparing: [], ready: [], out_for_delivery: [], delivered: [], cancelled: [] };
   orders.forEach((o) => { (groups[o.status] ??= []).push(o); });
+  // Clientes que só têm este pedido na loja são clientes novos.
+  const ordersByCustomer: Record<string, number> = {};
+  orders.forEach((o: any) => { ordersByCustomer[o.customer_id] = (ordersByCustomer[o.customer_id] ?? 0) + 1; });
   const active = ["pending", "accepted", "preparing", "ready", "out_for_delivery"];
   const historyGroups = ["delivered", "cancelled"];
 
@@ -770,6 +794,9 @@ function OrdersTab({ storeId, store }: { storeId: string; store?: any }) {
                         <div className="flex items-center gap-2">
                           <div className="font-medium">#{o.id.slice(0, 8)}</div>
                           <Badge>{orderStatusLabel[o.status]}</Badge>
+                          {ordersByCustomer[o.customer_id] === 1 && (
+                            <Badge variant="secondary" className="bg-success/15 text-success">Novo cliente</Badge>
+                          )}
                         </div>
                         <div className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleString("pt-BR")}</div>
                         <div className="mt-1 text-sm">{brl(Number(o.total))} • {o.payment_method}</div>
