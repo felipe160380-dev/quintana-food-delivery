@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ImageUpload } from "@/components/ImageUpload";
+import { CurrencyInput } from "@/components/CurrencyInput";
 import { LocationPicker, type PickedLocation } from "@/components/LocationPicker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -334,12 +335,15 @@ function StoreEdit({ store, onSaved }: { store: any; onSaved: () => void }) {
   const [loc, setLoc] = useState<PickedLocation | null>(
     store.latitude ? { address_line: store.address_line ?? "", latitude: store.latitude, longitude: store.longitude, city: store.city, state: store.state, postal_code: store.postal_code } : null
   );
+  const [addrNumber, setAddrNumber] = useState<string>(store.address_number ?? "");
+  const [addrComplement, setAddrComplement] = useState<string>(store.address_complement ?? "");
   const [saving, setSaving] = useState(false);
 
   return (
     <form className="space-y-4" onSubmit={async (e) => {
       e.preventDefault();
       if (form.cnpj && form.cnpj.replace(/\D/g, "").length !== 14) return toast.error("CNPJ inválido: informe os 14 dígitos.");
+      if (loc && !addrNumber.trim()) return toast.error("Informe o número do endereço da loja (use S/N se não houver).");
       setSaving(true);
       const patch = {
         name: form.name, description: form.description, category: form.category,
@@ -350,7 +354,10 @@ function StoreEdit({ store, onSaved }: { store: any; onSaved: () => void }) {
         accepts_pix: form.accepts_pix, accepts_card_online: form.accepts_card_online,
         accepts_cash: form.accepts_cash, accepts_card_on_delivery: form.accepts_card_on_delivery,
         payout_pix_key: form.payout_pix_key, hours,
-        ...(loc && { address_line: loc.address_line, city: loc.city, state: loc.state, postal_code: loc.postal_code, latitude: loc.latitude, longitude: loc.longitude }),
+        ...(loc && {
+          address_line: [loc.address_line, addrNumber.trim() ? `nº ${addrNumber.trim()}` : null, addrComplement.trim() || null].filter(Boolean).join(" — "),
+          city: loc.city, state: loc.state, postal_code: loc.postal_code, latitude: loc.latitude, longitude: loc.longitude,
+        }),
       };
       const { error } = await sb.from("stores").update(patch).eq("id", store.id);
       setSaving(false);
@@ -373,12 +380,25 @@ function StoreEdit({ store, onSaved }: { store: any; onSaved: () => void }) {
         <div className="space-y-1.5 sm:col-span-2"><Label>Descrição</Label><Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
       </CardContent></Card>
 
-      <Card><CardHeader><CardTitle className="text-base">Endereço da loja</CardTitle></CardHeader><CardContent><LocationPicker value={loc} onChange={setLoc} /></CardContent></Card>
+      <Card><CardHeader><CardTitle className="text-base">Endereço da loja</CardTitle></CardHeader>
+      <CardContent className="space-y-3">
+        <LocationPicker value={loc} onChange={(l) => { setLoc(l); if (l.street_number) setAddrNumber(l.street_number); }} />
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label>Número *</Label>
+            <Input value={addrNumber} onChange={(e) => setAddrNumber(e.target.value)} placeholder="Ex: 123 ou S/N" required />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Complemento</Label>
+            <Input value={addrComplement} onChange={(e) => setAddrComplement(e.target.value)} placeholder="Sala, bloco, referência" />
+          </div>
+        </div>
+      </CardContent></Card>
 
       <Card><CardHeader><CardTitle className="text-base">Entrega</CardTitle></CardHeader>
       <CardContent className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <div className="space-y-1.5"><Label>Taxa entrega (R$)</Label><Input type="number" step="0.01" value={form.delivery_fee} onChange={(e) => setForm({ ...form, delivery_fee: e.target.value })} /></div>
-        <div className="space-y-1.5"><Label>Pedido mín. (R$)</Label><Input type="number" step="0.01" value={form.min_order} onChange={(e) => setForm({ ...form, min_order: e.target.value })} /></div>
+        <div className="space-y-1.5"><Label>Taxa de entrega</Label><CurrencyInput value={form.delivery_fee} onChange={(v) => setForm({ ...form, delivery_fee: v })} /></div>
+        <div className="space-y-1.5"><Label>Pedido mínimo</Label><CurrencyInput value={form.min_order} onChange={(v) => setForm({ ...form, min_order: v })} /></div>
         <div className="space-y-1.5"><Label>Raio (km)</Label><Input type="number" step="0.5" value={form.delivery_radius_km} onChange={(e) => setForm({ ...form, delivery_radius_km: e.target.value })} /></div>
         <div className="space-y-1.5"><Label>Preparo (min)</Label><Input type="number" value={form.prep_time_min} onChange={(e) => setForm({ ...form, prep_time_min: e.target.value })} /></div>
       </CardContent></Card>
@@ -589,6 +609,8 @@ function ProductDialog({ product, categories, onClose }: { product: any; categor
         <h3 className="mb-3 text-lg font-bold">{isNew ? "Novo produto" : "Editar produto"}</h3>
         <form className="space-y-3" onSubmit={async (e) => {
           e.preventDefault();
+          if (!f.price || Number(f.price) <= 0) return toast.error("Informe o preço do produto");
+          if (f.promo_price && Number(f.promo_price) >= Number(f.price)) return toast.error("O preço promocional precisa ser menor que o preço normal");
           setSaving(true);
           const payload = {
             store_id: product.store_id, name: f.name, description: f.description,
@@ -610,8 +632,8 @@ function ProductDialog({ product, categories, onClose }: { product: any; categor
           <div className="space-y-1.5"><Label>Nome</Label><Input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} required /></div>
           <div className="space-y-1.5"><Label>Descrição</Label><Textarea value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} /></div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5"><Label>Preço "de" (R$)</Label><Input type="number" step="0.01" value={f.price} onChange={(e) => setF({ ...f, price: e.target.value })} required /></div>
-            <div className="space-y-1.5"><Label>Preço promocional (opcional)</Label><Input type="number" step="0.01" value={f.promo_price} onChange={(e) => setF({ ...f, promo_price: e.target.value })} /></div>
+            <div className="space-y-1.5"><Label>Preço</Label><CurrencyInput value={f.price} onChange={(v) => setF({ ...f, price: v })} required /></div>
+            <div className="space-y-1.5"><Label>Preço promocional (opcional)</Label><CurrencyInput value={f.promo_price} onChange={(v) => setF({ ...f, promo_price: v })} /></div>
             <div className="space-y-1.5">
               <Label>Categoria</Label>
               {categories.length > 0 ? (
@@ -681,7 +703,7 @@ function AddonsEditor({ productId }: { productId: string }) {
       </div>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <Input placeholder="Nome (ex: Bacon)" value={name} onChange={(e) => setName(e.target.value)} className="col-span-2" />
-        <Input placeholder="Preço" type="number" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} />
+        <CurrencyInput value={price} onChange={setPrice} />
         <Input placeholder="Máx" type="number" value={maxQty} onChange={(e) => setMaxQty(e.target.value)} />
       </div>
 
@@ -698,8 +720,9 @@ function AddonsEditor({ productId }: { productId: string }) {
 }
 
 // ============ Orders ============
+/** A loja controla apenas até "Pronto"; coleta e entrega são do entregador. */
 const nextStatus: Record<string, string | null> = {
-  pending: "accepted", accepted: "preparing", preparing: "ready", ready: "out_for_delivery", out_for_delivery: "delivered",
+  pending: "accepted", accepted: "preparing", preparing: "ready",
 };
 /** Pedidos com pagamento online só aparecem para a loja após confirmação do pagamento. */
 export const PAID_OR_OFFLINE =
