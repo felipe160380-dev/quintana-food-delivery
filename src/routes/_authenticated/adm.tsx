@@ -465,19 +465,34 @@ function OrdersTab() {
   );
 }
 
+type AdminUser = {
+  id: string; full_name: string | null; email: string | null; phone: string | null;
+  city: string | null; roles: string[]; created_at: string; deactivated_at: string | null;
+  courier_status: string | null; store_count: number;
+};
+
+const USER_FILTERS = [
+  { k: "all", label: "Todos" },
+  { k: "customer", label: "Clientes" },
+  { k: "merchant", label: "Lojistas" },
+  { k: "courier", label: "Entregadores" },
+  { k: "admin", label: "Admins" },
+  { k: "inactive", label: "Desativados" },
+] as const;
+
 function UsersTab() {
-  const [items, setItems] = useState<UserRow[]>([]);
+  const [items, setItems] = useState<AdminUser[]>([]);
   const [q, setQ] = useState("");
+  const [filter, setFilter] = useState<(typeof USER_FILTERS)[number]["k"]>("all");
+  const [loading, setLoading] = useState(true);
   useEffect(() => { load(); }, []);
   async function load() {
-    const { data: profs } = await supabase.from("profiles").select("id, full_name, phone").limit(200);
-    const { data: rolesData } = await supabase.from("user_roles").select("user_id, role");
-    const roleMap = new Map<string, string[]>();
-    (rolesData ?? []).forEach((r: any) => {
-      const arr = roleMap.get(r.user_id) ?? [];
-      arr.push(r.role); roleMap.set(r.user_id, arr);
-    });
-    setItems((profs ?? []).map((p: any) => ({ ...p, roles: roleMap.get(p.id) ?? [] })));
+    setLoading(true);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any).rpc("admin_list_users");
+    setLoading(false);
+    if (error) { console.error(error); return toast.error("Não foi possível carregar os usuários."); }
+    setItems((data ?? []) as AdminUser[]);
   }
   async function toggleRole(userId: string, role: string, has: boolean) {
     if (has) {
@@ -489,18 +504,57 @@ function UsersTab() {
     }
     toast.success("Papéis atualizados"); load();
   }
-  const filtered = items.filter((u) => !q || (u.full_name ?? "").toLowerCase().includes(q.toLowerCase()) || (u.phone ?? "").includes(q));
+  async function setActive(u: AdminUser, active: boolean) {
+    if (!active && !confirm(`Desativar a conta de ${u.full_name ?? u.email}? A pessoa perde acesso operacional e as lojas ficam fora do ar.`)) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any).rpc("admin_set_user_active", { _user_id: u.id, _active: active });
+    if (error) { console.error(error); return toast.error(error.message ?? "Não foi possível concluir."); }
+    toast.success(active ? "Conta reativada" : "Conta desativada"); load();
+  }
+
+  const term = q.trim().toLowerCase();
+  const filtered = items.filter((u) => {
+    const matchQ = !term
+      || (u.full_name ?? "").toLowerCase().includes(term)
+      || (u.email ?? "").toLowerCase().includes(term)
+      || (u.city ?? "").toLowerCase().includes(term)
+      || (u.phone ?? "").includes(term);
+    const matchF =
+      filter === "all" ? true
+      : filter === "inactive" ? !!u.deactivated_at
+      : u.roles.includes(filter);
+    return matchQ && matchF;
+  });
+
   return (
     <div className="space-y-3">
-      <Input placeholder="Buscar usuário..." value={q} onChange={(e) => setQ(e.target.value)} />
+      <Input placeholder="Buscar por nome, e-mail, telefone ou cidade..." value={q} onChange={(e) => setQ(e.target.value)} />
+      <div className="tabs-scroll flex gap-1">
+        {USER_FILTERS.map((f) => (
+          <Button key={f.k} size="sm" variant={filter === f.k ? "default" : "outline"} className="shrink-0" onClick={() => setFilter(f.k)}>
+            {f.label}
+          </Button>
+        ))}
+      </div>
+      <p className="text-xs text-muted-foreground">{filtered.length} usuário(s)</p>
+      {loading && <Card className="p-6 text-center text-sm text-muted-foreground">Carregando...</Card>}
+      {!loading && filtered.length === 0 && (
+        <Card className="p-6 text-center text-sm text-muted-foreground">Nenhum usuário encontrado com esses filtros.</Card>
+      )}
       {filtered.map((u) => (
-        <Card key={u.id}>
+        <Card key={u.id} className={u.deactivated_at ? "opacity-70" : ""}>
           <CardContent className="p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <div>
-              <p className="font-semibold">
+            <div className="min-w-0">
+              <p className="font-semibold truncate">
                 <Link to="/adm-usuario/$id" params={{ id: u.id }} className="hover:underline">{u.full_name ?? "Sem nome"}</Link>
+                {u.deactivated_at && <Badge variant="destructive" className="ml-2">Desativado</Badge>}
               </p>
-              <p className="text-xs text-muted-foreground">{u.phone ?? "—"}</p>
+              <p className="text-xs text-muted-foreground truncate">{u.email ?? "—"}</p>
+              <p className="text-xs text-muted-foreground truncate">
+                {u.phone ?? "sem telefone"} • {u.city ?? "cidade não informada"}
+                {u.store_count > 0 && ` • ${u.store_count} loja(s)`}
+                {u.courier_status && ` • entregador: ${u.courier_status}`}
+              </p>
               <div className="flex gap-1 mt-1 flex-wrap">
                 {u.roles.map((r) => <Badge key={r} variant="secondary">{r}</Badge>)}
                 {u.roles.length === 0 && <span className="text-xs text-muted-foreground">sem papéis</span>}
@@ -515,6 +569,11 @@ function UsersTab() {
                   </Button>
                 );
               })}
+              {u.deactivated_at ? (
+                <Button size="sm" variant="secondary" onClick={() => setActive(u, true)}>Reativar</Button>
+              ) : (
+                <Button size="sm" variant="ghost" className="text-destructive" onClick={() => setActive(u, false)}>Desativar</Button>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -522,6 +581,7 @@ function UsersTab() {
     </div>
   );
 }
+
 
 function WithdrawalsTab() {
   const [items, setItems] = useState<WithdrawalRow[]>([]);
