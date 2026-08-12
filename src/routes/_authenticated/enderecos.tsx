@@ -90,6 +90,7 @@ function AddressForm({ onSaved }: { onSaved: () => void }) {
     <form className="space-y-3" onSubmit={async (e) => {
       e.preventDefault();
       if (!loc) return toast.error("Escolha um endereço no mapa");
+      if (!number.trim()) return toast.error("Informe o número do endereço (use S/N se não houver)");
       setSaving(true);
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return;
@@ -109,7 +110,7 @@ function AddressForm({ onSaved }: { onSaved: () => void }) {
       <div className="space-y-1.5"><Label>Apelido</Label><Input value={label} onChange={(e) => setLabel(e.target.value)} /></div>
       <LocationPicker value={loc} onChange={handleLoc} />
       <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1.5"><Label>Número</Label><Input value={number} onChange={(e) => setNumber(e.target.value)} /></div>
+        <div className="space-y-1.5"><Label>Número *</Label><Input value={number} onChange={(e) => setNumber(e.target.value)} placeholder="Ex: 123 ou S/N" required /></div>
         <div className="space-y-1.5"><Label>Complemento</Label><Input value={complement} onChange={(e) => setComplement(e.target.value)} /></div>
       </div>
       <Button className="w-full" type="submit" disabled={saving}>{saving ? "Salvando..." : "Salvar endereço"}</Button>

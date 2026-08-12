@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { brl, orderStatusLabel, paymentMethodLabel } from "@/lib/format";
+import { brl, orderStatusLabel, paymentMethodLabel, courierStageLabel } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import { OrderChat } from "@/components/OrderChat";
 import { OrderTimeline } from "@/components/OrderTimeline";
 import { DeliveryMap } from "@/components/DeliveryMap";
 import { useCourierPosition, useOrderEvents } from "@/hooks/use-order-tracking";
+import { MpPaymentDialog, type MpMode } from "@/components/MpPaymentDialog";
 
 export const Route = createFileRoute("/_authenticated/pedidos/$id")({
   validateSearch: (search: Record<string, unknown>): { novo?: boolean } =>
@@ -30,9 +31,19 @@ function Page() {
   const [order, setOrder] = useState<any>(null);
   const [items, setItems] = useState<any[]>([]);
   const [me, setMe] = useState<string | null>(null);
+  const [pay, setPay] = useState<MpMode | null>(null);
+  const [origin, setOrigin] = useState<"customer" | "store" | "courier">("customer");
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setMe(data.user?.id ?? null));
+    supabase.auth.getUser().then(async ({ data }) => {
+      const uid = data.user?.id ?? null;
+      setMe(uid);
+      if (!uid) return;
+      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", uid);
+      const list = (roles ?? []).map((r) => r.role);
+      if (list.includes("merchant")) setOrigin("store");
+      else if (list.includes("courier")) setOrigin("courier");
+    });
   }, []);
 
   useEffect(() => {
@@ -75,7 +86,13 @@ function Page() {
   return (
     <div className="mx-auto max-w-2xl space-y-4 px-4 py-6">
       <Button variant="ghost" size="sm" asChild className="-ml-2">
-        <Link to="/pedidos"><ArrowLeft className="mr-1 size-4" /> Meus pedidos</Link>
+        {origin === "store" ? (
+          <Link to="/lojista"><ArrowLeft className="mr-1 size-4" /> Voltar ao painel da loja</Link>
+        ) : origin === "courier" ? (
+          <Link to="/entregador"><ArrowLeft className="mr-1 size-4" /> Voltar às entregas</Link>
+        ) : (
+          <Link to="/pedidos"><ArrowLeft className="mr-1 size-4" /> Meus pedidos</Link>
+        )}
       </Button>
 
       {novo && (
@@ -125,6 +142,11 @@ function Page() {
               store={order.store?.latitude && order.store?.longitude ? { lat: Number(order.store.latitude), lng: Number(order.store.longitude) } : null}
             />
           )}
+          {order.courier_stage && !["delivered", "cancelled"].includes(order.status) && (
+            <div className="rounded-lg border border-primary/40 bg-primary/5 p-2.5 text-xs font-medium">
+              Entregador: {courierStageLabel[order.courier_stage] ?? order.courier_stage}
+            </div>
+          )}
           <OrderTimeline status={order.status} events={events} />
         </CardContent>
       </Card>
@@ -162,8 +184,13 @@ function Page() {
           </div>
           <div className="border-t pt-2 text-xs text-muted-foreground">Pagamento: <span className="font-medium text-foreground">{paymentMethodLabel[order.payment_method]}</span></div>
           {["pix", "card_online"].includes(order.payment_method) && order.payment_status !== "paid" && order.status !== "cancelled" && (
-            <div className="rounded-lg border border-primary/40 bg-primary/5 p-2.5 text-xs leading-relaxed">
-              Aguardando confirmação do pagamento. A loja recebe o pedido assim que o pagamento for aprovado.
+            <div className="space-y-2 rounded-lg border border-primary/40 bg-primary/5 p-2.5 text-xs leading-relaxed">
+              <p>Aguardando confirmação do pagamento. A loja só recebe o pedido depois que o pagamento for aprovado.</p>
+              {isCustomer && (
+                <Button size="sm" className="w-full" onClick={() => setPay(order.payment_method === "pix" ? "pix" : "card")}>
+                  Pagar agora
+                </Button>
+              )}
             </div>
           )}
 
@@ -224,6 +251,15 @@ function Page() {
         </CardContent>
       </Card>
 
+      {pay && (
+        <MpPaymentDialog
+          orderId={order.id}
+          amount={Number(order.total)}
+          mode={pay}
+          onPaid={() => { setPay(null); toast.success("Pagamento confirmado!"); }}
+          onClose={() => setPay(null)}
+        />
+      )}
     </div>
   );
 }

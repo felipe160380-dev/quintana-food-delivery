@@ -26,3 +26,39 @@ export const paymentMethodLabel: Record<string, string> = {
   cash_on_delivery: "Dinheiro na entrega",
   card_on_delivery: "Cartão na entrega",
 };
+
+export const paymentStatusLabel: Record<string, string> = {
+  pending: "Aguardando pagamento",
+  paid: "Pago",
+  failed: "Não aprovado",
+  refunded: "Estornado",
+};
+
+/** Etapas detalhadas da entrega (fluxo do entregador). */
+export const courierStageLabel: Record<string, string> = {
+  accepted: "Entrega aceita",
+  to_store: "A caminho da loja",
+  at_store: "Na loja",
+  picked_up: "Pedido coletado",
+  to_customer: "A caminho do cliente",
+  at_customer: "No endereço do cliente",
+};
+
+/** Sequência obrigatória de etapas do entregador. */
+export const COURIER_STAGES = [
+  "accepted",
+  "to_store",
+  "at_store",
+  "picked_up",
+  "to_customer",
+  "at_customer",
+] as const;
+
+export const courierStageAction: Record<string, string> = {
+  to_store: "Sair para a loja",
+  at_store: "Cheguei na loja",
+  picked_up: "Coletei o pedido",
+  to_customer: "Sair para entrega",
+  at_customer: "Cheguei no cliente",
+};
+

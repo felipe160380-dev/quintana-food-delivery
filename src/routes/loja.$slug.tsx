@@ -1,7 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { brl } from "@/lib/format";
+import { brl, slugify } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -158,6 +158,24 @@ function StorePage() {
         </Card>
 
 
+        {/* Barra de categorias: rolável na horizontal, sempre visível ao rolar */}
+        {!loading && Object.keys(byCategory).length > 1 && (
+          <nav className="sticky top-14 z-20 -mx-4 mt-4 border-b bg-background/95 px-4 py-2 backdrop-blur">
+            <div className="tabs-scroll flex gap-2">
+              {Object.keys(byCategory).map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => document.getElementById(`cat-${slugify(cat)}`)?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                  className="shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </nav>
+        )}
+
         {/* Menu */}
         <div className="mt-4 space-y-6">
           {loading ? (
@@ -181,7 +199,7 @@ function StorePage() {
             />
           ) : (
             Object.entries(byCategory).map(([cat, list]) => (
-              <section key={cat}>
+              <section key={cat} id={`cat-${slugify(cat)}`} className="scroll-mt-28">
                 <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-muted-foreground">{cat}</h2>
                 <div className="space-y-3">
                   {list.map((p) => {

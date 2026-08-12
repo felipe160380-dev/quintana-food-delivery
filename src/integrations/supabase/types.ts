@@ -199,7 +199,9 @@ export type Database = {
           approval_status: Database["public"]["Enums"]["courier_approval_status"]
           approved_at: string | null
           city_id: string
+          cnh_url: string | null
           created_at: string
+          crlv_url: string | null
           current_lat: number | null
           current_lng: number | null
           document: string | null
@@ -211,14 +213,19 @@ export type Database = {
           photo_url: string | null
           updated_at: string
           vehicle: Database["public"]["Enums"]["vehicle_type"]
+          vehicle_brand: string | null
+          vehicle_model: string | null
           vehicle_plate: string | null
+          vehicle_year: string | null
         }
         Insert: {
           approval_note?: string | null
           approval_status?: Database["public"]["Enums"]["courier_approval_status"]
           approved_at?: string | null
           city_id: string
+          cnh_url?: string | null
           created_at?: string
+          crlv_url?: string | null
           current_lat?: number | null
           current_lng?: number | null
           document?: string | null
@@ -230,14 +237,19 @@ export type Database = {
           photo_url?: string | null
           updated_at?: string
           vehicle?: Database["public"]["Enums"]["vehicle_type"]
+          vehicle_brand?: string | null
+          vehicle_model?: string | null
           vehicle_plate?: string | null
+          vehicle_year?: string | null
         }
         Update: {
           approval_note?: string | null
           approval_status?: Database["public"]["Enums"]["courier_approval_status"]
           approved_at?: string | null
           city_id?: string
+          cnh_url?: string | null
           created_at?: string
+          crlv_url?: string | null
           current_lat?: number | null
           current_lng?: number | null
           document?: string | null
@@ -249,7 +261,10 @@ export type Database = {
           photo_url?: string | null
           updated_at?: string
           vehicle?: Database["public"]["Enums"]["vehicle_type"]
+          vehicle_brand?: string | null
+          vehicle_model?: string | null
           vehicle_plate?: string | null
+          vehicle_year?: string | null
         }
         Relationships: [
           {
@@ -463,6 +478,7 @@ export type Database = {
           courier_comment: string | null
           courier_id: string | null
           courier_rating: number | null
+          courier_stage: string | null
           created_at: string
           customer_id: string
           delivered_at: string | null
@@ -487,6 +503,7 @@ export type Database = {
           courier_comment?: string | null
           courier_id?: string | null
           courier_rating?: number | null
+          courier_stage?: string | null
           created_at?: string
           customer_id: string
           delivered_at?: string | null
@@ -511,6 +528,7 @@ export type Database = {
           courier_comment?: string | null
           courier_id?: string | null
           courier_rating?: number | null
+          courier_stage?: string | null
           created_at?: string
           customer_id?: string
           delivered_at?: string | null
@@ -776,6 +794,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          deactivated_at: string | null
           full_name: string | null
           id: string
           phone: string | null
@@ -785,6 +804,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          deactivated_at?: string | null
           full_name?: string | null
           id: string
           phone?: string | null
@@ -794,6 +814,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string
+          deactivated_at?: string | null
           full_name?: string | null
           id?: string
           phone?: string | null
@@ -1012,6 +1033,7 @@ export type Database = {
           approval_note: string | null
           approval_status: Database["public"]["Enums"]["store_approval_status"]
           approved_at: string | null
+          archived_at: string | null
           category: string | null
           city: string | null
           city_id: string
@@ -1049,6 +1071,7 @@ export type Database = {
           approval_note?: string | null
           approval_status?: Database["public"]["Enums"]["store_approval_status"]
           approved_at?: string | null
+          archived_at?: string | null
           category?: string | null
           city?: string | null
           city_id: string
@@ -1086,6 +1109,7 @@ export type Database = {
           approval_note?: string | null
           approval_status?: Database["public"]["Enums"]["store_approval_status"]
           approved_at?: string | null
+          archived_at?: string | null
           category?: string | null
           city?: string | null
           city_id?: string
@@ -1150,11 +1174,35 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_list_users: {
+        Args: never
+        Returns: {
+          city: string
+          courier_status: string
+          created_at: string
+          deactivated_at: string
+          email: string
+          full_name: string
+          id: string
+          phone: string
+          roles: string[]
+          store_count: number
+        }[]
+      }
+      admin_set_user_active: {
+        Args: { _active: boolean; _user_id: string }
+        Returns: undefined
+      }
+      archive_store: { Args: { _store_id: string }; Returns: undefined }
       confirm_delivery: {
         Args: { _code: string; _lat: number; _lng: number; _order_id: string }
         Returns: undefined
       }
       courier_resubmit: { Args: never; Returns: undefined }
+      courier_set_stage: {
+        Args: { _order_id: string; _stage: string }
+        Returns: undefined
+      }
       courier_wallet_balance: { Args: { _courier_id: string }; Returns: number }
       create_order: {
         Args: {
@@ -1166,6 +1214,10 @@ export type Database = {
           _store_id: string
         }
         Returns: string
+      }
+      customer_orders_count: {
+        Args: { _customer_id: string; _store_id: string }
+        Returns: number
       }
       delete_my_account: { Args: never; Returns: undefined }
       has_role: {

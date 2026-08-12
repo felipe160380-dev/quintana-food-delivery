@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { brl, orderStatusLabel } from "@/lib/format";
+import { brl, orderStatusLabel, courierStageLabel, courierStageAction, COURIER_STAGES } from "@/lib/format";
 import { toast } from "sonner";
 import { Bike, Package, Wallet } from "lucide-react";
 import { EmptyState, RowSkeleton } from "@/components/ui-states";
@@ -164,15 +164,37 @@ function OrderCard({ o, mine, onUpdate }: { o: any; mine?: boolean; onUpdate: ()
   const [code, setCode] = useState("");
   const addr = o.address_snapshot ?? {};
   const myPos = useCourierPosition(o.id, !!mine && o.status === "out_for_delivery");
+  const stage: string | null = o.courier_stage ?? null;
+  const stageIndex = stage ? COURIER_STAGES.indexOf(stage as (typeof COURIER_STAGES)[number]) : -1;
+  const nextStage = stageIndex >= 0 && stageIndex < COURIER_STAGES.length - 1
+    ? COURIER_STAGES[stageIndex + 1]
+    : null;
+  const [advancing, setAdvancing] = useState(false);
+
   const accept = async () => {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
-    const { error } = await supabase.from("orders").update({ courier_id: u.user.id, status: "out_for_delivery" }).eq("id", o.id);
-    if (error) { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); }
-    toast.success("Entrega aceita!");
+    const { error } = await supabase.from("orders")
+      .update({ courier_id: u.user.id, courier_stage: "accepted" })
+      .eq("id", o.id);
+    if (error) { console.error(error); return toast.error(error.message ?? "Não foi possível aceitar a entrega."); }
+    toast.success("Entrega aceita! Siga as etapas até a conclusão.");
     onUpdate();
   };
+
+  const advance = async () => {
+    if (!nextStage) return;
+    setAdvancing(true);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any).rpc("courier_set_stage", { _order_id: o.id, _stage: nextStage });
+    setAdvancing(false);
+    if (error) { console.error(error); return toast.error(error.message ?? "Não foi possível avançar a etapa."); }
+    toast.success(courierStageLabel[nextStage]);
+    onUpdate();
+  };
+
   const confirmDeliver = async () => {
+    if (stage !== "at_customer") return toast.error("Confirme antes que você chegou no endereço do cliente");
     if (code.length !== 4) return toast.error("Informe o código de 4 dígitos do cliente");
     let lat: number | null = null, lng: number | null = null;
     try {
@@ -215,8 +237,30 @@ function OrderCard({ o, mine, onUpdate }: { o: any; mine?: boolean; onUpdate: ()
         </div>
       </div>
 
-      {mine && o.status === "out_for_delivery" && (
+      {mine && (
         <div className="mt-3 space-y-3 border-t pt-3">
+          <div>
+            <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Etapa atual: {stage ? courierStageLabel[stage] : "Entrega aceita"}
+            </div>
+            <ol className="flex flex-wrap gap-1.5">
+              {COURIER_STAGES.map((st, i) => (
+                <li
+                  key={st}
+                  className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${
+                    i <= Math.max(stageIndex, 0)
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "text-muted-foreground"
+                  }`}
+                >{courierStageLabel[st]}</li>
+              ))}
+            </ol>
+            {nextStage && (
+              <Button size="sm" className="mt-2 w-full sm:w-auto" onClick={advance} disabled={advancing}>
+                {advancing ? "Registrando..." : courierStageAction[nextStage]}
+              </Button>
+            )}
+          </div>
           <DeliveryMap
             className="h-44"
             label="Rota até o cliente"
@@ -224,16 +268,21 @@ function OrderCard({ o, mine, onUpdate }: { o: any; mine?: boolean; onUpdate: ()
             destination={addr.latitude && addr.longitude ? { lat: Number(addr.latitude), lng: Number(addr.longitude) } : null}
             store={o.store?.latitude && o.store?.longitude ? { lat: Number(o.store.latitude), lng: Number(o.store.longitude) } : null}
           />
-          <div className="flex flex-wrap items-center gap-2">
+          <div className={`flex flex-wrap items-center gap-2 ${stage === "at_customer" ? "" : "opacity-50"}`}>
             <input
+              disabled={stage !== "at_customer"}
               value={code}
               onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 4))}
               placeholder="Código"
               inputMode="numeric"
               className="w-24 rounded-md border bg-background px-3 py-2 text-center text-lg font-mono tracking-widest"
             />
-            <Button size="sm" onClick={confirmDeliver}>Confirmar entrega</Button>
-            <span className="text-xs text-muted-foreground">Peça ao cliente os 4 dígitos.</span>
+            <Button size="sm" onClick={confirmDeliver} disabled={stage !== "at_customer"}>Confirmar entrega</Button>
+            <span className="text-xs text-muted-foreground">
+              {stage === "at_customer"
+                ? "Peça ao cliente os 4 dígitos."
+                : "Avance as etapas até chegar no cliente para liberar o código."}
+            </span>
           </div>
         </div>
       )}
