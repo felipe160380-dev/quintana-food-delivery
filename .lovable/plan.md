@@ -62,17 +62,24 @@ Correto: HMAC obrigatório (recusa sem segredo), idempotência por `X-Idempotenc
 
 Dashboard, Pedidos, Cardápio, Minha loja, Financeiro, Avaliações, Relatórios e Notificações existem. O redirecionamento indevido para "Meus pedidos / Você ainda não fez pedidos" **não foi reproduzido no código**: a tela do pedido é role-aware e o botão voltar do lojista aponta para o painel. **NÃO CONFIRMADO — precisa de teste** com conta de lojista real.
 
-## 8. Carrinho e checkout
+## 8. Carrinho e checkout — botão "Fazer pedido"
 
-Adicionar produto, adicionais, quantidade e carrinho por usuário estão implementados; barras fixas usam o utilitário `floating-bottom`. O botão "Fazer pedido" está na barra fixa do checkout. Cenário residual: se o pedido mínimo não for atingido, o botão continua visível e mostra erro — ok. **Responsividade real em 320/360/390/430px: NÃO CONFIRMADO — precisa de teste visual** (seção 19).
+Verificado no código atual: o botão fica numa barra `action-bar` com `position: fixed`, `z-index: 45`, acima do `BottomNav` (`z-40`) e com `padding-bottom` de safe-area. O `InstallPrompt` usa `floating-bottom` com `z-30`, ou seja, **fica atrás** da barra e não a cobre. Modais Radix usam z-50/10000, acima de tudo.
+Conclusão: **IMPLEMENTADO E FUNCIONANDO no código** — não encontrei cenário em que o botão suma. O botão só fica desabilitado (visível) sem endereço selecionado. Confirmação visual em 320/360/390/430px: **NÃO CONFIRMADO — precisa de teste** (seção 19).
+Um ponto de atenção real no checkout: ao fechar o modal de pagamento sem pagar, o carrinho é limpo e o cliente é levado ao pedido com Pix pendente — o pedido fica "órfão" (nunca pago, invisível para a loja) até ser cancelado manualmente.
 
 ## 9. Endereços
 
 Cliente: número obrigatório (aceita "S/N"), edição e geolocalização via LocationPicker — implementado. Loja: número exigido no cadastro — implementado. Coordenadas gravadas em `latitude/longitude`.
 
-## 10, 11, 17. Admin e exclusão de conta
+## 10, 11, 17. Admin, exclusão de loja e de conta
 
-Lista de usuários com e-mail, cidade, papéis, filtros **Todos | Clientes | Lojistas | Entregadores**, busca e ativar/desativar: implementados (`admin_list_users`, `admin_set_user_active`). Exclusão de loja é **arquivamento** (`archive_store`), não exclusão física. Exclusão de usuário pelo admin: existe desativação, **não** exclusão definitiva. `delete_my_account` existe e é usado no menu, seguido de logout e volta para a home — implementado.
+- Lista de usuários com nome, e-mail, telefone, cidade, papéis e data de cadastro + filtros **Todos | Clientes | Lojistas | Entregadores** + busca + ativar/desativar: IMPLEMENTADO E FUNCIONANDO (`admin_list_users`, `admin_set_user_active`).
+- **Excluir usuário pelo admin: NÃO IMPLEMENTADO.** O admin só desativa a conta ou remove papéis (`user_roles.delete`). Não há exclusão definitiva.
+- **Excluir loja pelo admin: IMPLEMENTADO, MAS COM PROBLEMA — causa confirmada.** Em `adm.tsx` a ação faz `supabase.from("stores").delete()`. No banco, `orders_store_id_fkey` está como **RESTRICT** (verificado em `pg_constraint`). Qualquer loja que já tenha um pedido **não pode ser excluída** e o Postgres devolve erro de chave estrangeira — que a tela mostra como "Não foi possível concluir". Produtos, categorias, avaliações, notificações e carteira têm CASCADE; apenas `orders` bloqueia.
+  Já existe o caminho correto: a RPC `archive_store` (usada no painel do lojista, funcionando), que arquiva a loja, tira do ar e desativa produtos. O admin não usa essa RPC.
+- `delete_my_account` existe, é chamado no menu, seguido de `signOut()` e volta para a home: IMPLEMENTADO E FUNCIONANDO no código. Comportamento real da sessão após excluir o usuário do Auth: **NÃO CONFIRMADO — precisa de teste**.
+
 
 ## 12, 13, 14. Produtos, categorias, novo cliente
 
@@ -118,9 +125,12 @@ Nenhuma exposição de dados pessoais ou manipulação de status/pagamento pelo 
 | 4 | Sem notificação de nova entrega | Entregador | Faltando | Não implementado | Alerta sonoro/visual ao surgir pedido pronto |
 | 5 | Cadastro do entregador sem documentos | Entregador | Incompleto | Etapas 2 e 3 não existem | Formulário em 3 etapas com upload no bucket `courier-docs` |
 | 6 | FAQ fora do menu superior | UX | Faltando | Só no rodapé | Item "Ajuda" no menu |
-| 7 | Admin não exclui usuário/loja de fato | Admin | Parcial | Só desativa/arquiva | Definir se exclusão definitiva é desejada |
-| 8 | Preço zero aceito | Produtos | Parcial | Sem validação mínima | Exigir valor maior que zero |
-| 9 | Responsividade | Interface | Não verificado | — | Auditoria visual por breakpoint |
+| 7 | Admin não consegue excluir loja | Admin | Com problema (causa confirmada) | `DELETE` direto em `stores` + FK `orders_store_id_fkey` RESTRICT | Usar `archive_store` no admin (ou definir exclusão em cascata consciente) |
+| 8 | Admin não exclui usuário | Admin | Não implementado | Só desativa/remove papel | Criar RPC de exclusão via Auth Admin |
+| 9 | Preço zero aceito | Produtos | Parcial | Sem validação mínima | Exigir valor maior que zero |
+| 10 | Pedido Pix abandonado fica órfão | Pagamento | Com problema | Sem expiração automática | Cancelar pedido Pix não pago após X minutos |
+| 11 | Responsividade | Interface | Não confirmado | — | Auditoria visual por breakpoint |
+
 
 ### Bloqueadores para lançamento
 1. Pagamento online não conclui (Pix/cartão) e pedido pago não chega à loja.
