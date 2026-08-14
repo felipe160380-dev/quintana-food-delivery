@@ -4,6 +4,17 @@
 
 const MP_BASE = "https://api.mercadopago.com";
 
+/**
+ * URL pública do webhook. Enviada em cada pagamento (notification_url) para
+ * não depender apenas do webhook configurado no painel do Mercado Pago.
+ */
+function notificationUrl(): string {
+  const base =
+    process.env.PUBLIC_BASE_URL?.replace(/\/$/, "") ||
+    "https://quintana-food-delivery.lovable.app";
+  return `${base}/api/public/mp-webhook`;
+}
+
 export type MpPixResponse = {
   id: number;
   status: string;
