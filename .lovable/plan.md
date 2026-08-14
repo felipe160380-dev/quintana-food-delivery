@@ -70,9 +70,14 @@ Adicionar produto, adicionais, quantidade e carrinho por usuário estão impleme
 
 Cliente: número obrigatório (aceita "S/N"), edição e geolocalização via LocationPicker — implementado. Loja: número exigido no cadastro — implementado. Coordenadas gravadas em `latitude/longitude`.
 
-## 10, 11, 17. Admin e exclusão de conta
+## 10, 11, 17. Admin, exclusão de loja e de conta
 
-Lista de usuários com e-mail, cidade, papéis, filtros **Todos | Clientes | Lojistas | Entregadores**, busca e ativar/desativar: implementados (`admin_list_users`, `admin_set_user_active`). Exclusão de loja é **arquivamento** (`archive_store`), não exclusão física. Exclusão de usuário pelo admin: existe desativação, **não** exclusão definitiva. `delete_my_account` existe e é usado no menu, seguido de logout e volta para a home — implementado.
+- Lista de usuários com nome, e-mail, telefone, cidade, papéis e data de cadastro + filtros **Todos | Clientes | Lojistas | Entregadores** + busca + ativar/desativar: IMPLEMENTADO E FUNCIONANDO (`admin_list_users`, `admin_set_user_active`).
+- **Excluir usuário pelo admin: NÃO IMPLEMENTADO.** O admin só desativa a conta ou remove papéis (`user_roles.delete`). Não há exclusão definitiva.
+- **Excluir loja pelo admin: IMPLEMENTADO, MAS COM PROBLEMA — causa confirmada.** Em `adm.tsx` a ação faz `supabase.from("stores").delete()`. No banco, `orders_store_id_fkey` está como **RESTRICT** (verificado em `pg_constraint`). Qualquer loja que já tenha um pedido **não pode ser excluída** e o Postgres devolve erro de chave estrangeira — que a tela mostra como "Não foi possível concluir". Produtos, categorias, avaliações, notificações e carteira têm CASCADE; apenas `orders` bloqueia.
+  Já existe o caminho correto: a RPC `archive_store` (usada no painel do lojista, funcionando), que arquiva a loja, tira do ar e desativa produtos. O admin não usa essa RPC.
+- `delete_my_account` existe, é chamado no menu, seguido de `signOut()` e volta para a home: IMPLEMENTADO E FUNCIONANDO no código. Comportamento real da sessão após excluir o usuário do Auth: **NÃO CONFIRMADO — precisa de teste**.
+
 
 ## 12, 13, 14. Produtos, categorias, novo cliente
 
