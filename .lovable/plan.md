@@ -127,9 +127,10 @@ Nenhuma exposição de dados pessoais ou manipulação de status/pagamento pelo 
 | 6 | FAQ fora do menu superior | UX | Faltando | Só no rodapé | Item "Ajuda" no menu |
 | 7 | Admin não consegue excluir loja | Admin | Com problema (causa confirmada) | `DELETE` direto em `stores` + FK `orders_store_id_fkey` RESTRICT | Usar `archive_store` no admin (ou definir exclusão em cascata consciente) |
 | 8 | Admin não exclui usuário | Admin | Não implementado | Só desativa/remove papel | Criar RPC de exclusão via Auth Admin |
+| 9 | Preço zero aceito | Produtos | Parcial | Sem validação mínima | Exigir valor maior que zero |
+| 10 | Pedido Pix abandonado fica órfão | Pagamento | Com problema | Sem expiração automática | Cancelar pedido Pix não pago após X minutos |
+| 11 | Responsividade | Interface | Não confirmado | — | Auditoria visual por breakpoint |
 
-| 8 | Preço zero aceito | Produtos | Parcial | Sem validação mínima | Exigir valor maior que zero |
-| 9 | Responsividade | Interface | Não verificado | — | Auditoria visual por breakpoint |
 
 ### Bloqueadores para lançamento
 1. Pagamento online não conclui (Pix/cartão) e pedido pago não chega à loja.
