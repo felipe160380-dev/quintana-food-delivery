@@ -125,7 +125,9 @@ Nenhuma exposição de dados pessoais ou manipulação de status/pagamento pelo 
 | 4 | Sem notificação de nova entrega | Entregador | Faltando | Não implementado | Alerta sonoro/visual ao surgir pedido pronto |
 | 5 | Cadastro do entregador sem documentos | Entregador | Incompleto | Etapas 2 e 3 não existem | Formulário em 3 etapas com upload no bucket `courier-docs` |
 | 6 | FAQ fora do menu superior | UX | Faltando | Só no rodapé | Item "Ajuda" no menu |
-| 7 | Admin não exclui usuário/loja de fato | Admin | Parcial | Só desativa/arquiva | Definir se exclusão definitiva é desejada |
+| 7 | Admin não consegue excluir loja | Admin | Com problema (causa confirmada) | `DELETE` direto em `stores` + FK `orders_store_id_fkey` RESTRICT | Usar `archive_store` no admin (ou definir exclusão em cascata consciente) |
+| 8 | Admin não exclui usuário | Admin | Não implementado | Só desativa/remove papel | Criar RPC de exclusão via Auth Admin |
+
 | 8 | Preço zero aceito | Produtos | Parcial | Sem validação mínima | Exigir valor maior que zero |
 | 9 | Responsividade | Interface | Não verificado | — | Auditoria visual por breakpoint |
 
