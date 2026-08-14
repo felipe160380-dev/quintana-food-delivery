@@ -62,9 +62,11 @@ Correto: HMAC obrigatório (recusa sem segredo), idempotência por `X-Idempotenc
 
 Dashboard, Pedidos, Cardápio, Minha loja, Financeiro, Avaliações, Relatórios e Notificações existem. O redirecionamento indevido para "Meus pedidos / Você ainda não fez pedidos" **não foi reproduzido no código**: a tela do pedido é role-aware e o botão voltar do lojista aponta para o painel. **NÃO CONFIRMADO — precisa de teste** com conta de lojista real.
 
-## 8. Carrinho e checkout
+## 8. Carrinho e checkout — botão "Fazer pedido"
 
-Adicionar produto, adicionais, quantidade e carrinho por usuário estão implementados; barras fixas usam o utilitário `floating-bottom`. O botão "Fazer pedido" está na barra fixa do checkout. Cenário residual: se o pedido mínimo não for atingido, o botão continua visível e mostra erro — ok. **Responsividade real em 320/360/390/430px: NÃO CONFIRMADO — precisa de teste visual** (seção 19).
+Verificado no código atual: o botão fica numa barra `action-bar` com `position: fixed`, `z-index: 45`, acima do `BottomNav` (`z-40`) e com `padding-bottom` de safe-area. O `InstallPrompt` usa `floating-bottom` com `z-30`, ou seja, **fica atrás** da barra e não a cobre. Modais Radix usam z-50/10000, acima de tudo.
+Conclusão: **IMPLEMENTADO E FUNCIONANDO no código** — não encontrei cenário em que o botão suma. O botão só fica desabilitado (visível) sem endereço selecionado. Confirmação visual em 320/360/390/430px: **NÃO CONFIRMADO — precisa de teste** (seção 19).
+Um ponto de atenção real no checkout: ao fechar o modal de pagamento sem pagar, o carrinho é limpo e o cliente é levado ao pedido com Pix pendente — o pedido fica "órfão" (nunca pago, invisível para a loja) até ser cancelado manualmente.
 
 ## 9. Endereços
 
