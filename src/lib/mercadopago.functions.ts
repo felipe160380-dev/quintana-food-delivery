@@ -61,7 +61,7 @@ export const createPixForOrder = createServerFn({ method: "POST" })
       ticket_url: qr?.ticket_url,
       mp,
     };
-    await supabaseAdmin.from("payments").upsert(
+    const { error: payErr } = await supabaseAdmin.from("payments").upsert(
       {
         order_id: order.id,
         provider: "mercadopago",
@@ -75,6 +75,8 @@ export const createPixForOrder = createServerFn({ method: "POST" })
       },
       { onConflict: "provider,external_id" },
     );
+    if (payErr) console.error("createPixForOrder payments upsert error", payErr.message);
+
     return {
       paymentId: String(mp.id),
       qr_code: qr?.qr_code ?? "",
