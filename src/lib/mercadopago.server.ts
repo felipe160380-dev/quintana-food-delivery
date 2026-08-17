@@ -92,6 +92,7 @@ export async function createPixPayment(args: {
       description: args.description,
       payment_method_id: "pix",
       external_reference: args.orderId,
+      notification_url: notificationUrl(),
       payer: { email: args.payerEmail, first_name: args.payerName || "Cliente" },
     }),
   });
@@ -114,6 +115,7 @@ export async function createCardPayment(args: {
       payment_method_id: args.card.payment_method_id,
       issuer_id: args.card.issuer_id,
       external_reference: args.orderId,
+      notification_url: notificationUrl(),
       payer: args.card.payer,
     }),
   });
@@ -122,6 +124,19 @@ export async function createCardPayment(args: {
 export async function getPayment(paymentId: string | number): Promise<MpPayment> {
   return mpFetch<MpPayment>(`/v1/payments/${paymentId}`, { method: "GET" });
 }
+
+/**
+ * Reconciliação: busca no Mercado Pago todos os pagamentos criados para um
+ * pedido (external_reference). Fonte da verdade é sempre a API do MP.
+ */
+export async function searchPaymentsByOrder(orderId: string): Promise<MpPayment[]> {
+  const res = await mpFetch<{ results?: MpPayment[] }>(
+    `/v1/payments/search?external_reference=${encodeURIComponent(orderId)}&sort=date_created&criteria=desc`,
+    { method: "GET" },
+  );
+  return res.results ?? [];
+}
+
 
 /** Mapeia status Mercado Pago para o enum payment_status do banco. */
 export function mapMpStatus(status: string): "pending" | "paid" | "failed" | "refunded" {
