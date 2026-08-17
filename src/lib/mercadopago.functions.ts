@@ -137,7 +137,7 @@ export const createCardForOrder = createServerFn({ method: "POST" })
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const status = mapMpStatus(mp.status);
-    await supabaseAdmin.from("payments").upsert(
+    const { error: payErr } = await supabaseAdmin.from("payments").upsert(
       {
         order_id: order.id,
         provider: "mercadopago",
@@ -151,6 +151,8 @@ export const createCardForOrder = createServerFn({ method: "POST" })
       },
       { onConflict: "provider,external_id" },
     );
+    if (payErr) console.error("createCardForOrder payments upsert error", payErr.message);
+
     if (status === "paid") {
       await supabaseAdmin.from("orders").update({ payment_status: "paid" }).eq("id", order.id);
     } else if (status === "failed") {
