@@ -166,3 +166,73 @@ export const createCardForOrder = createServerFn({ method: "POST" })
       status_detail: mp.status_detail,
     };
   });
+
+/**
+ * Reconciliação: consulta o Mercado Pago (fonte da verdade) e sincroniza
+ * payments + orders.payment_status. Usada quando o webhook não chega.
+ * Nunca confia em dados do cliente — apenas no orderId, e só quem participa
+ * do pedido (cliente, dono da loja ou admin) pode chamar.
+ */
+export const syncOrderPayment = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { orderId: string }) => {
+    if (!input?.orderId || typeof input.orderId !== "string") throw new Error("orderId inválido");
+    return input;
+  })
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    // RLS garante que só quem participa do pedido consegue lê-lo.
+    const { data: order, error } = await supabase
+      .from("orders")
+      .select("id, payment_status, payment_method")
+      .eq("id", data.orderId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!order) throw new Error("Pedido não encontrado");
+    if (order.payment_status === "paid") return { payment_status: "paid" as const };
+    if (!["pix", "card_online"].includes(order.payment_method)) {
+      return { payment_status: order.payment_status };
+    }
+
+    const { searchPaymentsByOrder, mapMpStatus } = await import("@/lib/mercadopago.server");
+    const list = await searchPaymentsByOrder(order.id);
+    if (list.length === 0) return { payment_status: order.payment_status };
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    let best: "pending" | "paid" | "failed" | "refunded" = "pending";
+    for (const mp of list) {
+      const status = mapMpStatus(mp.status);
+      const { error: upErr } = await supabaseAdmin.from("payments").upsert(
+        {
+          order_id: order.id,
+          provider: "mercadopago",
+          external_id: String(mp.id),
+          status,
+          amount: mp.transaction_amount,
+          payment_method: mp.payment_method_id ?? null,
+          payment_type: mp.payment_type_id ?? null,
+          paid_at: mp.date_approved,
+          raw: mp as any,
+        },
+        { onConflict: "provider,external_id" },
+      );
+      if (upErr) console.error("syncOrderPayment payments upsert error", upErr.message);
+      if (status === "paid") best = "paid";
+      else if (status === "refunded" && best !== "paid") best = "refunded";
+      else if (status === "failed" && best === "pending") best = "failed";
+    }
+
+    // Só promovemos o pedido quando o Mercado Pago confirma. Nunca rebaixamos
+    // um pedido já pago.
+    if (best === "paid") {
+      await supabaseAdmin.from("orders").update({ payment_status: "paid" }).eq("id", order.id);
+    } else if (best === "refunded") {
+      await supabaseAdmin
+        .from("orders")
+        .update({ payment_status: "refunded", status: "cancelled" })
+        .eq("id", order.id);
+    } else if (best === "failed") {
+      await supabaseAdmin.from("orders").update({ payment_status: "failed" }).eq("id", order.id);
+    }
+    return { payment_status: best };
+  });
