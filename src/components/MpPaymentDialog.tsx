@@ -9,6 +9,7 @@ import {
   createCardForOrder,
   createPixForOrder,
   getMpPublicKey,
+  syncOrderPayment,
 } from "@/lib/mercadopago.functions";
 import { brl } from "@/lib/format";
 import { Copy, Loader2 } from "lucide-react";
@@ -72,6 +73,7 @@ export function MpPaymentDialog({
 
 function PixBox({ orderId, onPaid }: { orderId: string; onPaid: () => void }) {
   const runPix = useServerFn(createPixForOrder);
+  const runSync = useServerFn(syncOrderPayment);
   const [qr, setQr] = useState<{ code: string; base64: string; url?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<"pending" | "paid" | "failed">("pending");
@@ -118,6 +120,31 @@ function PixBox({ orderId, onPaid }: { orderId: string; onPaid: () => void }) {
       supabase.removeChannel(ch);
     };
   }, [orderId, onPaid]);
+
+  // Fallback: se o webhook não chegar, reconcilia direto com o Mercado Pago.
+  useEffect(() => {
+    if (status !== "pending") return;
+    let stop = false;
+    const tick = async () => {
+      try {
+        const r = await runSync({ data: { orderId } });
+        if (stop) return;
+        if (r?.payment_status === "paid") {
+          setStatus("paid");
+          toast.success("Pagamento confirmado!");
+          setTimeout(onPaid, 800);
+        }
+      } catch {
+        /* silencioso: é apenas verificação em segundo plano */
+      }
+    };
+    const id = setInterval(tick, 6000);
+    return () => {
+      stop = true;
+      clearInterval(id);
+    };
+  }, [orderId, status, onPaid, runSync]);
+
 
   const copy = async () => {
     if (!qr?.code) return;

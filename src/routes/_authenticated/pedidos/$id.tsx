@@ -15,6 +15,8 @@ import { OrderTimeline } from "@/components/OrderTimeline";
 import { DeliveryMap } from "@/components/DeliveryMap";
 import { useCourierPosition, useOrderEvents } from "@/hooks/use-order-tracking";
 import { MpPaymentDialog, type MpMode } from "@/components/MpPaymentDialog";
+import { useServerFn } from "@tanstack/react-start";
+import { syncOrderPayment } from "@/lib/mercadopago.functions";
 
 export const Route = createFileRoute("/_authenticated/pedidos/$id")({
   validateSearch: (search: Record<string, unknown>): { novo?: boolean } =>
@@ -33,6 +35,7 @@ function Page() {
   const [me, setMe] = useState<string | null>(null);
   const [pay, setPay] = useState<MpMode | null>(null);
   const [origin, setOrigin] = useState<"customer" | "store" | "courier">("customer");
+  const runSync = useServerFn(syncOrderPayment);
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data }) => {
@@ -54,6 +57,16 @@ function Page() {
       setItems(it ?? []);
     };
     load();
+
+    // Reconciliação: pedidos online pendentes conferem o status direto no
+    // Mercado Pago (webhook pode não ter chegado).
+    void (async () => {
+      try {
+        await runSync({ data: { orderId: id } });
+      } catch {
+        /* ignora: verificação em segundo plano */
+      }
+    })();
 
     const ch = supabase.channel(`order:${id}`)
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orders", filter: `id=eq.${id}` }, (p) => {
