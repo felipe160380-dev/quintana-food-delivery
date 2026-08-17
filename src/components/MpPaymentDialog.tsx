@@ -9,6 +9,7 @@ import {
   createCardForOrder,
   createPixForOrder,
   getMpPublicKey,
+  syncOrderPayment,
 } from "@/lib/mercadopago.functions";
 import { brl } from "@/lib/format";
 import { Copy, Loader2 } from "lucide-react";
@@ -72,6 +73,7 @@ export function MpPaymentDialog({
 
 function PixBox({ orderId, onPaid }: { orderId: string; onPaid: () => void }) {
   const runPix = useServerFn(createPixForOrder);
+  const runSync = useServerFn(syncOrderPayment);
   const [qr, setQr] = useState<{ code: string; base64: string; url?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<"pending" | "paid" | "failed">("pending");
