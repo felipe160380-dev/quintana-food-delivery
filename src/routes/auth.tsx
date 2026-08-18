@@ -212,16 +212,55 @@ function SignUp({ onDone }: { onDone: (r: Role) => void }) {
 
 
 
+  const isCourier = role === "courier";
+  const showPersonal = !isCourier || step === 1;
+  const showDocs = isCourier && step === 2;
+  const showVehicle = isCourier && step === 3;
+  const isLastStep = !isCourier || step === 3;
+
+  if (sent) {
+    return (
+      <div className="space-y-3 pt-6 text-center">
+        <h2 className="text-lg font-semibold">Cadastro enviado com sucesso.</h2>
+        <p className="text-sm text-muted-foreground">
+          Seu cadastro está <strong>em análise</strong>. Assim que o administrador aprovar, você poderá
+          entrar como entregador e receber entregas.
+        </p>
+        <Button variant="outline" className="w-full" onClick={() => { setSent(false); setStep(1); }}>
+          Voltar
+        </Button>
+      </div>
+    );
+  }
+
+  const goNext = () => {
+    if (step === 1) {
+      if (!fullName.trim() || !phone.trim() || !document.trim()) return toast.error("Preencha nome, telefone e CPF.");
+      if (!/^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/.test(email.trim())) return toast.error("Informe um e-mail válido.");
+      if (password.length < 8) return toast.error("A senha precisa ter no mínimo 8 caracteres.");
+      if (!cityId) return toast.error("Escolha a cidade de atuação.");
+      return setStep(2);
+    }
+    if (step === 2) {
+      if (!cnhFile || !crlvFile || !photoFile) return toast.error("Envie a CNH, o CRLV e a foto 3x4.");
+      return setStep(3);
+    }
+  };
+
   return (
     <form
       className="space-y-4 pt-4"
       onSubmit={async (e) => {
         e.preventDefault();
+        if (!isLastStep) return goNext();
         if (!/^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/.test(email.trim())) {
           return toast.error("Informe um e-mail válido.");
         }
         if (!accepted) {
           return toast.error("É preciso aceitar os Termos de Uso e a Política de Privacidade.");
+        }
+        if (isCourier && (vehicle === "motorcycle" || vehicle === "car") && !plate.trim()) {
+          return toast.error("Informe a placa do veículo.");
         }
         setLoading(true);
         const { data, error } = await supabase.auth.signUp({
@@ -237,10 +276,20 @@ function SignUp({ onDone }: { onDone: (r: Role) => void }) {
         }
         if (role === "courier") {
           if (!cityId) { setLoading(false); return toast.error("Escolha a cidade de atuação"); }
+          const [cnhUrl, crlvUrl, photoUrl] = await Promise.all([
+            cnhFile ? uploadDoc(data.user.id, cnhFile, "cnh") : Promise.resolve(null),
+            crlvFile ? uploadDoc(data.user.id, crlvFile, "crlv") : Promise.resolve(null),
+            photoFile ? uploadDoc(data.user.id, photoFile, "foto") : Promise.resolve(null),
+          ]);
           await supabase.from("couriers").insert({
             id: data.user.id, document, vehicle, vehicle_plate: plate, approval_status: "pending",
             city_id: cityId,
+            cnh_url: cnhUrl, crlv_url: crlvUrl, photo_url: photoUrl,
+            vehicle_brand: brand || null, vehicle_model: model || null, vehicle_year: year || null,
           });
+          if (photoUrl) {
+            await supabase.from("profiles").update({ avatar_url: photoUrl }).eq("id", data.user.id);
+          }
           // Send approval-request notification (best-effort)
           try {
             await fetch("/api/public/courier-application", {
@@ -249,8 +298,9 @@ function SignUp({ onDone }: { onDone: (r: Role) => void }) {
             });
           } catch {}
           setLoading(false);
-          toast.success("Cadastro enviado! Aguarde aprovação do administrador.");
+          toast.success("Cadastro enviado com sucesso. Seu cadastro está em análise.");
           await supabase.auth.signOut();
+          setSent(true);
           return;
         }
 
@@ -261,43 +311,70 @@ function SignUp({ onDone }: { onDone: (r: Role) => void }) {
     >
       <div className="space-y-2">
         <Label>Criar conta como</Label>
-        <RolePicker value={role} onChange={setRole} />
-      </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="name">Nome completo</Label>
-        <Input id="name" required value={fullName} onChange={(e) => setFullName(e.target.value)} />
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1.5">
-          <Label htmlFor="phone">Telefone</Label>
-          <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(11) 90000-0000" />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="email-up">E-mail</Label>
-          <Input id="email-up" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
-        </div>
-      </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="pw">Senha</Label>
-        <Input id="pw" type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} />
-        <p className="text-[11px] text-muted-foreground">Mínimo 8 caracteres.</p>
+        <RolePicker value={role} onChange={(r) => { setRole(r); setStep(1); }} />
       </div>
 
-      {role === "courier" && (
-        <div className="space-y-3 rounded-lg border border-primary/30 bg-primary/5 p-3">
-          <p className="text-xs text-muted-foreground">Dados do entregador (serão enviados para aprovação).</p>
+      {isCourier && (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          {[1, 2, 3].map((s) => (
+            <span key={s} className={`flex-1 rounded-full border px-2 py-1 text-center ${s === step ? "border-primary bg-primary/10 font-medium text-primary" : ""}`}>
+              {s === 1 ? "1. Dados" : s === 2 ? "2. Documentos" : "3. Moto"}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {showPersonal && (
+        <>
           <div className="space-y-1.5">
-            <Label>Cidade de atuação</Label>
-            <Select value={cityId} onValueChange={setCityId}>
-              <SelectTrigger><SelectValue placeholder="Selecione a cidade" /></SelectTrigger>
-              <SelectContent>
-                {cities.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>{c.name} / {c.state}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="name">Nome completo</Label>
+            <Input id="name" required={!isCourier} value={fullName} onChange={(e) => setFullName(e.target.value)} />
           </div>
-          <div className="space-y-1.5"><Label>CPF</Label><Input value={document} onChange={(e) => setDocument(e.target.value)} required /></div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="phone">Telefone</Label>
+              <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(11) 90000-0000" />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="email-up">E-mail</Label>
+              <Input id="email-up" type="email" required={!isCourier} value={email} onChange={(e) => setEmail(e.target.value)} />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="pw">Senha</Label>
+            <Input id="pw" type="password" required={!isCourier} minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} />
+            <p className="text-[11px] text-muted-foreground">Mínimo 8 caracteres.</p>
+          </div>
+          {isCourier && (
+            <div className="space-y-3 rounded-lg border border-primary/30 bg-primary/5 p-3">
+              <div className="space-y-1.5"><Label>CPF</Label><Input value={document} onChange={(e) => setDocument(e.target.value)} /></div>
+              <div className="space-y-1.5">
+                <Label>Cidade de atuação</Label>
+                <Select value={cityId} onValueChange={setCityId}>
+                  <SelectTrigger><SelectValue placeholder="Selecione a cidade" /></SelectTrigger>
+                  <SelectContent>
+                    {cities.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>{c.name} / {c.state}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {showDocs && (
+        <div className="space-y-3 rounded-lg border border-primary/30 bg-primary/5 p-3">
+          <p className="text-xs text-muted-foreground">Envie fotos legíveis. Os documentos são privados e vistos apenas pela administração.</p>
+          <FilePick label="Foto da CNH" file={cnhFile} onPick={setCnhFile} />
+          <FilePick label="Foto do CRLV (documento da moto)" file={crlvFile} onPick={setCrlvFile} />
+          <FilePick label="Foto 3x4 (será sua foto de perfil)" file={photoFile} onPick={setPhotoFile} />
+        </div>
+      )}
+
+      {showVehicle && (
+        <div className="space-y-3 rounded-lg border border-primary/30 bg-primary/5 p-3">
           <div className="space-y-1.5">
             <Label>Veículo</Label>
             <Select value={vehicle} onValueChange={(v) => setVehicle(v as typeof vehicle)}>
@@ -310,27 +387,55 @@ function SignUp({ onDone }: { onDone: (r: Role) => void }) {
               </SelectContent>
             </Select>
           </div>
-          {(vehicle === "motorcycle" || vehicle === "car") && (
-            <div className="space-y-1.5"><Label>Placa</Label><Input value={plate} onChange={(e) => setPlate(e.target.value)} /></div>
-          )}
+          <div className="space-y-1.5"><Label>Placa</Label><Input value={plate} onChange={(e) => setPlate(e.target.value.toUpperCase())} /></div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5"><Label>Marca</Label><Input value={brand} onChange={(e) => setBrand(e.target.value)} /></div>
+            <div className="space-y-1.5"><Label>Modelo</Label><Input value={model} onChange={(e) => setModel(e.target.value)} /></div>
+          </div>
+          <div className="space-y-1.5"><Label>Ano</Label><Input value={year} inputMode="numeric" onChange={(e) => setYear(e.target.value.replace(/\D/g, "").slice(0, 4))} /></div>
         </div>
       )}
 
-      <label className="flex cursor-pointer items-start gap-2 rounded-lg border p-3 text-xs leading-relaxed">
-        <Checkbox checked={accepted} onCheckedChange={(v) => setAccepted(v === true)} className="mt-0.5" />
-        <span className="text-muted-foreground">
-          Li e aceito os{" "}
-          <a href="/termos" target="_blank" rel="noopener noreferrer" className="font-medium text-primary hover:underline">Termos de Uso</a>{" "}
-          e a{" "}
-          <a href="/privacidade" target="_blank" rel="noopener noreferrer" className="font-medium text-primary hover:underline">Política de Privacidade</a>.
-        </span>
-      </label>
-      <Button type="submit" className="w-full" disabled={loading || !accepted}>{loading ? "Criando..." : "Criar conta"}</Button>
-      <div className="relative py-1 text-center text-xs text-muted-foreground">
-        <span className="bg-card px-2">ou</span>
-        <div className="absolute inset-x-0 top-1/2 -z-10 border-t" />
+      {isLastStep && (
+        <label className="flex cursor-pointer items-start gap-2 rounded-lg border p-3 text-xs leading-relaxed">
+          <Checkbox checked={accepted} onCheckedChange={(v) => setAccepted(v === true)} className="mt-0.5" />
+          <span className="text-muted-foreground">
+            Li e aceito os{" "}
+            <a href="/termos" target="_blank" rel="noopener noreferrer" className="font-medium text-primary hover:underline">Termos de Uso</a>{" "}
+            e a{" "}
+            <a href="/privacidade" target="_blank" rel="noopener noreferrer" className="font-medium text-primary hover:underline">Política de Privacidade</a>.
+          </span>
+        </label>
+      )}
+
+      <div className="flex gap-2">
+        {isCourier && step > 1 && (
+          <Button type="button" variant="outline" className="flex-1" onClick={() => setStep(step - 1)}>Voltar</Button>
+        )}
+        <Button type="submit" className="flex-1" disabled={loading || (isLastStep && !accepted)}>
+          {loading ? "Enviando..." : isLastStep ? (isCourier ? "Enviar cadastro" : "Criar conta") : "Continuar"}
+        </Button>
       </div>
-      {role !== "courier" && <GoogleButton role={role} />}
+
+      {!isCourier && (
+        <>
+          <div className="relative py-1 text-center text-xs text-muted-foreground">
+            <span className="bg-card px-2">ou</span>
+            <div className="absolute inset-x-0 top-1/2 -z-10 border-t" />
+          </div>
+          <GoogleButton role={role} />
+        </>
+      )}
     </form>
+  );
+}
+
+function FilePick({ label, file, onPick }: { label: string; file: File | null; onPick: (f: File | null) => void }) {
+  return (
+    <div className="space-y-1.5">
+      <Label>{label}</Label>
+      <Input type="file" accept="image/*" onChange={(e) => onPick(e.target.files?.[0] ?? null)} />
+      {file && <p className="text-[11px] text-emerald-600">Selecionado: {file.name}</p>}
+    </div>
   );
 }
