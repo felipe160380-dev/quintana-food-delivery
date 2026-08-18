@@ -23,8 +23,27 @@ export function useLiveNotifications() {
         try { Notification.requestPermission(); } catch {}
       }
 
-      const notify = (title: string, body?: string) => {
+      const alertUser = () => {
+        try { navigator.vibrate?.([180, 90, 180]); } catch {}
+        try {
+          const Ctx = (window as any).AudioContext ?? (window as any).webkitAudioContext;
+          if (!Ctx) return;
+          const ctx = new Ctx();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "sine";
+          osc.frequency.value = 880;
+          gain.gain.value = 0.08;
+          osc.connect(gain).connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.35);
+          osc.onended = () => ctx.close();
+        } catch {}
+      };
+
+      const notify = (title: string, body?: string, alert = false) => {
         toast(title, { description: body });
+        if (alert) alertUser();
         if ("Notification" in window && Notification.permission === "granted") {
           try { new Notification(title, { body, icon: "/icon-192.png" }); } catch {}
         }
