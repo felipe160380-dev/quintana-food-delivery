@@ -180,6 +180,25 @@ function SignUp({ onDone }: { onDone: (r: Role) => void }) {
   const [accepted, setAccepted] = useState(false);
   const [cities, setCities] = useState<{ id: string; name: string; state: string }[]>([]);
   const [loading, setLoading] = useState(false);
+  // Etapas do cadastro do entregador: 1 dados pessoais, 2 documentos, 3 moto
+  const [step, setStep] = useState(1);
+  const [cnhFile, setCnhFile] = useState<File | null>(null);
+  const [crlvFile, setCrlvFile] = useState<File | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [brand, setBrand] = useState("");
+  const [model, setModel] = useState("");
+  const [year, setYear] = useState("");
+  const [sent, setSent] = useState(false);
+
+  // Envia um documento para o bucket privado e devolve uma URL assinada longa.
+  const uploadDoc = async (userId: string, file: File, kind: string): Promise<string | null> => {
+    const ext = file.name.split(".").pop() ?? "jpg";
+    const path = `${userId}/${kind}-${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage.from("courier-docs").upload(path, file);
+    if (error) { console.error(error); return null; }
+    const { data } = await supabase.storage.from("courier-docs").createSignedUrl(path, 60 * 60 * 24 * 365 * 5);
+    return data?.signedUrl ?? null;
+  };
 
   // Cidades ativas (para entregador escolher onde vai atuar)
   useEffect(() => {
