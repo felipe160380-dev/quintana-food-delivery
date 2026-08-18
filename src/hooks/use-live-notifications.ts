@@ -103,7 +103,7 @@ export function useLiveNotifications() {
           .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orders" }, (p) => {
             const oldRow = p.old as any; const row = p.new as any;
             if (row?.status === "ready" && oldRow?.status !== "ready" && !row?.courier_id) {
-              notify("Pedido pronto para retirada", "Abra o painel do entregador.");
+              notify("Pedido pronto para retirada", "Abra o painel do entregador.", true);
             }
             if (row?.courier_id === userId && oldRow?.status !== row?.status) {
               if (row.status === "delivered") notify("Entrega concluída ✅", "Bom trabalho!");
