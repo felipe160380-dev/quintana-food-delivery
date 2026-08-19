@@ -192,7 +192,8 @@ function Page() {
       <Tabs defaultValue="deliveries">
         <TabsList className="tabs-scroll h-auto gap-1 bg-muted/40 p-1">
           <TabsTrigger value="deliveries"><Package className="mr-1 size-4" />Entregas</TabsTrigger>
-          <TabsTrigger value="wallet"><Wallet className="mr-1 size-4" />Carteira</TabsTrigger>
+          <TabsTrigger value="history"><History className="mr-1 size-4" />Histórico</TabsTrigger>
+          <TabsTrigger value="wallet"><Wallet className="mr-1 size-4" />Ganhos</TabsTrigger>
         </TabsList>
 
         <TabsContent value="deliveries" className="mt-4">
@@ -229,10 +230,72 @@ function Page() {
           </section>
         </TabsContent>
 
+        <TabsContent value="history" className="mt-4">
+          {history.length === 0 ? (
+            <EmptyState icon={<History className="size-6" />} title="Nenhuma entrega finalizada" description="Suas entregas concluídas aparecem aqui." />
+          ) : (
+            <div className="space-y-2">
+              {history.map((h) => (
+                <Card key={h.id} className="flex items-center gap-3 p-3">
+                  <div className="size-10 shrink-0 overflow-hidden rounded-lg bg-muted">
+                    {h.store?.logo_url && <img src={h.store.logo_url} className="h-full w-full object-cover" alt="" />}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-medium">{h.store?.name}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {h.delivered_at ? new Date(h.delivered_at).toLocaleString("pt-BR") : "—"}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm font-bold tabular-nums text-emerald-600">{brl(Number(h.delivery_fee ?? 0))}</div>
+                    <Badge variant={h.status === "delivered" ? "secondary" : "outline"}>{orderStatusLabel[h.status]}</Badge>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
         <TabsContent value="wallet" className="mt-4">
           <CourierWalletTab courier={me.courier} />
         </TabsContent>
       </Tabs>
+
+      {offer && (
+        <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 p-4 sm:items-center">
+          <Card className="w-full max-w-sm p-4">
+            <div className="text-center text-sm font-bold uppercase tracking-wide text-primary">Nova entrega disponível</div>
+            <div className="mt-3 space-y-1 text-sm">
+              <div><span className="text-muted-foreground">Loja:</span> <strong>{offer.store?.name}</strong></div>
+              <div><span className="text-muted-foreground">Coleta:</span> {offer.store?.address_line ?? "—"}</div>
+              <div><span className="text-muted-foreground">Distância:</span> {typeof offer.distance_m === "number" ? formatDistance(offer.distance_m) : "—"}</div>
+              <div className="text-base font-bold text-emerald-600">Você ganha: {brl(Number(offer.delivery_fee ?? 0))}</div>
+            </div>
+            <div className="mt-4 flex gap-2">
+              <Button
+                className="flex-1"
+                onClick={async () => {
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  const { error } = await (supabase as any).rpc("courier_accept_order", { _order_id: offer.id });
+                  if (error) { console.error(error); toast.error(error.message ?? "Não foi possível aceitar a entrega."); }
+                  else toast.success("Entrega aceita! Siga as etapas até a conclusão.");
+                  setOffer(null);
+                  load();
+                }}
+              >Aceitar entrega</Button>
+              <Button
+                variant="outline"
+                onClick={async () => {
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  await (supabase as any).rpc("courier_decline_order", { _order_id: offer.id });
+                  setOffer(null);
+                  load();
+                }}
+              >Recusar</Button>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
@@ -249,13 +312,19 @@ function OrderCard({ o, mine, onUpdate }: { o: any; mine?: boolean; onUpdate: ()
   const [advancing, setAdvancing] = useState(false);
 
   const accept = async () => {
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) return;
-    const { error } = await supabase.from("orders")
-      .update({ courier_id: u.user.id, courier_stage: "accepted" })
-      .eq("id", o.id);
+    // Aceite atômico no servidor: apenas um entregador consegue assumir o pedido.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any).rpc("courier_accept_order", { _order_id: o.id });
     if (error) { console.error(error); return toast.error(error.message ?? "Não foi possível aceitar a entrega."); }
     toast.success("Entrega aceita! Siga as etapas até a conclusão.");
+    onUpdate();
+  };
+
+  const decline = async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any).rpc("courier_decline_order", { _order_id: o.id });
+    if (error) { console.error(error); return toast.error("Não foi possível recusar. Tente novamente."); }
+    toast("Oferta recusada. Ela seguirá para outro entregador.");
     onUpdate();
   };
 
@@ -303,14 +372,22 @@ function OrderCard({ o, mine, onUpdate }: { o: any; mine?: boolean; onUpdate: ()
             <span className="text-base font-bold tabular-nums text-emerald-600">Você ganha: {brl(Number(o.delivery_fee ?? 0))}</span>
             <span className="text-[11px] text-muted-foreground">Pedido: {brl(Number(o.total))}</span>
           </div>
+          {!mine && (
+            <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+              {typeof o.distance_m === "number" && <span>Distância até a loja: {formatDistance(o.distance_m)}</span>}
+              {o.is_priority && <Badge variant="secondary">Você é o mais próximo</Badge>}
+            </div>
+          )}
           <div className="mt-2 flex flex-wrap gap-2 sm:hidden">
             <Button asChild size="sm" variant="outline"><Link to="/pedidos/$id" params={{ id: o.id }}>Abrir</Link></Button>
-            {!mine && <Button size="sm" onClick={accept}>Aceitar</Button>}
+            {!mine && <Button size="sm" onClick={accept}>Aceitar entrega</Button>}
+            {!mine && <Button size="sm" variant="ghost" onClick={decline}>Recusar</Button>}
           </div>
         </div>
         <div className="hidden shrink-0 flex-col items-end gap-1 sm:flex">
           <Button asChild size="sm" variant="outline"><Link to="/pedidos/$id" params={{ id: o.id }}>Abrir</Link></Button>
-          {!mine && <Button size="sm" onClick={accept}>Aceitar</Button>}
+          {!mine && <Button size="sm" onClick={accept}>Aceitar entrega</Button>}
+          {!mine && <Button size="sm" variant="ghost" onClick={decline}>Recusar</Button>}
         </div>
       </div>
 
