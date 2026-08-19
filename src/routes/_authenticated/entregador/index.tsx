@@ -101,6 +101,49 @@ function Page() {
     mine.filter((o) => o.status === "out_for_delivery").map((o) => o.id),
   );
 
+  // Mantém a localização operacional ativa enquanto estiver disponível (mesmo sem entrega).
+  useCourierPresence(me?.user?.id ?? null, available || mine.length > 0);
+
+  // Reavalia periodicamente (janela de exclusividade do mais próximo / localização recente).
+  useEffect(() => {
+    if (!me) return;
+    const t = setInterval(load, 20000);
+    return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [me?.user?.id]);
+
+  // Popup + som/vibração quando uma nova oferta elegível aparece.
+  useEffect(() => {
+    if (!available || mine.length > 0) { setOffer(null); return; }
+    const fresh = ready.find((o) => !seenOffers.current.has(o.id));
+    if (!fresh) {
+      if (offer && !ready.some((o) => o.id === offer.id)) setOffer(null);
+      return;
+    }
+    seenOffers.current.add(fresh.id);
+    setOffer(fresh);
+    try { navigator.vibrate?.([200, 100, 200]); } catch { /* sem suporte */ }
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const Ctx = (window as any).AudioContext ?? (window as any).webkitAudioContext;
+      if (Ctx) {
+        const ctx = new Ctx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.value = 880;
+        gain.gain.value = 0.08;
+        osc.connect(gain).connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.4);
+        osc.onended = () => ctx.close();
+      }
+    } catch { /* navegador pode bloquear áudio automático */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, available, mine.length]);
+
+
+
 
   if (blocked) return (
     <div className="mx-auto max-w-md p-10 text-center">
