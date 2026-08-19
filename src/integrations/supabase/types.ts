@@ -470,6 +470,39 @@ export type Database = {
           },
         ]
       }
+      order_offer_declines: {
+        Row: {
+          courier_id: string
+          created_at: string
+          order_id: string
+        }
+        Insert: {
+          courier_id: string
+          created_at?: string
+          order_id: string
+        }
+        Update: {
+          courier_id?: string
+          created_at?: string
+          order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_offer_declines_courier_id_fkey"
+            columns: ["courier_id"]
+            isOneToOne: false
+            referencedRelation: "couriers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_offer_declines_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
           address_snapshot: Json
@@ -1198,6 +1231,26 @@ export type Database = {
         Args: { _code: string; _lat: number; _lng: number; _order_id: string }
         Returns: undefined
       }
+      courier_accept_order: { Args: { _order_id: string }; Returns: undefined }
+      courier_available_orders: {
+        Args: never
+        Returns: {
+          customer_address: Json
+          delivery_fee: number
+          distance_m: number
+          is_priority: boolean
+          order_id: string
+          ready_at: string
+          store_address: string
+          store_id: string
+          store_lat: number
+          store_lng: number
+          store_logo_url: string
+          store_name: string
+          total: number
+        }[]
+      }
+      courier_decline_order: { Args: { _order_id: string }; Returns: undefined }
       courier_resubmit: { Args: never; Returns: undefined }
       courier_set_stage: {
         Args: { _order_id: string; _stage: string }
@@ -1220,6 +1273,10 @@ export type Database = {
         Returns: number
       }
       delete_my_account: { Args: never; Returns: undefined }
+      geo_distance_m: {
+        Args: { lat1: number; lat2: number; lng1: number; lng2: number }
+        Returns: number
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
