@@ -25,6 +25,9 @@ function Page() {
   const [available, setAvailable] = useState(false);
   const [ready, setReady] = useState<any[]>([]);
   const [mine, setMine] = useState<any[]>([]);
+  const [history, setHistory] = useState<any[]>([]);
+  const [offer, setOffer] = useState<any | null>(null);
+  const seenOffers = useRef<Set<string>>(new Set());
 
   const [blocked, setBlocked] = useState<string | null>(null);
   const [rejected, setRejected] = useState(false);
