@@ -57,3 +57,63 @@ export function useCourierLocationShare(courierId: string | null, orderIds: stri
     };
   }, [courierId, key]);
 }
+
+/**
+ * Entregador disponível (mesmo sem entrega ativa): mantém `couriers.current_lat/lng`
+ * e `last_seen_at` atualizados para o sistema calcular a distância até a loja.
+ * Mesmo watcher/regra de economia do compartilhamento de entrega.
+ */
+export function useCourierPresence(courierId: string | null, active: boolean) {
+  const last = useRef<{ lat: number; lng: number; t: number } | null>(null);
+
+  useEffect(() => {
+    if (!courierId || !active) return;
+    if (typeof navigator === "undefined" || !navigator.geolocation) return;
+
+    last.current = null;
+    let cancelled = false;
+
+    const push = async (pos: GeolocationPosition) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      const now = Date.now();
+      const prev = last.current;
+      if (prev) {
+        const moved = distanceMeters({ lat: prev.lat, lng: prev.lng }, { lat, lng });
+        if (moved < 30 && now - prev.t < 60000) return;
+      }
+      last.current = { lat, lng, t: now };
+      if (cancelled) return;
+      await supabase
+        .from("couriers")
+        .update({
+          current_lat: lat,
+          current_lng: lng,
+          last_seen_at: new Date().toISOString(),
+        })
+        .eq("id", courierId);
+    };
+
+    const watchId = navigator.geolocation.watchPosition(push, () => {}, {
+      enableHighAccuracy: true,
+      maximumAge: 15000,
+      timeout: 20000,
+    });
+
+    // Heartbeat: renova last_seen_at mesmo parado (localização "recente").
+    const beat = setInterval(() => {
+      if (!last.current) return;
+      supabase
+        .from("couriers")
+        .update({ last_seen_at: new Date().toISOString() })
+        .eq("id", courierId)
+        .then(() => {});
+    }, 120000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(beat);
+      navigator.geolocation.clearWatch(watchId);
+    };
+  }, [courierId, active]);
+}
