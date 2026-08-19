@@ -46,10 +46,40 @@ function Page() {
     setMe({ user: u.user, courier: c });
     setAvailable(!!c?.is_available);
 
-    const { data: r } = await supabase.from("orders").select("*, store:stores(name,logo_url,address_line,latitude,longitude)").eq("status", "ready").eq("city_id", c.city_id).is("courier_id", null).order("created_at");
-    setReady(r ?? []);
+    // Ofertas elegíveis (servidor decide: cidade, pagamento, sem entrega ativa,
+    // recusas e prioridade do entregador mais próximo).
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: r, error: rErr } = await (supabase as any).rpc("courier_available_orders");
+    if (rErr) console.error(rErr);
+    setReady(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (r ?? []).map((row: any) => ({
+        id: row.order_id,
+        status: "ready",
+        delivery_fee: row.delivery_fee,
+        total: row.total,
+        address_snapshot: row.customer_address,
+        distance_m: row.distance_m,
+        is_priority: row.is_priority,
+        store: {
+          name: row.store_name,
+          logo_url: row.store_logo_url,
+          address_line: row.store_address,
+          latitude: row.store_lat,
+          longitude: row.store_lng,
+        },
+      })),
+    );
     const { data: m } = await supabase.from("orders").select("*, store:stores(name,logo_url,address_line,latitude,longitude)").eq("courier_id", u.user.id).in("status", ["ready", "out_for_delivery"]).order("created_at");
     setMine(m ?? []);
+    const { data: h } = await supabase
+      .from("orders")
+      .select("id,total,delivery_fee,delivered_at,status,store:stores(name,logo_url)")
+      .eq("courier_id", u.user.id)
+      .in("status", ["delivered", "cancelled"])
+      .order("delivered_at", { ascending: false })
+      .limit(50);
+    setHistory(h ?? []);
   };
 
   useEffect(() => {
