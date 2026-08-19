@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,14 +8,15 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { formatDistance } from "@/lib/geo";
 import { brl, orderStatusLabel, courierStageLabel, courierStageAction, COURIER_STAGES } from "@/lib/format";
 import { toast } from "sonner";
-import { Bike, Package, Wallet } from "lucide-react";
+import { Bike, History, Package, Wallet } from "lucide-react";
 import { EmptyState, RowSkeleton } from "@/components/ui-states";
 import { DeliveryMap } from "@/components/DeliveryMap";
 import { OrderChat } from "@/components/OrderChat";
 import { useCourierPosition } from "@/hooks/use-order-tracking";
-import { useCourierLocationShare } from "@/hooks/use-courier-location-share";
+import { useCourierLocationShare, useCourierPresence } from "@/hooks/use-courier-location-share";
 
 export const Route = createFileRoute("/_authenticated/entregador/")({ component: Page });
 
