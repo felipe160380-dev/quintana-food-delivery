@@ -350,7 +350,9 @@ function OrderCard({ o, mine, onUpdate }: { o: any; mine?: boolean; onUpdate: ()
     } catch {}
     const { error } = await supabase.rpc("confirm_delivery", { _order_id: o.id, _code: code, _lat: lat ?? 0, _lng: lng ?? 0 });
     if (error) { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); }
-    toast.success("Entrega confirmada!");
+    toast.success("Entrega concluída com sucesso", {
+      description: `Valor recebido: ${brl(Number(o.delivery_fee ?? 0))}`,
+    });
     setCode("");
     onUpdate();
   };
