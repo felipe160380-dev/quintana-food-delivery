@@ -38,7 +38,7 @@ function Page() {
     if (!u.user) return;
     const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", u.user.id);
     if (!roles?.some((r) => r.role === "courier")) { setBlocked("Sua conta não é uma conta de entregador. Saia e entre novamente escolhendo Entregador."); return; }
-    const { data: c } = await supabase.from("couriers").select("*").eq("id", u.user.id).maybeSingle();
+    const { data: c } = await supabase.from("couriers").select("*, city:cities(name,state)").eq("id", u.user.id).maybeSingle();
     if (!c || c.approval_status !== "approved") {
       const st = c?.approval_status ?? "pending";
       const label = st === "in_review" ? "em análise pela nossa equipe" : st === "rejected" ? "recusado" : "aguardando aprovação do administrador";
