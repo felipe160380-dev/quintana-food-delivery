@@ -412,7 +412,7 @@ function StoresTab() {
                 {s.approval_status === "approved" && (
                   <Button size="sm" variant="outline" onClick={() => toggle(s)}>{s.is_online ? "Desativar" : "Ativar"}</Button>
                 )}
-                <Button size="sm" variant="destructive" onClick={() => remove(s)}>Excluir</Button>
+                <Button size="sm" variant="destructive" onClick={() => remove(s)}>Arquivar</Button>
               </div>
             </div>
           </CardContent>
