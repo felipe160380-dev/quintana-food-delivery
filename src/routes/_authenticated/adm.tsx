@@ -365,10 +365,11 @@ function StoresTab() {
     load();
   }
   async function remove(s: StoreRow) {
-    if (!confirm(`Excluir loja "${s.name}"? Esta ação é irreversível.`)) return;
-    const { error } = await supabase.from("stores").delete().eq("id", s.id);
-    if (error) { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); }
-    toast.success("Loja excluída"); load();
+    if (!confirm(`Arquivar a loja "${s.name}"? Ela sai do ar e deixa de aparecer para os clientes, mas todo o histórico (pedidos, pagamentos e avaliações) é preservado.`)) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any).rpc("archive_store", { _store_id: s.id });
+    if (error) { console.error(error); return toast.error(error.message ?? "Não foi possível concluir. Tente novamente."); }
+    toast.success("Loja arquivada — histórico preservado"); load();
   }
   const filtered = items.filter((s) => !q || s.name.toLowerCase().includes(q.toLowerCase()) || s.slug.includes(q.toLowerCase()));
   return (
