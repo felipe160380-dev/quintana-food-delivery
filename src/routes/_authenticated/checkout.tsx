@@ -244,9 +244,10 @@ function Page() {
             const id = payDialog.orderId;
             setPayDialog(null);
             clear();
-            toast.message("Você pode concluir o pagamento na tela do pedido.");
-            nav({ to: "/pedidos/$id", params: { id }, search: { novo: true } });
+            toast.warning("Pagamento não concluído. O pedido só será enviado à loja após a confirmação do Pix.");
+            nav({ to: "/pedidos/$id", params: { id }, search: {} });
           }}
+
         />
       )}
     </div>
