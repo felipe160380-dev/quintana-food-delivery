@@ -46,14 +46,28 @@ export const createPixForOrder = createServerFn({ method: "POST" })
       };
     }
 
-    const { createPixPayment, mapMpStatus } = await import("@/lib/mercadopago.server");
+    const { createPixPayment, mapMpStatus, searchPaymentsByOrder } = await import(
+      "@/lib/mercadopago.server"
+    );
     const email = (claims as any)?.email || `cliente-${userId}@quintanafood.app`;
-    const mp = await createPixPayment({
-      orderId: order.id,
-      amount: Number(order.total),
-      description: `Pedido MiPede #${order.id.slice(0, 8)}`,
-      payerEmail: email,
-    });
+    let mp;
+    try {
+      mp = await createPixPayment({
+        orderId: order.id,
+        amount: Number(order.total),
+        description: `Pedido MiPede #${order.id.slice(0, 8)}`,
+        payerEmail: email,
+      });
+    } catch (e: any) {
+      // Chamada duplicada (idempotência do MP, ex.: 423). Reaproveita o Pix já criado.
+      const found = await searchPaymentsByOrder(order.id);
+      const reusable = found.find(
+        (p: any) => p.point_of_interaction?.transaction_data?.qr_code && p.status === "pending",
+      );
+      if (!reusable) throw e;
+      mp = reusable as any;
+    }
+
     const qr = mp.point_of_interaction?.transaction_data;
     const rawPayload = {
       qr_code: qr?.qr_code,
