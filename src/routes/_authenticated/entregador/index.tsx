@@ -222,9 +222,10 @@ function Page() {
               <EmptyState
                 icon={<Package className="size-6" />}
                 title="Nenhum pedido pronto agora"
-                description="Assim que uma loja liberar um pedido, ele aparece aqui automaticamente."
+                description={`Você atende pedidos de ${(me?.courier as any)?.city?.name ?? "sua cidade"}. Assim que uma loja dessa cidade liberar um pedido, ele aparece aqui automaticamente.`}
               />
             ) : (
+
               <div className="space-y-2">
                 {ready.map((o) => <OrderCard key={o.id} o={o} onUpdate={load} />)}
               </div>
