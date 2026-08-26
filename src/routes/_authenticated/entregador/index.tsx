@@ -38,7 +38,7 @@ function Page() {
     if (!u.user) return;
     const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", u.user.id);
     if (!roles?.some((r) => r.role === "courier")) { setBlocked("Sua conta não é uma conta de entregador. Saia e entre novamente escolhendo Entregador."); return; }
-    const { data: c } = await supabase.from("couriers").select("*").eq("id", u.user.id).maybeSingle();
+    const { data: c } = await supabase.from("couriers").select("*, city:cities(name,state)").eq("id", u.user.id).maybeSingle();
     if (!c || c.approval_status !== "approved") {
       const st = c?.approval_status ?? "pending";
       const label = st === "in_review" ? "em análise pela nossa equipe" : st === "rejected" ? "recusado" : "aguardando aprovação do administrador";
@@ -184,7 +184,9 @@ function Page() {
           <Switch checked={available} onCheckedChange={async (v) => {
             await supabase.from("couriers").update({ is_available: v, last_seen_at: new Date().toISOString() }).eq("id", me.user.id);
             setAvailable(v);
+            await load();
           }} />
+
         </div>
 
       </div>
@@ -220,9 +222,10 @@ function Page() {
               <EmptyState
                 icon={<Package className="size-6" />}
                 title="Nenhum pedido pronto agora"
-                description="Assim que uma loja liberar um pedido, ele aparece aqui automaticamente."
+                description={`Você atende pedidos de ${(me?.courier as any)?.city?.name ?? "sua cidade"}. Assim que uma loja dessa cidade liberar um pedido, ele aparece aqui automaticamente.`}
               />
             ) : (
+
               <div className="space-y-2">
                 {ready.map((o) => <OrderCard key={o.id} o={o} onUpdate={load} />)}
               </div>
