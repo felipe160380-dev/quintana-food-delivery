@@ -184,7 +184,9 @@ function Page() {
           <Switch checked={available} onCheckedChange={async (v) => {
             await supabase.from("couriers").update({ is_available: v, last_seen_at: new Date().toISOString() }).eq("id", me.user.id);
             setAvailable(v);
+            await load();
           }} />
+
         </div>
 
       </div>
