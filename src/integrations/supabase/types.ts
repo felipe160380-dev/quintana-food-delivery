@@ -1053,36 +1053,51 @@ export type Database = {
       store_withdrawals: {
         Row: {
           amount: number
+          approved_at: string | null
+          approved_by: string | null
           fee: number
           id: string
           net: number
           note: string | null
+          paid_at: string | null
+          paid_by: string | null
           pix_key: string
           processed_at: string | null
+          rejected_by: string | null
           requested_at: string
           status: string
           store_id: string
         }
         Insert: {
           amount: number
+          approved_at?: string | null
+          approved_by?: string | null
           fee?: number
           id?: string
           net: number
           note?: string | null
+          paid_at?: string | null
+          paid_by?: string | null
           pix_key: string
           processed_at?: string | null
+          rejected_by?: string | null
           requested_at?: string
           status?: string
           store_id: string
         }
         Update: {
           amount?: number
+          approved_at?: string | null
+          approved_by?: string | null
           fee?: number
           id?: string
           net?: number
           note?: string | null
+          paid_at?: string | null
+          paid_by?: string | null
           pix_key?: string
           processed_at?: string | null
+          rejected_by?: string | null
           requested_at?: string
           status?: string
           store_id?: string
@@ -1248,6 +1263,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_approve_withdrawal: { Args: { _id: string }; Returns: undefined }
       admin_list_users: {
         Args: never
         Returns: {
@@ -1262,6 +1278,11 @@ export type Database = {
           roles: string[]
           store_count: number
         }[]
+      }
+      admin_mark_withdrawal_paid: { Args: { _id: string }; Returns: undefined }
+      admin_reject_withdrawal: {
+        Args: { _id: string; _reason: string }
+        Returns: undefined
       }
       admin_set_user_active: {
         Args: { _active: boolean; _user_id: string }
