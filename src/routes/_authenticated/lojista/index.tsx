@@ -758,11 +758,12 @@ const nextStatus: Record<string, string | null> = {
 export const PAID_OR_OFFLINE =
   "payment_status.eq.paid,payment_method.in.(cash_on_delivery,card_on_delivery)";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function OrdersTab({ storeId, store }: { storeId: string; store?: any }) {
+function OrdersTab({ storeId, store, sub, onSubChange }: { storeId: string; store?: any; sub: "active" | "history"; onSubChange: (v: "active" | "history") => void }) {
   const [tracking, setTracking] = useState<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [orders, setOrders] = useState<any[]>([]);
-  const [tab, setTab] = useState<"active" | "history">("active");
+  const tab = sub;
+  const setTab = onSubChange;
   const load = async () => {
     const { data } = await sb.from("orders").select("*").eq("store_id", storeId).or(PAID_OR_OFFLINE).order("created_at", { ascending: false });
     setOrders(data ?? []);
