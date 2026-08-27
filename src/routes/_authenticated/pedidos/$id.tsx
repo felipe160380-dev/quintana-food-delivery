@@ -18,9 +18,15 @@ import { MpPaymentDialog, type MpMode } from "@/components/MpPaymentDialog";
 import { useServerFn } from "@tanstack/react-start";
 import { syncOrderPayment } from "@/lib/mercadopago.functions";
 
+type OrderSearch = { novo?: boolean; from?: "lojista"; tab?: string; sub?: string };
+
 export const Route = createFileRoute("/_authenticated/pedidos/$id")({
-  validateSearch: (search: Record<string, unknown>): { novo?: boolean } =>
-    search.novo === true || search.novo === "1" ? { novo: true } : {},
+  validateSearch: (search: Record<string, unknown>): OrderSearch => ({
+    ...(search.novo === true || search.novo === "1" ? { novo: true as const } : {}),
+    ...(search.from === "lojista" ? { from: "lojista" as const } : {}),
+    ...(typeof search.tab === "string" ? { tab: search.tab } : {}),
+    ...(typeof search.sub === "string" ? { sub: search.sub } : {}),
+  }),
 
   component: Page,
 });
@@ -28,7 +34,7 @@ export const Route = createFileRoute("/_authenticated/pedidos/$id")({
 
 function Page() {
   const { id } = Route.useParams();
-  const { novo } = Route.useSearch();
+  const { novo, from, tab, sub } = Route.useSearch();
 
   const [order, setOrder] = useState<any>(null);
   const [items, setItems] = useState<any[]>([]);
