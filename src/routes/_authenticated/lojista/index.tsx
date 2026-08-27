@@ -812,7 +812,7 @@ function OrdersTab({ storeId, store, sub, onSubChange }: { storeId: string; stor
                         <div className="mt-1 text-sm">{brl(Number(o.total))} • {o.payment_method}</div>
                       </div>
                       <div className="flex flex-col items-end gap-1">
-                        <Button asChild size="sm" variant="outline"><Link to="/pedidos/$id" params={{ id: o.id }}>Abrir</Link></Button>
+                        <Button asChild size="sm" variant="outline"><Link to="/pedidos/$id" params={{ id: o.id }} search={{ from: "lojista", tab: "orders", sub: tab }}>Abrir</Link></Button>
                         {o.status === "out_for_delivery" && (
                           <Button size="sm" variant="secondary" onClick={() => setTracking(o)}>Acompanhar entrega</Button>
                         )}
