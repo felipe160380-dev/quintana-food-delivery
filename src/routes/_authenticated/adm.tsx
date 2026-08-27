@@ -138,19 +138,31 @@ function AdminPanel() {
 }
 
 function DashboardTab() {
-  const [stats, setStats] = useState({ stores: 0, pendingStores: 0, couriers: 0, pendingCouriers: 0, orders: 0, todayOrders: 0, pendingWithdrawals: 0 });
+  const [stats, setStats] = useState({
+    stores: 0, pendingStores: 0, couriers: 0, pendingCouriers: 0, orders: 0, todayOrders: 0,
+    pendingWithdrawals: 0, inProgress: 0, doneToday: 0, cancelledToday: 0,
+    revenueToday: 0, paidToday: 0, payPending: 0, refundedTotal: 0,
+  });
   useEffect(() => {
     (async () => {
       const today = new Date(); today.setHours(0, 0, 0, 0);
-      const [s, sp, c, cp, o, ot, w] = await Promise.all([
+      const iso = today.toISOString();
+      const [s, sp, c, cp, o, ot, w, ip, dt, ct, pt, pp, rf] = await Promise.all([
         supabase.from("stores").select("id", { count: "exact", head: true }),
         supabase.from("stores").select("id", { count: "exact", head: true }).in("approval_status", ["pending", "in_review"]),
         supabase.from("couriers").select("id", { count: "exact", head: true }),
         supabase.from("couriers").select("id", { count: "exact", head: true }).in("approval_status", ["pending", "in_review"]),
         supabase.from("orders").select("id", { count: "exact", head: true }),
-        supabase.from("orders").select("id", { count: "exact", head: true }).gte("created_at", today.toISOString()),
+        supabase.from("orders").select("id", { count: "exact", head: true }).gte("created_at", iso),
         supabase.from("store_withdrawals").select("id", { count: "exact", head: true }).eq("status", "requested"),
+        supabase.from("orders").select("id", { count: "exact", head: true }).in("status", ["accepted", "preparing", "ready", "out_for_delivery"]),
+        supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "delivered").gte("created_at", iso),
+        supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "cancelled").gte("created_at", iso),
+        supabase.from("orders").select("total").eq("payment_status", "paid").gte("created_at", iso),
+        supabase.from("orders").select("id", { count: "exact", head: true }).eq("payment_status", "pending"),
+        supabase.from("orders").select("total").eq("payment_status", "refunded"),
       ]);
+      const sum = (rows: any[] | null) => (rows ?? []).reduce((a, r) => a + Number(r.total ?? 0), 0);
       setStats({
         stores: s.count ?? 0,
         pendingStores: sp.count ?? 0,
@@ -159,18 +171,34 @@ function DashboardTab() {
         orders: o.count ?? 0,
         todayOrders: ot.count ?? 0,
         pendingWithdrawals: w.count ?? 0,
+        inProgress: ip.count ?? 0,
+        doneToday: dt.count ?? 0,
+        cancelledToday: ct.count ?? 0,
+        revenueToday: sum(pt.data as any[]),
+        paidToday: (pt.data ?? []).length,
+        payPending: pp.count ?? 0,
+        refundedTotal: sum(rf.data as any[]),
       });
     })();
   }, []);
+  const brl = (v: number) => `R$ ${v.toFixed(2)}`;
   const kpis = [
+    { label: "Pedidos hoje", value: stats.todayOrders },
+    { label: "Pedidos em andamento", value: stats.inProgress },
+    { label: "Concluídos hoje", value: stats.doneToday },
+    { label: "Cancelados hoje", value: stats.cancelledToday, alert: stats.cancelledToday > 0 },
+    { label: "Faturamento hoje", value: brl(stats.revenueToday) },
+    { label: "Pagamentos aprovados hoje", value: stats.paidToday },
+    { label: "Pagamentos pendentes", value: stats.payPending, alert: stats.payPending > 0 },
+    { label: "Valores estornados", value: brl(stats.refundedTotal) },
     { label: "Lojas cadastradas", value: stats.stores },
     { label: "Lojas aguardando análise", value: stats.pendingStores, alert: stats.pendingStores > 0 },
     { label: "Entregadores", value: stats.couriers },
     { label: "Entregadores aguardando análise", value: stats.pendingCouriers, alert: stats.pendingCouriers > 0 },
     { label: "Pedidos totais", value: stats.orders },
-    { label: "Pedidos hoje", value: stats.todayOrders },
     { label: "Saques a processar", value: stats.pendingWithdrawals, alert: stats.pendingWithdrawals > 0 },
   ];
+
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
       {kpis.map((k) => (
