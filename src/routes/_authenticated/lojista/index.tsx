@@ -145,7 +145,7 @@ function Page() {
 
 
 
-      <Tabs defaultValue="dashboard">
+      <Tabs value={tab} onValueChange={(v) => nav({ to: "/lojista", search: (p) => ({ ...p, tab: v }), replace: true })}>
         <TabsList className="tabs-scroll h-auto gap-1 bg-muted/40 p-1">
           <TabsTrigger value="dashboard"><LayoutDashboard className="mr-1 size-4" />Dashboard</TabsTrigger>
           <TabsTrigger value="orders" className="relative">
