@@ -18,9 +18,15 @@ import { MpPaymentDialog, type MpMode } from "@/components/MpPaymentDialog";
 import { useServerFn } from "@tanstack/react-start";
 import { syncOrderPayment } from "@/lib/mercadopago.functions";
 
+type OrderSearch = { novo?: boolean; from?: "lojista"; tab?: string; sub?: string };
+
 export const Route = createFileRoute("/_authenticated/pedidos/$id")({
-  validateSearch: (search: Record<string, unknown>): { novo?: boolean } =>
-    search.novo === true || search.novo === "1" ? { novo: true } : {},
+  validateSearch: (search: Record<string, unknown>): OrderSearch => ({
+    ...(search.novo === true || search.novo === "1" ? { novo: true as const } : {}),
+    ...(search.from === "lojista" ? { from: "lojista" as const } : {}),
+    ...(typeof search.tab === "string" ? { tab: search.tab } : {}),
+    ...(typeof search.sub === "string" ? { sub: search.sub } : {}),
+  }),
 
   component: Page,
 });
@@ -28,7 +34,7 @@ export const Route = createFileRoute("/_authenticated/pedidos/$id")({
 
 function Page() {
   const { id } = Route.useParams();
-  const { novo } = Route.useSearch();
+  const { novo, from, tab, sub } = Route.useSearch();
 
   const [order, setOrder] = useState<any>(null);
   const [items, setItems] = useState<any[]>([]);
@@ -99,8 +105,8 @@ function Page() {
   return (
     <div className="mx-auto max-w-2xl space-y-4 px-4 py-6">
       <Button variant="ghost" size="sm" asChild className="-ml-2">
-        {origin === "store" ? (
-          <Link to="/lojista"><ArrowLeft className="mr-1 size-4" /> Voltar ao painel da loja</Link>
+        {from === "lojista" || origin === "store" ? (
+          <Link to="/lojista" search={{ ...(tab ? { tab } : {}), ...(sub ? { sub } : {}) }}><ArrowLeft className="mr-1 size-4" /> Voltar ao painel da loja</Link>
         ) : origin === "courier" ? (
           <Link to="/entregador"><ArrowLeft className="mr-1 size-4" /> Voltar às entregas</Link>
         ) : (

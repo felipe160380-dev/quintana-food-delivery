@@ -26,7 +26,13 @@ import {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const sb = supabase as any;
 
-export const Route = createFileRoute("/_authenticated/lojista/")({ component: Page });
+export const Route = createFileRoute("/_authenticated/lojista/")({
+  validateSearch: (search: Record<string, unknown>): { tab?: string; sub?: string } => ({
+    ...(typeof search.tab === "string" ? { tab: search.tab } : {}),
+    ...(typeof search.sub === "string" ? { sub: search.sub } : {}),
+  }),
+  component: Page,
+});
 
 const WEEK = [
   { k: "mon", label: "Seg" }, { k: "tue", label: "Ter" }, { k: "wed", label: "Qua" },
@@ -42,6 +48,9 @@ function todayHours(hours: Record<string, { open: string; close: string; closed?
 
 function Page() {
   const nav = useNavigate();
+  const search = Route.useSearch();
+  const tab = search.tab ?? "dashboard";
+  const sub = search.sub === "history" ? "history" : "active";
   const [loading, setLoading] = useState(true);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [store, setStore] = useState<any>(null);
@@ -139,7 +148,7 @@ function Page() {
 
 
 
-      <Tabs defaultValue="dashboard">
+      <Tabs value={tab} onValueChange={(v) => nav({ to: "/lojista", search: (p) => ({ ...p, tab: v }), replace: true })}>
         <TabsList className="tabs-scroll h-auto gap-1 bg-muted/40 p-1">
           <TabsTrigger value="dashboard"><LayoutDashboard className="mr-1 size-4" />Dashboard</TabsTrigger>
           <TabsTrigger value="orders" className="relative">
@@ -158,7 +167,7 @@ function Page() {
         </TabsList>
 
         <TabsContent value="dashboard" className="mt-4"><DashboardTab store={store} /></TabsContent>
-        <TabsContent value="orders" className="mt-4"><OrdersTab storeId={store.id} store={store} /></TabsContent>
+        <TabsContent value="orders" className="mt-4"><OrdersTab storeId={store.id} store={store} sub={sub} onSubChange={(v) => nav({ to: "/lojista", search: (p) => ({ ...p, tab: "orders", sub: v }), replace: true })} /></TabsContent>
         <TabsContent value="menu" className="mt-4"><MenuTab storeId={store.id} /></TabsContent>
         <TabsContent value="store" className="mt-4"><StoreEdit store={store} onSaved={load} /></TabsContent>
         <TabsContent value="finance" className="mt-4"><FinanceTab store={store} /></TabsContent>
@@ -290,7 +299,7 @@ function DashboardTab({ store }: { store: any }) {
                   <div className="truncate font-medium">#{o.id.slice(0, 8)}</div>
                   <div className="truncate text-xs text-muted-foreground">{brl(Number(o.total))} • {new Date(o.created_at).toLocaleTimeString("pt-BR")}</div>
                 </div>
-                <Button size="sm" asChild className="shrink-0"><Link to="/pedidos/$id" params={{ id: o.id }}>Abrir</Link></Button>
+                <Button size="sm" asChild className="shrink-0"><Link to="/pedidos/$id" params={{ id: o.id }} search={{ from: "lojista", tab: "dashboard" }}>Abrir</Link></Button>
               </div>
 
             ))}
@@ -749,11 +758,12 @@ const nextStatus: Record<string, string | null> = {
 export const PAID_OR_OFFLINE =
   "payment_status.eq.paid,payment_method.in.(cash_on_delivery,card_on_delivery)";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function OrdersTab({ storeId, store }: { storeId: string; store?: any }) {
+function OrdersTab({ storeId, store, sub, onSubChange }: { storeId: string; store?: any; sub: "active" | "history"; onSubChange: (v: "active" | "history") => void }) {
   const [tracking, setTracking] = useState<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [orders, setOrders] = useState<any[]>([]);
-  const [tab, setTab] = useState<"active" | "history">("active");
+  const tab = sub;
+  const setTab = onSubChange;
   const load = async () => {
     const { data } = await sb.from("orders").select("*").eq("store_id", storeId).or(PAID_OR_OFFLINE).order("created_at", { ascending: false });
     setOrders(data ?? []);
@@ -802,7 +812,7 @@ function OrdersTab({ storeId, store }: { storeId: string; store?: any }) {
                         <div className="mt-1 text-sm">{brl(Number(o.total))} • {o.payment_method}</div>
                       </div>
                       <div className="flex flex-col items-end gap-1">
-                        <Button asChild size="sm" variant="outline"><Link to="/pedidos/$id" params={{ id: o.id }}>Abrir</Link></Button>
+                        <Button asChild size="sm" variant="outline"><Link to="/pedidos/$id" params={{ id: o.id }} search={{ from: "lojista", tab: "orders", sub: tab }}>Abrir</Link></Button>
                         {o.status === "out_for_delivery" && (
                           <Button size="sm" variant="secondary" onClick={() => setTracking(o)}>Acompanhar entrega</Button>
                         )}
@@ -1156,7 +1166,7 @@ function NotificationsTab({ storeId }: { storeId: string }) {
               {n.body && <div className="text-xs text-muted-foreground">{n.body}</div>}
               <div className="mt-1 text-[10px] text-muted-foreground">{new Date(n.created_at).toLocaleString("pt-BR")}</div>
             </div>
-            {n.order_id && <Button size="sm" variant="ghost" asChild><Link to="/pedidos/$id" params={{ id: n.order_id }}>Abrir</Link></Button>}
+            {n.order_id && <Button size="sm" variant="ghost" asChild><Link to="/pedidos/$id" params={{ id: n.order_id }} search={{ from: "lojista", tab: "notifs" }}>Abrir</Link></Button>}
           </div>
         </Card>
       ))}
