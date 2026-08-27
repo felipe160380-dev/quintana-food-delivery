@@ -105,8 +105,8 @@ function Page() {
   return (
     <div className="mx-auto max-w-2xl space-y-4 px-4 py-6">
       <Button variant="ghost" size="sm" asChild className="-ml-2">
-        {origin === "store" ? (
-          <Link to="/lojista"><ArrowLeft className="mr-1 size-4" /> Voltar ao painel da loja</Link>
+        {from === "lojista" || origin === "store" ? (
+          <Link to="/lojista" search={{ ...(tab ? { tab } : {}), ...(sub ? { sub } : {}) }}><ArrowLeft className="mr-1 size-4" /> Voltar ao painel da loja</Link>
         ) : origin === "courier" ? (
           <Link to="/entregador"><ArrowLeft className="mr-1 size-4" /> Voltar às entregas</Link>
         ) : (
