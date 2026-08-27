@@ -65,6 +65,47 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_audit_log: {
+        Row: {
+          action: string
+          admin_id: string
+          amount: number | null
+          created_at: string
+          details: Json | null
+          id: string
+          order_id: string | null
+          result: string
+        }
+        Insert: {
+          action: string
+          admin_id: string
+          amount?: number | null
+          created_at?: string
+          details?: Json | null
+          id?: string
+          order_id?: string | null
+          result: string
+        }
+        Update: {
+          action?: string
+          admin_id?: string
+          amount?: number | null
+          created_at?: string
+          details?: Json | null
+          id?: string
+          order_id?: string | null
+          result?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_audit_log_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cities: {
         Row: {
           created_at: string

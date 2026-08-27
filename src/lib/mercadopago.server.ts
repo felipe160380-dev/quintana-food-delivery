@@ -126,6 +126,23 @@ export async function getPayment(paymentId: string | number): Promise<MpPayment>
 }
 
 /**
+ * Estorno TOTAL de um pagamento aprovado no Mercado Pago.
+ * O valor nunca vem do navegador: o MP estorna o total do próprio pagamento.
+ */
+export async function refundPayment(paymentId: string | number): Promise<{
+  id: number | string;
+  status?: string;
+  amount?: number;
+}> {
+  return mpFetch(`/v1/payments/${paymentId}/refunds`, {
+    method: "POST",
+    idempotencyKey: `refund-${paymentId}`,
+    body: JSON.stringify({}),
+  });
+}
+
+
+/**
  * Reconciliação: busca no Mercado Pago todos os pagamentos criados para um
  * pedido (external_reference). Fonte da verdade é sempre a API do MP.
  */
