@@ -1166,7 +1166,7 @@ function NotificationsTab({ storeId }: { storeId: string }) {
               {n.body && <div className="text-xs text-muted-foreground">{n.body}</div>}
               <div className="mt-1 text-[10px] text-muted-foreground">{new Date(n.created_at).toLocaleString("pt-BR")}</div>
             </div>
-            {n.order_id && <Button size="sm" variant="ghost" asChild><Link to="/pedidos/$id" params={{ id: n.order_id }}>Abrir</Link></Button>}
+            {n.order_id && <Button size="sm" variant="ghost" asChild><Link to="/pedidos/$id" params={{ id: n.order_id }} search={{ from: "lojista", tab: "notifs" }}>Abrir</Link></Button>}
           </div>
         </Card>
       ))}
