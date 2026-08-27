@@ -26,7 +26,13 @@ import {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const sb = supabase as any;
 
-export const Route = createFileRoute("/_authenticated/lojista/")({ component: Page });
+export const Route = createFileRoute("/_authenticated/lojista/")({
+  validateSearch: (search: Record<string, unknown>): { tab?: string; sub?: string } => ({
+    ...(typeof search.tab === "string" ? { tab: search.tab } : {}),
+    ...(typeof search.sub === "string" ? { sub: search.sub } : {}),
+  }),
+  component: Page,
+});
 
 const WEEK = [
   { k: "mon", label: "Seg" }, { k: "tue", label: "Ter" }, { k: "wed", label: "Qua" },
