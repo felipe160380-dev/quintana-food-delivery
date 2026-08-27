@@ -50,10 +50,16 @@ type OrderRow = {
   status: string;
   total: number;
   payment_method: string;
+  payment_status: string;
   customer_id: string;
   store_id: string;
+  courier_id: string | null;
   created_at: string;
+  customer_name?: string | null;
+  store_name?: string | null;
+  courier_name?: string | null;
 };
+
 
 type WithdrawalRow = {
   id: string;
