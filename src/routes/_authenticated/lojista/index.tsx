@@ -48,6 +48,9 @@ function todayHours(hours: Record<string, { open: string; close: string; closed?
 
 function Page() {
   const nav = useNavigate();
+  const search = Route.useSearch();
+  const tab = search.tab ?? "dashboard";
+  const sub = search.sub === "history" ? "history" : "active";
   const [loading, setLoading] = useState(true);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [store, setStore] = useState<any>(null);
