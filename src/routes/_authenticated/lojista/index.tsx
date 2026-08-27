@@ -299,7 +299,7 @@ function DashboardTab({ store }: { store: any }) {
                   <div className="truncate font-medium">#{o.id.slice(0, 8)}</div>
                   <div className="truncate text-xs text-muted-foreground">{brl(Number(o.total))} • {new Date(o.created_at).toLocaleTimeString("pt-BR")}</div>
                 </div>
-                <Button size="sm" asChild className="shrink-0"><Link to="/pedidos/$id" params={{ id: o.id }}>Abrir</Link></Button>
+                <Button size="sm" asChild className="shrink-0"><Link to="/pedidos/$id" params={{ id: o.id }} search={{ from: "lojista", tab: "dashboard" }}>Abrir</Link></Button>
               </div>
 
             ))}
