@@ -429,48 +429,198 @@ function StoresTab() {
 }
 
 
+const ORDER_FILTERS: { k: string; label: string; kind: "status" | "payment" }[] = [
+  { k: "all", label: "Todos", kind: "status" },
+  { k: "pending", label: "Pendentes", kind: "status" },
+  { k: "in_progress", label: "Em andamento", kind: "status" },
+  { k: "ready", label: "Prontos", kind: "status" },
+  { k: "out_for_delivery", label: "Em entrega", kind: "status" },
+  { k: "delivered", label: "Entregues", kind: "status" },
+  { k: "cancelled", label: "Cancelados", kind: "status" },
+  { k: "pay_pending", label: "Pgto pendente", kind: "payment" },
+  { k: "pay_paid", label: "Pgto aprovado", kind: "payment" },
+  { k: "pay_failed", label: "Pgto falhou", kind: "payment" },
+  { k: "pay_refunded", label: "Reembolsados", kind: "payment" },
+];
+
+const ORDER_STATUS_LABEL: Record<string, string> = {
+  pending: "Pendente",
+  accepted: "Aceito",
+  preparing: "Em preparo",
+  ready: "Pronto",
+  out_for_delivery: "Em entrega",
+  delivered: "Entregue",
+  cancelled: "Cancelado",
+};
+
+const PAYMENT_METHOD_LABEL: Record<string, string> = {
+  pix: "Pix",
+  card_online: "Cartão online",
+  cash_on_delivery: "Dinheiro na entrega",
+  card_on_delivery: "Cartão na entrega",
+};
+
+const PAYMENT_STATUS_LABEL: Record<string, string> = {
+  pending: "Pagamento pendente",
+  paid: "Pago",
+  failed: "Pagamento falhou",
+  refunded: "Estornado",
+};
+
 function OrdersTab() {
   const [items, setItems] = useState<OrderRow[]>([]);
-  const [status, setStatus] = useState<string>("all");
-  useEffect(() => { load(); }, [status]);
+  const [filter, setFilter] = useState<string>("all");
+  const [q, setQ] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [refundTarget, setRefundTarget] = useState<OrderRow | null>(null);
+  const [refunding, setRefunding] = useState(false);
+  const refund = useServerFn(adminRefundOrder);
+
+  useEffect(() => { load(); }, [filter]);
+
   async function load() {
-    let q = supabase.from("orders").select("id, status, total, payment_method, customer_id, store_id, created_at").order("created_at", { ascending: false }).limit(100);
-    if (status !== "all") q = q.eq("status", status as any);
-    const { data } = await q;
-    setItems((data ?? []) as OrderRow[]);
+    setLoading(true);
+    let query = supabase
+      .from("orders")
+      .select("id, status, total, payment_method, payment_status, customer_id, store_id, courier_id, created_at")
+      .order("created_at", { ascending: false })
+      .limit(100);
+    if (filter === "in_progress") query = query.in("status", ["accepted", "preparing"] as any);
+    else if (filter === "pay_pending") query = query.eq("payment_status", "pending" as any);
+    else if (filter === "pay_paid") query = query.eq("payment_status", "paid" as any);
+    else if (filter === "pay_failed") query = query.eq("payment_status", "failed" as any);
+    else if (filter === "pay_refunded") query = query.eq("payment_status", "refunded" as any);
+    else if (filter !== "all") query = query.eq("status", filter as any);
+
+    const { data } = await query;
+    const rows = (data ?? []) as unknown as OrderRow[];
+    if (rows.length) {
+      const personIds = Array.from(
+        new Set(rows.flatMap((r) => [r.customer_id, r.courier_id]).filter(Boolean) as string[]),
+      );
+      const storeIds = Array.from(new Set(rows.map((r) => r.store_id)));
+      const [{ data: profs }, { data: stores }] = await Promise.all([
+        supabase.from("profiles").select("id, full_name").in("id", personIds),
+        supabase.from("stores").select("id, name").in("id", storeIds),
+      ]);
+      const pMap = new Map((profs ?? []).map((p: any) => [p.id, p.full_name]));
+      const sMap = new Map((stores ?? []).map((s: any) => [s.id, s.name]));
+      rows.forEach((r) => {
+        r.customer_name = pMap.get(r.customer_id) ?? null;
+        r.courier_name = r.courier_id ? pMap.get(r.courier_id) ?? null : null;
+        r.store_name = sMap.get(r.store_id) ?? null;
+      });
+    }
+    setItems(rows);
+    setLoading(false);
   }
+
   async function cancel(id: string) {
     if (!confirm("Cancelar este pedido?")) return;
     const { error } = await supabase.from("orders").update({ status: "cancelled" }).eq("id", id);
     if (error) { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); }
     toast.success("Pedido cancelado"); load();
   }
-  const statuses = ["all", "pending", "confirmed", "preparing", "ready", "on_the_way", "delivered", "cancelled"];
+
+  async function confirmRefund() {
+    if (!refundTarget) return;
+    setRefunding(true);
+    try {
+      const res = await refund({ data: { orderId: refundTarget.id } });
+      toast.success(`Estorno concluído: R$ ${Number(res.amount).toFixed(2)}`);
+      setRefundTarget(null);
+      load();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Falha no estorno");
+    } finally {
+      setRefunding(false);
+    }
+  }
+
+  const term = q.trim().toLowerCase();
+  const filtered = items.filter((o) =>
+    !term
+    || o.id.toLowerCase().includes(term)
+    || (o.customer_name ?? "").toLowerCase().includes(term)
+    || (o.store_name ?? "").toLowerCase().includes(term),
+  );
+
   return (
     <div className="space-y-3">
-      <div className="flex gap-2 flex-wrap">
-        {statuses.map((s) => (
-          <Button key={s} size="sm" variant={status === s ? "default" : "outline"} onClick={() => setStatus(s)}>{s}</Button>
+      <Input placeholder="Buscar por número do pedido, cliente ou loja..." value={q} onChange={(e) => setQ(e.target.value)} />
+      <div className="tabs-scroll flex gap-1">
+        {ORDER_FILTERS.map((f) => (
+          <Button key={f.k} size="sm" className="shrink-0" variant={filter === f.k ? "default" : "outline"} onClick={() => setFilter(f.k)}>
+            {f.label}
+          </Button>
         ))}
       </div>
-      {items.map((o) => (
+      {loading && <Loader2 className="animate-spin" />}
+      {!loading && filtered.length === 0 && (
+        <Card className="p-6 text-center text-sm text-muted-foreground">Nenhum pedido com esses filtros.</Card>
+      )}
+      {filtered.map((o) => (
         <Card key={o.id}>
-          <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
-            <div className="min-w-0">
+          <CardContent className="flex flex-wrap items-start justify-between gap-3 p-4">
+            <div className="min-w-0 space-y-1">
               <p className="font-mono text-xs">#{o.id.slice(0, 8)}</p>
-              <p className="flex flex-wrap items-center gap-1 text-sm">R$ {Number(o.total).toFixed(2)} · {o.payment_method} · <Badge>{o.status}</Badge></p>
-              <p className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleString("pt-BR")}</p>
+              <p className="flex flex-wrap items-center gap-1 text-sm font-semibold">
+                R$ {Number(o.total).toFixed(2)}
+                <Badge variant={o.status === "cancelled" ? "destructive" : "default"}>{ORDER_STATUS_LABEL[o.status] ?? o.status}</Badge>
+                <Badge variant={o.payment_status === "paid" ? "default" : o.payment_status === "refunded" ? "destructive" : "secondary"}>
+                  {PAYMENT_STATUS_LABEL[o.payment_status] ?? o.payment_status}
+                </Badge>
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Cliente: {o.customer_name ?? "—"} · Loja: {o.store_name ?? "—"} · Entregador: {o.courier_name ?? "—"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {PAYMENT_METHOD_LABEL[o.payment_method] ?? o.payment_method} · {new Date(o.created_at).toLocaleString("pt-BR")}
+              </p>
             </div>
-
-            {!["delivered", "cancelled"].includes(o.status) && (
-              <Button size="sm" variant="destructive" onClick={() => cancel(o.id)}>Cancelar</Button>
-            )}
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" variant="ghost" asChild>
+                <Link to="/pedidos/$id" params={{ id: o.id }}>Abrir</Link>
+              </Button>
+              {o.payment_status === "paid" && ["pix", "card_online"].includes(o.payment_method) && (
+                <Button size="sm" variant="outline" onClick={() => setRefundTarget(o)}>Estornar pagamento</Button>
+              )}
+              {!["delivered", "cancelled"].includes(o.status) && (
+                <Button size="sm" variant="destructive" onClick={() => cancel(o.id)}>Cancelar</Button>
+              )}
+            </div>
           </CardContent>
         </Card>
       ))}
+
+      <Dialog open={!!refundTarget} onOpenChange={(v) => !v && setRefundTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmar estorno total</DialogTitle>
+            <DialogDescription>
+              O valor será devolvido ao cliente pelo Mercado Pago. O pedido e todo o histórico são preservados.
+              Esta ação não pode ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          {refundTarget && (
+            <div className="text-sm space-y-1">
+              <p>Pedido <span className="font-mono">#{refundTarget.id.slice(0, 8)}</span></p>
+              <p>Cliente: {refundTarget.customer_name ?? "—"}</p>
+              <p className="text-lg font-bold">Valor a estornar: R$ {Number(refundTarget.total).toFixed(2)}</p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRefundTarget(null)} disabled={refunding}>Cancelar</Button>
+            <Button variant="destructive" onClick={confirmRefund} disabled={refunding}>
+              {refunding && <Loader2 className="w-4 h-4 mr-1 animate-spin" />} Confirmar estorno
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
 
 type AdminUser = {
   id: string; full_name: string | null; email: string | null; phone: string | null;
