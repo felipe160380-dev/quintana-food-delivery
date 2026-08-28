@@ -100,7 +100,7 @@ export async function loadOrderDetail(db: Db, orderId: string): Promise<AdminOrd
       delivery_code: o.delivery_code ?? null,
       delivered_at: o.delivered_at ?? null,
       courier_stage: o.courier_stage ?? null,
-      address: (o.address_snapshot ?? {}) as Record<string, unknown>,
+      address: (o.address_snapshot ?? {}) as Record<string, string | number | boolean | null>,
     },
     items,
     customer: {

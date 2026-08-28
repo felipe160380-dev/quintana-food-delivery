@@ -107,7 +107,7 @@ export type AdminOrderDetail = {
     delivery_code: string | null;
     delivered_at: string | null;
     courier_stage: string | null;
-    address: Record<string, unknown>;
+    address: Record<string, string | number | boolean | null>;
   };
   items: {
     id: string;

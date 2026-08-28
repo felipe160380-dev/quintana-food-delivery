@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import type { ReportData } from "@/lib/reports.server";
+import type { ReportData } from "@/lib/reports.types";
 
 /** Relatório administrativo: uma loja específica ou a plataforma inteira. */
 export const adminReport = createServerFn({ method: "POST" })
