@@ -11,11 +11,11 @@ export const slugify = (s: string) =>
     .slice(0, 60);
 
 export const orderStatusLabel: Record<string, string> = {
-  pending: "Aguardando loja",
+  pending: "Pendente",
   accepted: "Aceito",
   preparing: "Em preparo",
   ready: "Pronto",
-  out_for_delivery: "A caminho",
+  out_for_delivery: "Saiu para entrega",
   delivered: "Entregue",
   cancelled: "Cancelado",
 };
@@ -28,11 +28,35 @@ export const paymentMethodLabel: Record<string, string> = {
 };
 
 export const paymentStatusLabel: Record<string, string> = {
-  pending: "Aguardando pagamento",
+  pending: "Pendente",
   paid: "Pago",
-  failed: "Não aprovado",
+  approved: "Pago",
+  failed: "Falhou",
+  rejected: "Recusado",
   refunded: "Estornado",
+  cancelled: "Cancelado",
+  in_process: "Em análise",
 };
+
+/** Situação das solicitações de saque (lojista e entregador). */
+export const withdrawalStatusLabel: Record<string, string> = {
+  requested: "Pendente",
+  approved: "Aprovado",
+  paid: "Pago",
+  rejected: "Recusado",
+};
+
+/** Identificador curto exibido ao usuário (compatível com os pedidos atuais). */
+export const orderNumber = (id: string) => `#${(id ?? "").slice(0, 8)}`;
+
+export const dateTimeBR = (iso?: string | null) =>
+  iso ? new Date(iso).toLocaleString("pt-BR") : "—";
+
+export const dateBR = (iso?: string | null) =>
+  iso ? new Date(iso).toLocaleDateString("pt-BR") : "—";
+
+export const label = (map: Record<string, string>, value?: string | null) =>
+  (value && (map[value] ?? value)) || "—";
 
 /** Etapas detalhadas da entrega (fluxo do entregador). */
 export const courierStageLabel: Record<string, string> = {
