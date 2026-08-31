@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Loader2, FileSpreadsheet } from "lucide-react";
@@ -28,11 +28,15 @@ type Props = {
 };
 
 export function ExcelExport({ audience, stores, allowAllStores = false, title = "Exportar Excel" }: Props) {
-  const [storeId, setStoreId] = useState<string>(stores[0]?.id ?? "");
+  const [storeId, setStoreId] = useState<string>(allowAllStores ? "all" : stores[0]?.id ?? "");
   const [period, setPeriod] = useState<PeriodKey>("30d");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!storeId && stores[0]) setStoreId(stores[0].id);
+  }, [stores, storeId]);
 
   const runAdmin = useServerFn(adminReport);
   const runMerchant = useServerFn(merchantReport);

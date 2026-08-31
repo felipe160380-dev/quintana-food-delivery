@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { ExcelExport } from "@/components/ExcelExport";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DeliveryMap } from "@/components/DeliveryMap";
 import { useCourierPosition } from "@/hooks/use-order-tracking";
-import { brl, orderStatusLabel, slugify } from "@/lib/format";
+import { brl, orderStatusLabel, slugify, withdrawalStatusLabel } from "@/lib/format";
 import { toast } from "sonner";
 import {
   Store as StoreIcon, Plus, Trash2, Package, ClipboardList, LayoutDashboard,
@@ -941,6 +942,8 @@ function FinanceTab({ store }: { store: any }) {
         <StatCard label="Saques na semana" value={withdrawalsThisWeek.length} sub={hasFreeUsed ? "Gratuito usado" : "1 gratuito disponível"} />
       </div>
 
+      <ExcelExport audience="merchant" stores={[{ id: store.id, name: store.name }]} title="Exportar meus dados (Excel)" />
+
       <Card>
         <CardHeader><CardTitle className="text-base">Solicitar saque via PIX</CardTitle></CardHeader>
         <CardContent>
@@ -969,9 +972,9 @@ function FinanceTab({ store }: { store: any }) {
                     <div className="font-medium">{brl(Number(w.amount))} <span className="text-xs text-muted-foreground">(líquido {brl(Number(w.net))})</span></div>
                     <div className="text-xs text-muted-foreground">{new Date(w.requested_at).toLocaleString("pt-BR")} • {w.pix_key}</div>
                   </div>
-                  <Badge variant={w.status === "paid" ? "default" : w.status === "rejected" ? "destructive" : "secondary"}>{
-                    { pending: "Em análise", processing: "Em processamento", paid: "Pago", rejected: "Rejeitado" }[w.status as string] ?? w.status
-                  }</Badge>
+                  <Badge variant={w.status === "paid" ? "default" : w.status === "rejected" ? "destructive" : "secondary"}>
+                    {withdrawalStatusLabel[w.status as string] ?? w.status}
+                  </Badge>
                 </div>
               ))}
             </div>
