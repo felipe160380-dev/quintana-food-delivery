@@ -15,8 +15,26 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogD
 import { toast } from "sonner";
 import { Loader2, ShieldCheck, Store as StoreIcon, Users, Bike, ClipboardList, Wallet, MapPin, Trash2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { ExcelExport } from "@/components/ExcelExport";
+import {
+  brl,
+  dateTimeBR,
+  label as tr,
+  orderNumber,
+  orderStatusLabel,
+  paymentMethodLabel,
+  paymentStatusLabel,
+  withdrawalStatusLabel,
+} from "@/lib/format";
+
+type AdmSearch = { tab?: string; q?: string; filtro?: string };
 
 export const Route = createFileRoute("/_authenticated/adm")({
+  validateSearch: (s: Record<string, unknown>): AdmSearch => ({
+    ...(typeof s.tab === "string" ? { tab: s.tab } : {}),
+    ...(typeof s.q === "string" ? { q: s.q } : {}),
+    ...(typeof s.filtro === "string" ? { filtro: s.filtro } : {}),
+  }),
   component: AdminPanel,
 });
 
@@ -86,6 +104,7 @@ type UserRow = {
 function AdminPanel() {
   const { user, roles, loading } = useAuth();
   const navigate = useNavigate();
+  const search = Route.useSearch();
   const isAdmin = roles.includes("admin");
 
   useEffect(() => {
@@ -114,7 +133,10 @@ function AdminPanel() {
         </div>
       </header>
 
-      <Tabs defaultValue="dashboard">
+      <Tabs
+        value={search.tab ?? "dashboard"}
+        onValueChange={(v) => navigate({ to: "/adm", search: v === "orders" ? { tab: v } : { tab: v } })}
+      >
         <TabsList className="tabs-scroll mb-4 h-auto gap-1 p-1">
           <TabsTrigger value="dashboard">Visão</TabsTrigger>
           <TabsTrigger value="couriers"><Bike className="w-4 h-4 mr-1" />Entregadores</TabsTrigger>
@@ -474,40 +496,32 @@ const ORDER_FILTERS: { k: string; label: string; kind: "status" | "payment" }[] 
   { k: "pay_refunded", label: "Reembolsados", kind: "payment" },
 ];
 
-const ORDER_STATUS_LABEL: Record<string, string> = {
-  pending: "Pendente",
-  accepted: "Aceito",
-  preparing: "Em preparo",
-  ready: "Pronto",
-  out_for_delivery: "Em entrega",
-  delivered: "Entregue",
-  cancelled: "Cancelado",
-};
-
-const PAYMENT_METHOD_LABEL: Record<string, string> = {
-  pix: "Pix",
-  card_online: "Cartão online",
-  cash_on_delivery: "Dinheiro na entrega",
-  card_on_delivery: "Cartão na entrega",
-};
-
-const PAYMENT_STATUS_LABEL: Record<string, string> = {
-  pending: "Pagamento pendente",
-  paid: "Pago",
-  failed: "Pagamento falhou",
-  refunded: "Estornado",
-};
+// Tradução centralizada em @/lib/format (orderStatusLabel, paymentStatusLabel, paymentMethodLabel).
 
 function OrdersTab() {
+  const search = Route.useSearch();
+  const navigate = useNavigate();
   const [items, setItems] = useState<OrderRow[]>([]);
-  const [filter, setFilter] = useState<string>("all");
-  const [q, setQ] = useState("");
+  const [filter, setFilter] = useState<string>(search.filtro ?? "all");
+  const [q, setQ] = useState(search.q ?? "");
   const [loading, setLoading] = useState(false);
   const [refundTarget, setRefundTarget] = useState<OrderRow | null>(null);
   const [refunding, setRefunding] = useState(false);
   const refund = useServerFn(adminRefundOrder);
 
   useEffect(() => { load(); }, [filter]);
+
+  // Mantém busca/filtro na URL para voltar do detalhe sem perder o contexto.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      navigate({
+        to: "/adm",
+        search: { tab: "orders", ...(q ? { q } : {}), ...(filter !== "all" ? { filtro: filter } : {}) },
+        replace: true,
+      });
+    }, 300);
+    return () => clearTimeout(t);
+  }, [q, filter, navigate]);
 
   async function load() {
     setLoading(true);
@@ -569,16 +583,23 @@ function OrdersTab() {
   }
 
   const term = q.trim().toLowerCase();
+  const clean = term.replace(/^#/, "");
   const filtered = items.filter((o) =>
-    !term
-    || o.id.toLowerCase().includes(term)
-    || (o.customer_name ?? "").toLowerCase().includes(term)
-    || (o.store_name ?? "").toLowerCase().includes(term),
+    !clean
+    || o.id.toLowerCase().includes(clean)
+    || o.id.slice(0, 8).toLowerCase().includes(clean)
+    || (o.customer_name ?? "").toLowerCase().includes(clean)
+    || (o.store_name ?? "").toLowerCase().includes(clean)
+    || (o.courier_name ?? "").toLowerCase().includes(clean),
   );
 
   return (
     <div className="space-y-3">
-      <Input placeholder="Buscar por número do pedido, cliente ou loja..." value={q} onChange={(e) => setQ(e.target.value)} />
+      <Input
+        placeholder="Buscar pedido por número, cliente, loja ou entregador"
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+      />
       <div className="tabs-scroll flex gap-1">
         {ORDER_FILTERS.map((f) => (
           <Button key={f.k} size="sm" className="shrink-0" variant={filter === f.k ? "default" : "outline"} onClick={() => setFilter(f.k)}>
@@ -594,24 +615,30 @@ function OrdersTab() {
         <Card key={o.id}>
           <CardContent className="flex flex-wrap items-start justify-between gap-3 p-4">
             <div className="min-w-0 space-y-1">
-              <p className="font-mono text-xs">#{o.id.slice(0, 8)}</p>
+              <p className="font-mono text-xs">{orderNumber(o.id)}</p>
               <p className="flex flex-wrap items-center gap-1 text-sm font-semibold">
-                R$ {Number(o.total).toFixed(2)}
-                <Badge variant={o.status === "cancelled" ? "destructive" : "default"}>{ORDER_STATUS_LABEL[o.status] ?? o.status}</Badge>
+                {brl(Number(o.total))}
+                <Badge variant={o.status === "cancelled" ? "destructive" : "default"}>{tr(orderStatusLabel, o.status)}</Badge>
                 <Badge variant={o.payment_status === "paid" ? "default" : o.payment_status === "refunded" ? "destructive" : "secondary"}>
-                  {PAYMENT_STATUS_LABEL[o.payment_status] ?? o.payment_status}
+                  {tr(paymentStatusLabel, o.payment_status)}
                 </Badge>
               </p>
               <p className="text-xs text-muted-foreground">
                 Cliente: {o.customer_name ?? "—"} · Loja: {o.store_name ?? "—"} · Entregador: {o.courier_name ?? "—"}
               </p>
               <p className="text-xs text-muted-foreground">
-                {PAYMENT_METHOD_LABEL[o.payment_method] ?? o.payment_method} · {new Date(o.created_at).toLocaleString("pt-BR")}
+                {tr(paymentMethodLabel, o.payment_method)} · {dateTimeBR(o.created_at)}
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button size="sm" variant="ghost" asChild>
-                <Link to="/pedidos/$id" params={{ id: o.id }}>Abrir</Link>
+              <Button size="sm" variant="secondary" asChild>
+                <Link
+                  to="/adm-pedido/$id"
+                  params={{ id: o.id }}
+                  search={{ ...(q ? { q } : {}), ...(filter !== "all" ? { filtro: filter } : {}) }}
+                >
+                  Ver detalhes
+                </Link>
               </Button>
               {o.payment_status === "paid" && ["pix", "card_online"].includes(o.payment_method) && (
                 <Button size="sm" variant="outline" onClick={() => setRefundTarget(o)}>Estornar pagamento</Button>
@@ -635,9 +662,9 @@ function OrdersTab() {
           </DialogHeader>
           {refundTarget && (
             <div className="text-sm space-y-1">
-              <p>Pedido <span className="font-mono">#{refundTarget.id.slice(0, 8)}</span></p>
+              <p>Pedido <span className="font-mono">{orderNumber(refundTarget.id)}</span></p>
               <p>Cliente: {refundTarget.customer_name ?? "—"}</p>
-              <p className="text-lg font-bold">Valor a estornar: R$ {Number(refundTarget.total).toFixed(2)}</p>
+              <p className="text-lg font-bold">Valor a estornar: {brl(Number(refundTarget.total))}</p>
             </div>
           )}
           <DialogFooter>
