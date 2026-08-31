@@ -433,6 +433,12 @@ function StoresTab() {
   const filtered = items.filter((s) => !q || s.name.toLowerCase().includes(q.toLowerCase()) || s.slug.includes(q.toLowerCase()));
   return (
     <div className="space-y-3">
+      <ExcelExport
+        audience="admin"
+        allowAllStores
+        stores={items.map((s) => ({ id: s.id, name: s.name }))}
+        title="Exportar Excel (loja ou plataforma)"
+      />
       <div className="flex gap-2 flex-wrap">
         {STATUS_FILTERS.map((f) => (
           <Button key={f.key} size="sm" variant={filter === f.key ? "default" : "outline"} onClick={() => setFilter(f.key)}>{f.label}</Button>
@@ -798,47 +804,184 @@ function UsersTab() {
 }
 
 
+const WITHDRAWAL_FILTERS = [
+  { k: "all", label: "Todos" },
+  { k: "requested", label: "Pendentes" },
+  { k: "approved", label: "Aprovados" },
+  { k: "paid", label: "Pagos" },
+  { k: "rejected", label: "Recusados" },
+] as const;
+
+type WithdrawalFull = WithdrawalRow & {
+  approved_at: string | null;
+  paid_at: string | null;
+  store_name?: string | null;
+  store_city?: string | null;
+  owner_name?: string | null;
+};
+
 function WithdrawalsTab() {
-  const [items, setItems] = useState<WithdrawalRow[]>([]);
+  const [items, setItems] = useState<WithdrawalFull[]>([]);
   const [status, setStatus] = useState<string>("requested");
+  const [q, setQ] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [detail, setDetail] = useState<WithdrawalFull | null>(null);
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+
   useEffect(() => { load(); }, [status]);
+
   async function load() {
-    let q = supabase.from("store_withdrawals").select("id, store_id, amount, fee, net, pix_key, status, requested_at, note").order("requested_at", { ascending: false });
-    if (status !== "all") q = q.eq("status", status);
-    const { data } = await q;
-    setItems((data ?? []) as WithdrawalRow[]);
+    setLoading(true);
+    let query = supabase
+      .from("store_withdrawals")
+      .select("id, store_id, amount, fee, net, pix_key, status, requested_at, note, approved_at, paid_at")
+      .order("requested_at", { ascending: false });
+    if (status !== "all") query = query.eq("status", status);
+    const { data } = await query;
+    const rows = (data ?? []) as unknown as WithdrawalFull[];
+    if (rows.length) {
+      const storeIds = Array.from(new Set(rows.map((r) => r.store_id)));
+      const { data: stores } = await supabase.from("stores").select("id, name, city, owner_id").in("id", storeIds);
+      const ownerIds = Array.from(new Set((stores ?? []).map((s: any) => s.owner_id)));
+      const { data: owners } = await supabase.from("profiles").select("id, full_name").in("id", ownerIds);
+      const oMap = new Map((owners ?? []).map((o: any) => [o.id, o.full_name]));
+      const sMap = new Map((stores ?? []).map((s: any) => [s.id, s]));
+      rows.forEach((r) => {
+        const st: any = sMap.get(r.store_id);
+        r.store_name = st?.name ?? null;
+        r.store_city = st?.city ?? null;
+        r.owner_name = st ? oMap.get(st.owner_id) ?? null : null;
+      });
+    }
+    setItems(rows);
+    setLoading(false);
   }
-  async function setStatusOf(id: string, newStatus: string) {
-    const patch: any = { status: newStatus };
-    if (newStatus === "paid" || newStatus === "rejected") patch.processed_at = new Date().toISOString();
-    const { error } = await supabase.from("store_withdrawals").update(patch).eq("id", id);
-    if (error) { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); }
-    toast.success("Saque atualizado"); load();
+
+  async function run(rpc: string, args: Record<string, unknown>, ok: string) {
+    setBusy(true);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any).rpc(rpc, args);
+    setBusy(false);
+    if (error) { console.error(error); return toast.error(error.message ?? "Não foi possível concluir."); }
+    toast.success(ok);
+    setDetail(null);
+    setRejectOpen(false);
+    setReason("");
+    load();
   }
+
+  async function approve(w: WithdrawalFull) {
+    if (!confirm(`Autorizar saque de ${brl(Number(w.amount))} para ${w.store_name ?? "a loja"}?`)) return;
+    await run("admin_approve_withdrawal", { _id: w.id }, "Saque autorizado");
+  }
+
+  async function markPaid(w: WithdrawalFull) {
+    if (!confirm(`Confirmar que o repasse de ${brl(Number(w.net))} para ${w.store_name ?? "a loja"} já foi realizado?`)) return;
+    await run("admin_mark_withdrawal_paid", { _id: w.id }, "Saque marcado como pago");
+  }
+
+  const term = q.trim().toLowerCase();
+  const filtered = items.filter((w) =>
+    !term
+    || (w.store_name ?? "").toLowerCase().includes(term)
+    || (w.owner_name ?? "").toLowerCase().includes(term),
+  );
+
   return (
     <div className="space-y-3">
-      <div className="flex gap-2 flex-wrap">
-        {["requested", "paid", "rejected", "all"].map((s) => (
-          <Button key={s} size="sm" variant={status === s ? "default" : "outline"} onClick={() => setStatus(s)}>{s}</Button>
+      <div className="tabs-scroll flex gap-1">
+        {WITHDRAWAL_FILTERS.map((f) => (
+          <Button key={f.k} size="sm" className="shrink-0" variant={status === f.k ? "default" : "outline"} onClick={() => setStatus(f.k)}>
+            {f.label}
+          </Button>
         ))}
       </div>
-      {items.map((w) => (
+      <Input placeholder="Buscar por loja ou lojista" value={q} onChange={(e) => setQ(e.target.value)} />
+      {loading && <Loader2 className="animate-spin" />}
+      {!loading && filtered.length === 0 && (
+        <Card className="p-6 text-center text-sm text-muted-foreground">Nenhuma solicitação com esses filtros.</Card>
+      )}
+      {filtered.map((w) => (
         <Card key={w.id}>
-          <CardContent className="p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <div>
-              <p className="font-semibold">R$ {Number(w.net).toFixed(2)} <span className="text-xs text-muted-foreground">(bruto {Number(w.amount).toFixed(2)}, taxa {Number(w.fee).toFixed(2)})</span></p>
-              <p className="text-xs text-muted-foreground">PIX: {w.pix_key}</p>
-              <p className="text-xs">{new Date(w.requested_at).toLocaleString("pt-BR")} · <Badge>{w.status}</Badge></p>
+          <CardContent className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between">
+            <div className="min-w-0">
+              <p className="font-semibold">
+                {brl(Number(w.amount))}{" "}
+                <span className="text-xs font-normal text-muted-foreground">
+                  (líquido {brl(Number(w.net))} · taxa {brl(Number(w.fee))})
+                </span>
+              </p>
+              <p className="text-sm">{w.store_name ?? "—"} <span className="text-xs text-muted-foreground">· {w.owner_name ?? "—"}</span></p>
+              <p className="text-xs text-muted-foreground">
+                {dateTimeBR(w.requested_at)} · <Badge variant={w.status === "rejected" ? "destructive" : w.status === "paid" ? "default" : "secondary"}>{tr(withdrawalStatusLabel, w.status)}</Badge>
+              </p>
             </div>
-            {w.status === "requested" && (
-              <div className="flex gap-2">
-                <Button size="sm" onClick={() => setStatusOf(w.id, "paid")}>Marcar pago</Button>
-                <Button size="sm" variant="destructive" onClick={() => setStatusOf(w.id, "rejected")}>Rejeitar</Button>
-              </div>
-            )}
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" variant="secondary" onClick={() => setDetail(w)}>Ver detalhes</Button>
+              {w.status === "requested" && <Button size="sm" onClick={() => approve(w)} disabled={busy}>Autorizar saque</Button>}
+              {w.status === "approved" && <Button size="sm" onClick={() => markPaid(w)} disabled={busy}>Marcar como pago</Button>}
+              {(w.status === "requested" || w.status === "approved") && (
+                <Button size="sm" variant="destructive" onClick={() => { setDetail(w); setRejectOpen(true); }} disabled={busy}>Recusar</Button>
+              )}
+            </div>
           </CardContent>
         </Card>
       ))}
+
+      <Dialog open={!!detail && !rejectOpen} onOpenChange={(v) => !v && setDetail(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Solicitação de saque</DialogTitle>
+            <DialogDescription>Dados necessários para a operação financeira.</DialogDescription>
+          </DialogHeader>
+          {detail && (
+            <div className="space-y-1 text-sm">
+              <p>Loja: <strong>{detail.store_name ?? "—"}</strong> {detail.store_city ? `· ${detail.store_city}` : ""}</p>
+              <p>Lojista: {detail.owner_name ?? "—"}</p>
+              <p>Valor solicitado: <strong>{brl(Number(detail.amount))}</strong></p>
+              <p>Taxa: {brl(Number(detail.fee))} · Líquido a pagar: <strong>{brl(Number(detail.net))}</strong></p>
+              <p>Chave PIX: <span className="font-mono">{detail.pix_key}</span></p>
+              <p>Solicitado em: {dateTimeBR(detail.requested_at)}</p>
+              <p>Situação: {tr(withdrawalStatusLabel, detail.status)}</p>
+              <p>Aprovado em: {detail.approved_at ? dateTimeBR(detail.approved_at) : "—"}</p>
+              <p>Pago em: {detail.paid_at ? dateTimeBR(detail.paid_at) : "—"}</p>
+              {detail.status === "rejected" && <p className="text-destructive">Motivo da recusa: {detail.note ?? "—"}</p>}
+            </div>
+          )}
+          <DialogFooter className="flex-wrap gap-2">
+            {detail?.status === "requested" && <Button onClick={() => approve(detail)} disabled={busy}>Autorizar saque</Button>}
+            {detail?.status === "approved" && <Button onClick={() => markPaid(detail)} disabled={busy}>Marcar como pago</Button>}
+            <Button variant="outline" onClick={() => setDetail(null)}>Fechar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={rejectOpen} onOpenChange={(v) => { if (!v) { setRejectOpen(false); setReason(""); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Recusar saque</DialogTitle>
+            <DialogDescription>
+              O valor reservado volta para a carteira da loja. Informe o motivo — ele fica registrado e visível para o lojista.
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea rows={4} placeholder="Motivo da recusa" value={reason} onChange={(e) => setReason(e.target.value)} />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setRejectOpen(false); setReason(""); }} disabled={busy}>Cancelar</Button>
+            <Button
+              variant="destructive"
+              disabled={busy}
+              onClick={() => {
+                if (reason.trim().length < 3) return toast.error("Informe o motivo da recusa.");
+                if (detail) void run("admin_reject_withdrawal", { _id: detail.id, _reason: reason.trim() }, "Saque recusado");
+              }}
+            >
+              {busy && <Loader2 className="mr-1 size-4 animate-spin" />} Confirmar recusa
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
