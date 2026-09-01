@@ -1,7 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ExcelExport } from "@/components/ExcelExport";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -941,8 +940,6 @@ function FinanceTab({ store }: { store: any }) {
         <StatCard label="Faturamento do mês" value={brl(revenueMonth)} />
         <StatCard label="Saques na semana" value={withdrawalsThisWeek.length} sub={hasFreeUsed ? "Gratuito usado" : "1 gratuito disponível"} />
       </div>
-
-      <ExcelExport audience="merchant" stores={[{ id: store.id, name: store.name }]} title="Exportar meus dados (Excel)" />
 
       <Card>
         <CardHeader><CardTitle className="text-base">Solicitar saque via PIX</CardTitle></CardHeader>

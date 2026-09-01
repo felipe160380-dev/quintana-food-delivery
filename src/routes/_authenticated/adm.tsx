@@ -15,7 +15,6 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogD
 import { toast } from "sonner";
 import { Loader2, ShieldCheck, Store as StoreIcon, Users, Bike, ClipboardList, Wallet, MapPin, Trash2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-import { ExcelExport } from "@/components/ExcelExport";
 import {
   brl,
   dateTimeBR,
@@ -433,12 +432,6 @@ function StoresTab() {
   const filtered = items.filter((s) => !q || s.name.toLowerCase().includes(q.toLowerCase()) || s.slug.includes(q.toLowerCase()));
   return (
     <div className="space-y-3">
-      <ExcelExport
-        audience="admin"
-        allowAllStores
-        stores={items.map((s) => ({ id: s.id, name: s.name }))}
-        title="Exportar Excel (loja ou plataforma)"
-      />
       <div className="flex gap-2 flex-wrap">
         {STATUS_FILTERS.map((f) => (
           <Button key={f.key} size="sm" variant={filter === f.key ? "default" : "outline"} onClick={() => setFilter(f.key)}>{f.label}</Button>
