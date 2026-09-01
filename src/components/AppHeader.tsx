@@ -104,8 +104,11 @@ export function AppHeader() {
             </Button>
           )}
 
+          {user && <NotificationsBell />}
+
           {!user ? (
             <Button size="sm" onClick={() => nav({ to: "/auth" })}>
+
               <LogIn className="mr-1 size-4" /> Entrar
             </Button>
           ) : (
