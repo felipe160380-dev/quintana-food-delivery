@@ -1,115 +1,81 @@
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 
+function alertUser() {
+  try { navigator.vibrate?.([180, 90, 180]); } catch {}
+  try {
+    const Ctx = (window as any).AudioContext ?? (window as any).webkitAudioContext;
+    if (!Ctx) return;
+    const ctx = new Ctx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = 880;
+    gain.gain.value = 0.08;
+    osc.connect(gain).connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.35);
+    osc.onended = () => ctx.close();
+  } catch {}
+}
+
+function notify(title: string, body?: string | null, alert = false) {
+  toast(title, { description: body ?? undefined });
+  if (alert) alertUser();
+  if ("Notification" in window && Notification.permission === "granted") {
+    try { new Notification(title, { body: body ?? undefined, icon: "/icon-192.png" }); } catch {}
+  }
+}
+
 /**
- * Subscribes to relevant realtime events for the signed-in user and shows
- * toast + optional native browser notifications.
- * - customers: notified when their order status changes
- * - merchants: notified of new orders in their stores
- * - couriers: notified when a new order becomes 'ready' with no courier
+ * Escuta as notificações persistidas do usuário logado (user_notifications)
+ * e, para lojistas, as notificações das próprias lojas (store_notifications),
+ * exibindo toast + notificação nativa do navegador.
  */
 export function useLiveNotifications() {
+  const { user, roles } = useAuth();
+  const userId = user?.id;
+  const isMerchant = roles.includes("merchant");
+
   useEffect(() => {
+    if (!userId) return;
     let cancelled = false;
-    let channels: any[] = [];
+    const channels: any[] = [];
+
+    if ("Notification" in window && Notification.permission === "default") {
+      try { Notification.requestPermission(); } catch {}
+    }
+
+    const personal = supabase
+      .channel(`notif-user-${userId}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "user_notifications", filter: `user_id=eq.${userId}` },
+        (p) => {
+          const row = p.new as any;
+          notify(row.title, row.body, row.kind === "courier_approved" || row.kind?.startsWith("payment_"));
+        },
+      )
+      .subscribe();
+    channels.push(personal);
 
     (async () => {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user || cancelled) return;
-      const userId = u.user.id;
-
-      if ("Notification" in window && Notification.permission === "default") {
-        try { Notification.requestPermission(); } catch {}
-      }
-
-      const alertUser = () => {
-        try { navigator.vibrate?.([180, 90, 180]); } catch {}
-        try {
-          const Ctx = (window as any).AudioContext ?? (window as any).webkitAudioContext;
-          if (!Ctx) return;
-          const ctx = new Ctx();
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.type = "sine";
-          osc.frequency.value = 880;
-          gain.gain.value = 0.08;
-          osc.connect(gain).connect(ctx.destination);
-          osc.start();
-          osc.stop(ctx.currentTime + 0.35);
-          osc.onended = () => ctx.close();
-        } catch {}
-      };
-
-      const notify = (title: string, body?: string, alert = false) => {
-        toast(title, { description: body });
-        if (alert) alertUser();
-        if ("Notification" in window && Notification.permission === "granted") {
-          try { new Notification(title, { body, icon: "/icon-192.png" }); } catch {}
-        }
-      };
-
-      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", userId);
-      const isMerchant = roles?.some((r) => r.role === "merchant");
-      const isCourier = roles?.some((r) => r.role === "courier");
-
-      const statusMsg: Record<string, string> = {
-        accepted: "A loja confirmou seu pedido 🎉",
-        preparing: "Seu pedido está sendo preparado 👨‍🍳",
-        ready: "Pedido pronto, aguardando entregador 📦",
-        out_for_delivery: "Saiu para entrega — acompanhe no mapa 🛵",
-        delivered: "Pedido entregue. Bom apetite! ✅",
-        cancelled: "Seu pedido foi cancelado ❌",
-      };
-
-      // Customer: any of my orders changed
-      const c1 = supabase.channel(`notif-customer-${userId}`)
-        .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orders", filter: `customer_id=eq.${userId}` }, (p) => {
-          const oldRow = p.old as any; const row = p.new as any;
-          if (oldRow?.status !== row?.status) {
-            notify("Pedido atualizado", statusMsg[row.status] ?? `Status: ${row.status}`);
-          } else if (oldRow?.payment_status !== row?.payment_status && row?.payment_status === "paid") {
-            notify("Pagamento confirmado", "A loja já recebeu seu pedido.");
-          } else if (oldRow?.courier_id !== row?.courier_id && row?.courier_id) {
-            notify("Entregador a caminho", "Um entregador aceitou seu pedido.");
-          }
-        })
-        .subscribe();
-      channels.push(c1);
-
-      if (isMerchant) {
-        const { data: stores } = await supabase.from("stores").select("id,name").eq("owner_id", userId);
-        for (const s of stores ?? []) {
-          const ch = supabase.channel(`notif-store-${s.id}`)
-            .on("postgres_changes", { event: "INSERT", schema: "public", table: "orders", filter: `store_id=eq.${s.id}` },
-              () => notify(`Novo pedido em ${s.name}`, "Abra o painel do lojista para aceitar."))
-            .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orders", filter: `store_id=eq.${s.id}` }, (p) => {
-              const oldRow = p.old as any; const row = p.new as any;
-              if (oldRow?.courier_id !== row?.courier_id && row?.courier_id) {
-                notify(`Entregador designado — ${s.name}`, "Um entregador aceitou a corrida.");
-              } else if (oldRow?.status !== row?.status && row?.status === "out_for_delivery") {
-                notify(`Pedido saiu para entrega — ${s.name}`, "Acompanhe a entrega no painel.");
-              } else if (oldRow?.status !== row?.status && row?.status === "delivered") {
-                notify(`Pedido entregue — ${s.name}`, "O valor foi creditado na sua carteira.");
-              }
-            })
-            .subscribe();
-          channels.push(ch);
-        }
-      }
-
-      if (isCourier) {
-        const ch = supabase.channel("notif-courier-ready")
-          .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orders" }, (p) => {
-            const oldRow = p.old as any; const row = p.new as any;
-            if (row?.status === "ready" && oldRow?.status !== "ready" && !row?.courier_id) {
-              notify("Pedido pronto para retirada", "Abra o painel do entregador.", true);
-            }
-            if (row?.courier_id === userId && oldRow?.status !== row?.status) {
-              if (row.status === "delivered") notify("Entrega concluída ✅", "Bom trabalho!");
-              if (row.status === "cancelled") notify("Entrega cancelada", "O pedido foi cancelado.");
-            }
-          })
+      if (!isMerchant) return;
+      const { data: stores } = await supabase.from("stores").select("id,name").eq("owner_id", userId);
+      if (cancelled) return;
+      for (const s of stores ?? []) {
+        const ch = supabase
+          .channel(`notif-store-${s.id}`)
+          .on(
+            "postgres_changes",
+            { event: "INSERT", schema: "public", table: "store_notifications", filter: `store_id=eq.${s.id}` },
+            (p) => {
+              const row = p.new as any;
+              notify(row.title, row.body, row.kind === "new_order");
+            },
+          )
           .subscribe();
         channels.push(ch);
       }
@@ -119,5 +85,5 @@ export function useLiveNotifications() {
       cancelled = true;
       channels.forEach((c) => supabase.removeChannel(c));
     };
-  }, []);
+  }, [userId, isMerchant]);
 }

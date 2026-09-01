@@ -1237,6 +1237,53 @@ export type Database = {
           },
         ]
       }
+      user_notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          dedupe_key: string | null
+          id: string
+          kind: string
+          link: string | null
+          order_id: string | null
+          read_at: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          dedupe_key?: string | null
+          id?: string
+          kind: string
+          link?: string | null
+          order_id?: string | null
+          read_at?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          dedupe_key?: string | null
+          id?: string
+          kind?: string
+          link?: string | null
+          order_id?: string | null
+          read_at?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_notifications_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1364,6 +1411,29 @@ export type Database = {
       }
       mark_conversation_read: {
         Args: { _order_id: string; _thread?: string }
+        Returns: undefined
+      }
+      notify_admins: {
+        Args: {
+          _body: string
+          _dedupe?: string
+          _kind: string
+          _link?: string
+          _order_id?: string
+          _title: string
+        }
+        Returns: undefined
+      }
+      notify_user: {
+        Args: {
+          _body: string
+          _dedupe?: string
+          _kind: string
+          _link?: string
+          _order_id?: string
+          _title: string
+          _user_id: string
+        }
         Returns: undefined
       }
       rate_courier: {

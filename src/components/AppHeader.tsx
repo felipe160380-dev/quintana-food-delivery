@@ -16,6 +16,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { primaryRole } from "@/lib/profile";
+import { NotificationsBell } from "@/components/NotificationsBell";
 import logo from "@/assets/mipede-logo.png.asset.json";
 
 export function AppHeader() {
@@ -103,8 +104,11 @@ export function AppHeader() {
             </Button>
           )}
 
+          {user && <NotificationsBell />}
+
           {!user ? (
             <Button size="sm" onClick={() => nav({ to: "/auth" })}>
+
               <LogIn className="mr-1 size-4" /> Entrar
             </Button>
           ) : (
