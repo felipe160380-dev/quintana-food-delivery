@@ -397,15 +397,16 @@ function OrderCard({ o, mine, onUpdate }: { o: any; mine?: boolean; onUpdate: ()
           )}
           <div className="mt-2 flex flex-wrap gap-2 sm:hidden">
             <Button asChild size="sm" variant="outline"><Link to="/pedidos/$id" params={{ id: o.id }}>Abrir</Link></Button>
-            {!mine && <Button size="sm" onClick={accept}>Aceitar entrega</Button>}
-            {!mine && <Button size="sm" variant="ghost" onClick={decline}>Recusar</Button>}
+            {!mine && <Button size="sm" disabled={busy} onClick={accept}>{busy ? "Aguarde..." : "Aceitar entrega"}</Button>}
+            {!mine && <Button size="sm" variant="ghost" disabled={busy} onClick={decline}>Recusar</Button>}
           </div>
         </div>
         <div className="hidden shrink-0 flex-col items-end gap-1 sm:flex">
           <Button asChild size="sm" variant="outline"><Link to="/pedidos/$id" params={{ id: o.id }}>Abrir</Link></Button>
-          {!mine && <Button size="sm" onClick={accept}>Aceitar entrega</Button>}
-          {!mine && <Button size="sm" variant="ghost" onClick={decline}>Recusar</Button>}
+          {!mine && <Button size="sm" disabled={busy} onClick={accept}>{busy ? "Aguarde..." : "Aceitar entrega"}</Button>}
+          {!mine && <Button size="sm" variant="ghost" disabled={busy} onClick={decline}>Recusar</Button>}
         </div>
+
       </div>
 
       {mine && (
