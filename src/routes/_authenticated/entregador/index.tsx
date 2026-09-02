@@ -449,7 +449,7 @@ function OrderCard({ o, mine, onUpdate }: { o: any; mine?: boolean; onUpdate: ()
               inputMode="numeric"
               className="w-24 rounded-md border bg-background px-3 py-2 text-center text-lg font-mono tracking-widest"
             />
-            <Button size="sm" onClick={confirmDeliver} disabled={stage !== "at_customer"}>Confirmar entrega</Button>
+            <Button size="sm" onClick={confirmDeliver} disabled={stage !== "at_customer" || confirming}>{confirming ? "Confirmando..." : "Confirmar entrega"}</Button>
             <span className="text-xs text-muted-foreground">
               {stage === "at_customer"
                 ? "Peça ao cliente os 4 dígitos."
