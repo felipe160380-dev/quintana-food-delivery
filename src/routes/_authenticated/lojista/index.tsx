@@ -795,45 +795,10 @@ function OrdersTab({ storeId, store, sub, onSubChange }: { storeId: string; stor
           <div className="mb-1 text-xs font-semibold uppercase text-muted-foreground">{orderStatusLabel[st]} ({groups[st].length})</div>
           {groups[st].length === 0 ? <div className="mb-2 rounded-lg border border-dashed p-3 text-xs text-muted-foreground">—</div> : (
             <div className="mb-3 space-y-2">
-              {groups[st].map((o) => {
-                const next = nextStatus[o.status];
-                return (
-                  <Card key={o.id} className="p-3">
-                    <div className="flex items-start gap-3">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <div className="font-medium">#{o.id.slice(0, 8)}</div>
-                          <Badge>{orderStatusLabel[o.status]}</Badge>
-                          {ordersByCustomer[o.customer_id] === 1 && (
-                            <Badge variant="secondary" className="bg-success/15 text-success">Novo cliente</Badge>
-                          )}
-                        </div>
-                        <div className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleString("pt-BR")}</div>
-                        <div className="mt-1 text-sm">{brl(Number(o.total))} • {o.payment_method}</div>
-                      </div>
-                      <div className="flex flex-col items-end gap-1">
-                        <Button asChild size="sm" variant="outline"><Link to="/pedidos/$id" params={{ id: o.id }} search={{ from: "lojista", tab: "orders", sub: tab }}>Abrir</Link></Button>
-                        {o.status === "out_for_delivery" && (
-                          <Button size="sm" variant="secondary" onClick={() => setTracking(o)}>Acompanhar entrega</Button>
-                        )}
-                        {next && !["cancelled", "delivered"].includes(o.status) && (
-                          <Button size="sm" onClick={async () => {
-                            const { error } = await sb.from("orders").update({ status: next }).eq("id", o.id);
-                            if (error) { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); }
-                            toast.success("Status atualizado");
-                          }}>Marcar {orderStatusLabel[next]}</Button>
-                        )}
-                        {o.status === "pending" && (
-                          <Button size="sm" variant="ghost" className="text-destructive" onClick={async () => {
-                            if (!confirm("Recusar pedido?")) return;
-                            await sb.from("orders").update({ status: "cancelled" }).eq("id", o.id);
-                          }}>Recusar</Button>
-                        )}
-                      </div>
-                    </div>
-                  </Card>
-                );
-              })}
+              {groups[st].map((o) => (
+                <OrderRow key={o.id} o={o} tab={tab} isNewCustomer={ordersByCustomer[o.customer_id] === 1} onTrack={() => setTracking(o)} />
+              ))}
+
             </div>
           )}
         </div>
@@ -842,6 +807,70 @@ function OrdersTab({ storeId, store, sub, onSubChange }: { storeId: string; stor
     </div>
   );
 }
+
+/**
+ * Linha de pedido do painel da loja.
+ * Botões de transição têm estado de carregamento e a atualização é condicionada
+ * ao status atual (`.eq("status", o.status)`), impedindo duplo clique e
+ * transições concorrentes.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function OrderRow({ o, tab, isNewCustomer, onTrack }: { o: any; tab: "active" | "history"; isNewCustomer: boolean; onTrack: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const next = nextStatus[o.status];
+
+  const move = async (to: string) => {
+    if (busy) return;
+    setBusy(true);
+    const { data, error } = await sb
+      .from("orders")
+      .update({ status: to })
+      .eq("id", o.id)
+      .eq("status", o.status)
+      .select("id");
+    setBusy(false);
+    if (error) { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); }
+    if (!data || data.length === 0) return toast.message("Este pedido já foi atualizado.");
+    toast.success("Status atualizado");
+  };
+
+  return (
+    <Card className="p-3">
+      <div className="flex flex-wrap items-start gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="font-medium">#{o.id.slice(0, 8)}</div>
+            <Badge>{orderStatusLabel[o.status]}</Badge>
+            {isNewCustomer && (
+              <Badge variant="secondary" className="bg-success/15 text-success">Novo cliente</Badge>
+            )}
+          </div>
+          <div className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleString("pt-BR")}</div>
+          <div className="mt-1 text-sm">{brl(Number(o.total))} • {o.payment_method}</div>
+        </div>
+        <div className="flex w-full flex-col items-stretch gap-1 sm:w-auto sm:items-end">
+          <Button asChild size="sm" variant="outline"><Link to="/pedidos/$id" params={{ id: o.id }} search={{ from: "lojista", tab: "orders", sub: tab }}>Abrir</Link></Button>
+          {o.status === "out_for_delivery" && (
+            <Button size="sm" variant="secondary" onClick={onTrack}>Acompanhar entrega</Button>
+          )}
+          {next && !["cancelled", "delivered"].includes(o.status) && (
+            <Button size="sm" disabled={busy} onClick={() => move(next)}>
+              {busy ? "Atualizando..." : `Marcar ${orderStatusLabel[next]}`}
+            </Button>
+          )}
+          {o.status === "pending" && (
+            <Button size="sm" variant="ghost" disabled={busy} className="text-destructive" onClick={() => {
+              if (!confirm("Recusar pedido?")) return;
+              void move("cancelled");
+            }}>Recusar</Button>
+          )}
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function TrackingDialog({ order, store, onClose }: { order: any; store?: any; onClose: () => void }) {

@@ -313,26 +313,34 @@ function OrderCard({ o, mine, onUpdate }: { o: any; mine?: boolean; onUpdate: ()
     ? COURIER_STAGES[stageIndex + 1]
     : null;
   const [advancing, setAdvancing] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [confirming, setConfirming] = useState(false);
 
   const accept = async () => {
     // Aceite atômico no servidor: apenas um entregador consegue assumir o pedido.
+    if (busy) return;
+    setBusy(true);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase as any).rpc("courier_accept_order", { _order_id: o.id });
-    if (error) { console.error(error); return toast.error(error.message ?? "Não foi possível aceitar a entrega."); }
+    setBusy(false);
+    if (error) { console.error(error); onUpdate(); return toast.error(error.message ?? "Não foi possível aceitar a entrega."); }
     toast.success("Entrega aceita! Siga as etapas até a conclusão.");
     onUpdate();
   };
 
   const decline = async () => {
+    if (busy) return;
+    setBusy(true);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase as any).rpc("courier_decline_order", { _order_id: o.id });
+    setBusy(false);
     if (error) { console.error(error); return toast.error("Não foi possível recusar. Tente novamente."); }
     toast("Oferta recusada. Ela seguirá para outro entregador.");
     onUpdate();
   };
 
   const advance = async () => {
-    if (!nextStage) return;
+    if (!nextStage || advancing) return;
     setAdvancing(true);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase as any).rpc("courier_set_stage", { _order_id: o.id, _stage: nextStage });
@@ -343,8 +351,10 @@ function OrderCard({ o, mine, onUpdate }: { o: any; mine?: boolean; onUpdate: ()
   };
 
   const confirmDeliver = async () => {
+    if (confirming) return;
     if (stage !== "at_customer") return toast.error("Confirme antes que você chegou no endereço do cliente");
     if (code.length !== 4) return toast.error("Informe o código de 4 dígitos do cliente");
+    setConfirming(true);
     let lat: number | null = null, lng: number | null = null;
     try {
       const pos = await new Promise<GeolocationPosition>((res, rej) =>
@@ -352,13 +362,15 @@ function OrderCard({ o, mine, onUpdate }: { o: any; mine?: boolean; onUpdate: ()
       lat = pos.coords.latitude; lng = pos.coords.longitude;
     } catch {}
     const { error } = await supabase.rpc("confirm_delivery", { _order_id: o.id, _code: code, _lat: lat ?? 0, _lng: lng ?? 0 });
-    if (error) { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); }
+    setConfirming(false);
+    if (error) { console.error(error); return toast.error(error.message ?? "Não foi possível concluir. Tente novamente."); }
     toast.success("Entrega concluída com sucesso", {
       description: `Valor recebido: ${brl(Number(o.delivery_fee ?? 0))}`,
     });
     setCode("");
     onUpdate();
   };
+
 
   return (
     <Card className="p-3 transition-shadow hover:shadow-md">
@@ -385,15 +397,16 @@ function OrderCard({ o, mine, onUpdate }: { o: any; mine?: boolean; onUpdate: ()
           )}
           <div className="mt-2 flex flex-wrap gap-2 sm:hidden">
             <Button asChild size="sm" variant="outline"><Link to="/pedidos/$id" params={{ id: o.id }}>Abrir</Link></Button>
-            {!mine && <Button size="sm" onClick={accept}>Aceitar entrega</Button>}
-            {!mine && <Button size="sm" variant="ghost" onClick={decline}>Recusar</Button>}
+            {!mine && <Button size="sm" disabled={busy} onClick={accept}>{busy ? "Aguarde..." : "Aceitar entrega"}</Button>}
+            {!mine && <Button size="sm" variant="ghost" disabled={busy} onClick={decline}>Recusar</Button>}
           </div>
         </div>
         <div className="hidden shrink-0 flex-col items-end gap-1 sm:flex">
           <Button asChild size="sm" variant="outline"><Link to="/pedidos/$id" params={{ id: o.id }}>Abrir</Link></Button>
-          {!mine && <Button size="sm" onClick={accept}>Aceitar entrega</Button>}
-          {!mine && <Button size="sm" variant="ghost" onClick={decline}>Recusar</Button>}
+          {!mine && <Button size="sm" disabled={busy} onClick={accept}>{busy ? "Aguarde..." : "Aceitar entrega"}</Button>}
+          {!mine && <Button size="sm" variant="ghost" disabled={busy} onClick={decline}>Recusar</Button>}
         </div>
+
       </div>
 
       {mine && (
@@ -436,7 +449,7 @@ function OrderCard({ o, mine, onUpdate }: { o: any; mine?: boolean; onUpdate: ()
               inputMode="numeric"
               className="w-24 rounded-md border bg-background px-3 py-2 text-center text-lg font-mono tracking-widest"
             />
-            <Button size="sm" onClick={confirmDeliver} disabled={stage !== "at_customer"}>Confirmar entrega</Button>
+            <Button size="sm" onClick={confirmDeliver} disabled={stage !== "at_customer" || confirming}>{confirming ? "Confirmando..." : "Confirmar entrega"}</Button>
             <span className="text-xs text-muted-foreground">
               {stage === "at_customer"
                 ? "Peça ao cliente os 4 dígitos."
