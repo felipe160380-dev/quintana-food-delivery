@@ -480,7 +480,9 @@ function OrderCard({ o, mine, onUpdate }: { o: any; mine?: boolean; onUpdate: ()
 const sb = supabase as any;
 
 const WITHDRAWAL_STATUS: Record<string, string> = {
+  requested: "Pendente",
   pending: "Pendente",
+  approved: "Autorizado",
   processing: "Em processamento",
   paid: "Pago",
   rejected: "Recusado",
