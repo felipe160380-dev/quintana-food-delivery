@@ -547,6 +547,9 @@ export type Database = {
       orders: {
         Row: {
           address_snapshot: Json
+          cancel_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
           change_for: number | null
           city_id: string
           courier_comment: string | null
@@ -564,6 +567,7 @@ export type Database = {
           notes: string | null
           payment_method: Database["public"]["Enums"]["payment_method"]
           payment_status: Database["public"]["Enums"]["payment_status"]
+          refund_pending: boolean
           status: Database["public"]["Enums"]["order_status"]
           store_id: string
           subtotal: number
@@ -572,6 +576,9 @@ export type Database = {
         }
         Insert: {
           address_snapshot: Json
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           change_for?: number | null
           city_id: string
           courier_comment?: string | null
@@ -589,6 +596,7 @@ export type Database = {
           notes?: string | null
           payment_method: Database["public"]["Enums"]["payment_method"]
           payment_status?: Database["public"]["Enums"]["payment_status"]
+          refund_pending?: boolean
           status?: Database["public"]["Enums"]["order_status"]
           store_id: string
           subtotal: number
@@ -597,6 +605,9 @@ export type Database = {
         }
         Update: {
           address_snapshot?: Json
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           change_for?: number | null
           city_id?: string
           courier_comment?: string | null
@@ -614,6 +625,7 @@ export type Database = {
           notes?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
           payment_status?: Database["public"]["Enums"]["payment_status"]
+          refund_pending?: boolean
           status?: Database["public"]["Enums"]["order_status"]
           store_id?: string
           subtotal?: number
@@ -1336,6 +1348,10 @@ export type Database = {
         Returns: undefined
       }
       archive_store: { Args: { _store_id: string }; Returns: undefined }
+      cancel_order: {
+        Args: { _order_id: string; _reason?: string }
+        Returns: undefined
+      }
       confirm_delivery: {
         Args: { _code: string; _lat: number; _lng: number; _order_id: string }
         Returns: undefined
