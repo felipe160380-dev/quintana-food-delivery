@@ -834,6 +834,23 @@ function OrderRow({ o, tab, isNewCustomer, onTrack }: { o: any; tab: "active" | 
     toast.success("Status atualizado");
   };
 
+  // Cancelamento sempre pela função segura do servidor: ela valida etapa,
+  // pagamento e sinaliza reembolso pendente quando o pedido já foi pago.
+  const cancel = async () => {
+    if (busy) return;
+    const reason = prompt("Motivo do cancelamento (opcional):") ?? "";
+    setBusy(true);
+    const { error } = await sb.rpc("cancel_order", { _order_id: o.id, _reason: reason });
+    setBusy(false);
+    if (error) { console.error(error); return toast.error(error.message); }
+    if (["pix", "card_online"].includes(o.payment_method) && o.payment_status === "paid") {
+      toast.success("Pedido cancelado. O estorno ao cliente será feito pela administração.");
+    } else {
+      toast.success("Pedido cancelado. Nenhuma cobrança foi concluída neste pedido.");
+    }
+  };
+
+
   return (
     <Card className="p-3">
       <div className="flex flex-wrap items-start gap-3">
