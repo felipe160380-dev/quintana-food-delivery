@@ -875,12 +875,13 @@ function OrderRow({ o, tab, isNewCustomer, onTrack }: { o: any; tab: "active" | 
               {busy ? "Atualizando..." : `Marcar ${orderStatusLabel[next]}`}
             </Button>
           )}
-          {o.status === "pending" && (
+          {["pending", "accepted", "preparing"].includes(o.status) && (
             <Button size="sm" variant="ghost" disabled={busy} className="text-destructive" onClick={() => {
-              if (!confirm("Recusar pedido?")) return;
-              void move("cancelled");
-            }}>Recusar</Button>
+              if (!confirm(o.status === "pending" ? "Recusar pedido?" : "Cancelar este pedido?")) return;
+              void cancel();
+            }}>{busy ? "Aguarde..." : o.status === "pending" ? "Recusar" : "Cancelar pedido"}</Button>
           )}
+
         </div>
       </div>
     </Card>
