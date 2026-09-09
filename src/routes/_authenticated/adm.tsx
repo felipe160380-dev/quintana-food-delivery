@@ -74,6 +74,8 @@ type OrderRow = {
   customer_id: string;
   store_id: string;
   courier_id: string | null;
+  refund_pending?: boolean;
+
   created_at: string;
   customer_name?: string | null;
   store_name?: string | null;
