@@ -110,6 +110,18 @@ function Page() {
           <Row k="Taxa de entrega" v={brl(o.delivery_fee)} />
           <Row k="Total" v={<span className="text-base font-bold">{brl(o.total)}</span>} />
           <Row k="Observações" v={o.notes ?? "—"} />
+          {o.status === "cancelled" && (
+            <>
+              <Row k="Cancelado por" v={o.cancelled_by ?? "—"} />
+              <Row k="Motivo do cancelamento" v={o.cancel_reason ?? "—"} />
+              <Row k="Situação do dinheiro" v={
+                o.payment_status === "refunded" ? "Reembolsado"
+                  : o.refund_pending ? "Pago — reembolso pendente"
+                    : "Nenhuma cobrança concluída"
+              } />
+            </>
+          )}
+
         </CardContent>
       </Card>
 
