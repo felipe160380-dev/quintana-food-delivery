@@ -641,6 +641,10 @@ function OrdersTab() {
                 <Badge variant={o.payment_status === "paid" ? "default" : o.payment_status === "refunded" ? "destructive" : "secondary"}>
                   {tr(paymentStatusLabel, o.payment_status)}
                 </Badge>
+                {o.refund_pending && (
+                  <Badge variant="outline" className="border-destructive text-destructive">Reembolso pendente</Badge>
+                )}
+
               </p>
               <p className="text-xs text-muted-foreground">
                 Cliente: {o.customer_name ?? "—"} · Loja: {o.store_name ?? "—"} · Entregador: {o.courier_name ?? "—"}
