@@ -16,6 +16,11 @@ export type AdminOrderDetail = {
     delivery_code: string | null;
     delivered_at: string | null;
     courier_stage: string | null;
+    refund_pending: boolean;
+    cancel_reason: string | null;
+    cancelled_by: string | null;
+    cancelled_at: string | null;
+
     address: Record<string, string | number | boolean | null>;
   };
   items: {

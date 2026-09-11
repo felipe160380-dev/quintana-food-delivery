@@ -213,6 +213,25 @@ function Page() {
             </div>
           )}
 
+          {order.status === "cancelled" && (
+            <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-2.5 text-xs leading-relaxed">
+              <p className="font-semibold text-destructive">Pedido cancelado</p>
+              {order.cancel_reason && <p className="mt-0.5">Motivo: {order.cancel_reason}</p>}
+              <p className="mt-1">
+                {order.payment_status === "refunded"
+                  ? "Reembolso concluído — o valor foi devolvido pelo meio de pagamento."
+                  : order.payment_status === "paid"
+                    ? "O pagamento foi aprovado e o reembolso está em análise pela administração."
+                    : "Nenhum pagamento foi concluído neste pedido."}
+              </p>
+            </div>
+          )}
+
+          {isCustomer && order.status === "pending" && (
+            <CancelOrderButton orderId={order.id} />
+          )}
+
+
           <div className="flex justify-between text-base font-bold"><span>Total</span><span className="tabular-nums">{brl(Number(order.total))}</span></div>
           {order.status === "out_for_delivery" && order.delivery_code && isCustomer && (
             <div className="rounded-xl border-2 border-primary bg-primary/5 p-3 text-center">
@@ -283,7 +302,35 @@ function Page() {
   );
 }
 
+/**
+ * Cancelamento do cliente: apenas enquanto a loja ainda não aceitou.
+ * Toda a validação (etapa, papel, pagamento) acontece na função segura
+ * `cancel_order` no banco — o botão é só o atalho da interface.
+ */
+function CancelOrderButton({ orderId }: { orderId: string }) {
+  const [busy, setBusy] = useState(false);
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      className="w-full text-destructive"
+      disabled={busy}
+      onClick={async () => {
+        if (!confirm("Cancelar este pedido?")) return;
+        setBusy(true);
+        const { error } = await supabase.rpc("cancel_order", { _order_id: orderId, _reason: "" });
+        setBusy(false);
+        if (error) { console.error(error); return toast.error(error.message); }
+        toast.success("Pedido cancelado.");
+      }}
+    >
+      {busy ? "Cancelando..." : "Cancelar pedido"}
+    </Button>
+  );
+}
+
 function CourierRating({ orderId, initial }: { orderId: string; initial: number | null }) {
+
   const [rating, setRating] = useState<number>(initial ?? 0);
   const [comment, setComment] = useState("");
   const [saved, setSaved] = useState(!!initial);

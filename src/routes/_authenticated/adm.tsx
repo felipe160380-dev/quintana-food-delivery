@@ -491,6 +491,8 @@ const ORDER_FILTERS: { k: string; label: string; kind: "status" | "payment" }[] 
   { k: "out_for_delivery", label: "Em entrega", kind: "status" },
   { k: "delivered", label: "Entregues", kind: "status" },
   { k: "cancelled", label: "Cancelados", kind: "status" },
+  { k: "refund_pending", label: "Reembolso pendente", kind: "payment" },
+
   { k: "pay_pending", label: "Pgto pendente", kind: "payment" },
   { k: "pay_paid", label: "Pgto aprovado", kind: "payment" },
   { k: "pay_failed", label: "Pgto falhou", kind: "payment" },
@@ -508,6 +510,8 @@ function OrdersTab() {
   const [loading, setLoading] = useState(false);
   const [refundTarget, setRefundTarget] = useState<OrderRow | null>(null);
   const [refunding, setRefunding] = useState(false);
+  const [cancelling, setCancelling] = useState<string | null>(null);
+
   const refund = useServerFn(adminRefundOrder);
 
   useEffect(() => { load(); }, [filter]);
@@ -528,7 +532,7 @@ function OrdersTab() {
     setLoading(true);
     let query = supabase
       .from("orders")
-      .select("id, status, total, payment_method, payment_status, customer_id, store_id, courier_id, created_at")
+      .select("id, status, total, payment_method, payment_status, refund_pending, customer_id, store_id, courier_id, created_at")
       .order("created_at", { ascending: false })
       .limit(100);
     if (filter === "in_progress") query = query.in("status", ["accepted", "preparing"] as any);
@@ -536,7 +540,9 @@ function OrdersTab() {
     else if (filter === "pay_paid") query = query.eq("payment_status", "paid" as any);
     else if (filter === "pay_failed") query = query.eq("payment_status", "failed" as any);
     else if (filter === "pay_refunded") query = query.eq("payment_status", "refunded" as any);
+    else if (filter === "refund_pending") query = query.eq("refund_pending", true);
     else if (filter !== "all") query = query.eq("status", filter as any);
+
 
     const { data } = await query;
     const rows = (data ?? []) as unknown as OrderRow[];
@@ -561,12 +567,24 @@ function OrdersTab() {
     setLoading(false);
   }
 
-  async function cancel(id: string) {
-    if (!confirm("Cancelar este pedido?")) return;
-    const { error } = await supabase.from("orders").update({ status: "cancelled" }).eq("id", id);
-    if (error) { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); }
-    toast.success("Pedido cancelado"); load();
+  async function cancel(o: OrderRow) {
+    const online = ["pix", "card_online"].includes(o.payment_method) && o.payment_status === "paid";
+    if (!confirm(
+      online
+        ? "Cancelar este pedido? O pagamento continua cobrado: o pedido ficará marcado como reembolso pendente até você concluir o estorno."
+        : "Cancelar este pedido?",
+    )) return;
+    if (cancelling) return;
+    setCancelling(o.id);
+    const reason = prompt("Motivo do cancelamento (opcional):") ?? "";
+    const { error } = await supabase.rpc("cancel_order", { _order_id: o.id, _reason: reason });
+    setCancelling(null);
+    if (error) { console.error(error); return toast.error(error.message); }
+    toast.success(online ? "Pedido cancelado — reembolso pendente" : "Pedido cancelado");
+    load();
   }
+
+
 
   async function confirmRefund() {
     if (!refundTarget) return;
@@ -623,6 +641,10 @@ function OrdersTab() {
                 <Badge variant={o.payment_status === "paid" ? "default" : o.payment_status === "refunded" ? "destructive" : "secondary"}>
                   {tr(paymentStatusLabel, o.payment_status)}
                 </Badge>
+                {o.refund_pending && (
+                  <Badge variant="outline" className="border-destructive text-destructive">Reembolso pendente</Badge>
+                )}
+
               </p>
               <p className="text-xs text-muted-foreground">
                 Cliente: {o.customer_name ?? "—"} · Loja: {o.store_name ?? "—"} · Entregador: {o.courier_name ?? "—"}
@@ -645,8 +667,11 @@ function OrdersTab() {
                 <Button size="sm" variant="outline" onClick={() => setRefundTarget(o)}>Estornar pagamento</Button>
               )}
               {!["delivered", "cancelled"].includes(o.status) && (
-                <Button size="sm" variant="destructive" onClick={() => cancel(o.id)}>Cancelar</Button>
+                <Button size="sm" variant="destructive" disabled={cancelling === o.id} onClick={() => cancel(o)}>
+                  {cancelling === o.id ? "Cancelando..." : "Cancelar"}
+                </Button>
               )}
+
             </div>
           </CardContent>
         </Card>
