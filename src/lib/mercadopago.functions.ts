@@ -49,7 +49,7 @@ export const createPixForOrder = createServerFn({ method: "POST" })
     const { createPixPayment, mapMpStatus, searchPaymentsByOrder } = await import(
       "@/lib/mercadopago.server"
     );
-    const email = (claims as any)?.email || `cliente-${userId}@quintanafood.app`;
+    const email = (claims as any)?.email || `cliente-${userId}@mipede.app`;
     let mp;
     try {
       mp = await createPixPayment({

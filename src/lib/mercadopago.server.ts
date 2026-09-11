@@ -11,7 +11,7 @@ const MP_BASE = "https://api.mercadopago.com";
 function notificationUrl(): string {
   const base =
     process.env.PUBLIC_BASE_URL?.replace(/\/$/, "") ||
-    "https://quintana-food-delivery.lovable.app";
+    "https://mipede.lovable.app";
   return `${base}/api/public/mp-webhook`;
 }
 
