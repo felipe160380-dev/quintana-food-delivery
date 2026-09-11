@@ -510,6 +510,8 @@ function OrdersTab() {
   const [loading, setLoading] = useState(false);
   const [refundTarget, setRefundTarget] = useState<OrderRow | null>(null);
   const [refunding, setRefunding] = useState(false);
+  const [cancelling, setCancelling] = useState<string | null>(null);
+
   const refund = useServerFn(adminRefundOrder);
 
   useEffect(() => { load(); }, [filter]);
