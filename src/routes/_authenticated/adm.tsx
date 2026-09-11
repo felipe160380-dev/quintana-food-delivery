@@ -667,8 +667,11 @@ function OrdersTab() {
                 <Button size="sm" variant="outline" onClick={() => setRefundTarget(o)}>Estornar pagamento</Button>
               )}
               {!["delivered", "cancelled"].includes(o.status) && (
-                <Button size="sm" variant="destructive" onClick={() => cancel(o.id)}>Cancelar</Button>
+                <Button size="sm" variant="destructive" disabled={cancelling === o.id} onClick={() => cancel(o)}>
+                  {cancelling === o.id ? "Cancelando..." : "Cancelar"}
+                </Button>
               )}
+
             </div>
           </CardContent>
         </Card>
