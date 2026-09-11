@@ -491,6 +491,8 @@ const ORDER_FILTERS: { k: string; label: string; kind: "status" | "payment" }[] 
   { k: "out_for_delivery", label: "Em entrega", kind: "status" },
   { k: "delivered", label: "Entregues", kind: "status" },
   { k: "cancelled", label: "Cancelados", kind: "status" },
+  { k: "refund_pending", label: "Reembolso pendente", kind: "payment" },
+
   { k: "pay_pending", label: "Pgto pendente", kind: "payment" },
   { k: "pay_paid", label: "Pgto aprovado", kind: "payment" },
   { k: "pay_failed", label: "Pgto falhou", kind: "payment" },
