@@ -302,7 +302,35 @@ function Page() {
   );
 }
 
+/**
+ * Cancelamento do cliente: apenas enquanto a loja ainda não aceitou.
+ * Toda a validação (etapa, papel, pagamento) acontece na função segura
+ * `cancel_order` no banco — o botão é só o atalho da interface.
+ */
+function CancelOrderButton({ orderId }: { orderId: string }) {
+  const [busy, setBusy] = useState(false);
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      className="w-full text-destructive"
+      disabled={busy}
+      onClick={async () => {
+        if (!confirm("Cancelar este pedido?")) return;
+        setBusy(true);
+        const { error } = await supabase.rpc("cancel_order", { _order_id: orderId, _reason: "" });
+        setBusy(false);
+        if (error) { console.error(error); return toast.error(error.message); }
+        toast.success("Pedido cancelado.");
+      }}
+    >
+      {busy ? "Cancelando..." : "Cancelar pedido"}
+    </Button>
+  );
+}
+
 function CourierRating({ orderId, initial }: { orderId: string; initial: number | null }) {
+
   const [rating, setRating] = useState<number>(initial ?? 0);
   const [comment, setComment] = useState("");
   const [saved, setSaved] = useState(!!initial);
