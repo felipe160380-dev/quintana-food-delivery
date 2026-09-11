@@ -565,12 +565,24 @@ function OrdersTab() {
     setLoading(false);
   }
 
-  async function cancel(id: string) {
-    if (!confirm("Cancelar este pedido?")) return;
-    const { error } = await supabase.from("orders").update({ status: "cancelled" }).eq("id", id);
-    if (error) { console.error(error); return toast.error("Não foi possível concluir. Tente novamente."); }
-    toast.success("Pedido cancelado"); load();
+  async function cancel(o: OrderRow) {
+    const online = ["pix", "card_online"].includes(o.payment_method) && o.payment_status === "paid";
+    if (!confirm(
+      online
+        ? "Cancelar este pedido? O pagamento continua cobrado: o pedido ficará marcado como reembolso pendente até você concluir o estorno."
+        : "Cancelar este pedido?",
+    )) return;
+    if (cancelling) return;
+    setCancelling(o.id);
+    const reason = prompt("Motivo do cancelamento (opcional):") ?? "";
+    const { error } = await supabase.rpc("cancel_order", { _order_id: o.id, _reason: reason });
+    setCancelling(null);
+    if (error) { console.error(error); return toast.error(error.message); }
+    toast.success(online ? "Pedido cancelado — reembolso pendente" : "Pedido cancelado");
+    load();
   }
+
+
 
   async function confirmRefund() {
     if (!refundTarget) return;
