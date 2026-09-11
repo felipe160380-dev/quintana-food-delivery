@@ -213,6 +213,25 @@ function Page() {
             </div>
           )}
 
+          {order.status === "cancelled" && (
+            <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-2.5 text-xs leading-relaxed">
+              <p className="font-semibold text-destructive">Pedido cancelado</p>
+              {order.cancel_reason && <p className="mt-0.5">Motivo: {order.cancel_reason}</p>}
+              <p className="mt-1">
+                {order.payment_status === "refunded"
+                  ? "Reembolso concluído — o valor foi devolvido pelo meio de pagamento."
+                  : order.payment_status === "paid"
+                    ? "O pagamento foi aprovado e o reembolso está em análise pela administração."
+                    : "Nenhum pagamento foi concluído neste pedido."}
+              </p>
+            </div>
+          )}
+
+          {isCustomer && order.status === "pending" && (
+            <CancelOrderButton orderId={order.id} />
+          )}
+
+
           <div className="flex justify-between text-base font-bold"><span>Total</span><span className="tabular-nums">{brl(Number(order.total))}</span></div>
           {order.status === "out_for_delivery" && order.delivery_code && isCustomer && (
             <div className="rounded-xl border-2 border-primary bg-primary/5 p-3 text-center">
