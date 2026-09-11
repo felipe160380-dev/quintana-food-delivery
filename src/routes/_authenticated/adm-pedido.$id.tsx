@@ -94,7 +94,11 @@ function Page() {
             <Badge variant={o.payment_status === "paid" ? "default" : o.payment_status === "refunded" ? "destructive" : "secondary"}>
               {label(paymentStatusLabel, o.payment_status)}
             </Badge>
+            {o.refund_pending && (
+              <Badge variant="outline" className="border-destructive text-destructive">Reembolso pendente</Badge>
+            )}
           </CardTitle>
+
         </CardHeader>
         <CardContent>
           <Row k="ID completo" v={<span className="font-mono text-xs">{o.id}</span>} />
