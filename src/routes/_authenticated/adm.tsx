@@ -530,7 +530,7 @@ function OrdersTab() {
     setLoading(true);
     let query = supabase
       .from("orders")
-      .select("id, status, total, payment_method, payment_status, customer_id, store_id, courier_id, created_at")
+      .select("id, status, total, payment_method, payment_status, refund_pending, customer_id, store_id, courier_id, created_at")
       .order("created_at", { ascending: false })
       .limit(100);
     if (filter === "in_progress") query = query.in("status", ["accepted", "preparing"] as any);
@@ -538,7 +538,9 @@ function OrdersTab() {
     else if (filter === "pay_paid") query = query.eq("payment_status", "paid" as any);
     else if (filter === "pay_failed") query = query.eq("payment_status", "failed" as any);
     else if (filter === "pay_refunded") query = query.eq("payment_status", "refunded" as any);
+    else if (filter === "refund_pending") query = query.eq("refund_pending", true);
     else if (filter !== "all") query = query.eq("status", filter as any);
+
 
     const { data } = await query;
     const rows = (data ?? []) as unknown as OrderRow[];
