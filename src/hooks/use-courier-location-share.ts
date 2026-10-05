@@ -28,9 +28,8 @@ export function useCourierLocationShare(courierId: string | null, orderIds: stri
         const moved = distanceMeters({ lat: prev.lat, lng: prev.lng }, { lat, lng });
         if (moved < 20 && now - prev.t < 10000) return;
       }
-      last.current = { lat, lng, t: now };
       if (cancelled) return;
-      await supabase.from("order_courier_locations").upsert(
+      const { error } = await supabase.from("order_courier_locations").upsert(
         ids.map((order_id) => ({
           order_id,
           courier_id: courierId,
@@ -43,6 +42,8 @@ export function useCourierLocationShare(courierId: string | null, orderIds: stri
         })),
         { onConflict: "order_id" },
       );
+      // Só registra como "enviado" se o servidor aceitou (sem internet → tenta de novo na próxima leitura).
+      if (!error) last.current = { lat, lng, t: now };
     };
 
     const watchId = navigator.geolocation.watchPosition(push, () => {}, {
