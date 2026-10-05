@@ -161,6 +161,16 @@ function Page() {
               store={order.store?.latitude && order.store?.longitude ? { lat: Number(order.store.latitude), lng: Number(order.store.longitude) } : null}
             />
           )}
+          {order.status === "out_for_delivery" && (() => {
+            if (!courierPos) return <p className="text-xs text-muted-foreground">Aguardando a localização do entregador.</p>;
+            const ageMin = Math.floor((Date.now() - new Date(courierPos.updated_at).getTime()) / 60000);
+            if (ageMin < 2) return null;
+            return (
+              <p className="text-xs text-muted-foreground">
+                Última localização conhecida há {ageMin} min — o entregador está sem atualização recente.
+              </p>
+            );
+          })()}
           {order.courier_stage && !["delivered", "cancelled"].includes(order.status) && (
             <div className="rounded-lg border border-primary/40 bg-primary/5 p-2.5 text-xs font-medium">
               Entregador: {courierStageLabel[order.courier_stage] ?? order.courier_stage}

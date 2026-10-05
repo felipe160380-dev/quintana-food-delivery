@@ -36,6 +36,8 @@ export const Route = createFileRoute("/loja/$slug")({
 
 type Product = { id: string; name: string; description: string | null; price: number; promo_price: number | null; image_url: string | null; category: string | null; is_available: boolean; is_paused: boolean; stock: number | null };
 
+import { isStoreOpenNow } from "@/lib/store-hours";
+
 type Hours = Record<string, { open: string; close: string; closed?: boolean }>;
 
 /** Rótulo do horário de hoje (somente exibição). */
@@ -127,9 +129,14 @@ function StorePage() {
             <div className="min-w-0 flex-1">
               <div className="flex min-w-0 items-center gap-2">
                 <h1 className="min-w-0 truncate text-lg font-bold leading-tight sm:text-2xl">{store.name}</h1>
-                <Badge className={`shrink-0 ${store.is_online ? "bg-success text-success-foreground" : ""}`} variant={store.is_online ? "default" : "secondary"}>
-                  {store.is_online ? "Aberta" : "Fechada"}
-                </Badge>
+                {(() => {
+                  const open = store.is_online && isStoreOpenNow(store.hours);
+                  return (
+                    <Badge className={`shrink-0 ${open ? "bg-success text-success-foreground" : ""}`} variant={open ? "default" : "secondary"}>
+                      {!store.is_online ? "Offline" : open ? "Aberta" : "Fechada"}
+                    </Badge>
+                  );
+                })()}
               </div>
               <p className="mt-0.5 truncate text-xs text-muted-foreground sm:text-sm">{store.category ?? "Restaurante"}</p>
             </div>
