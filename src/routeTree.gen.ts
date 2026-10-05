@@ -9,50 +9,39 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TermosRouteImport } from './routes/termos'
-import { Route as PrivacidadeRouteImport } from './routes/privacidade'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AjudaRouteImport } from './routes/ajuda'
-import { Route as AdmLoginRouteImport } from './routes/adm-login'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as LojaSlugRouteImport } from './routes/loja.$slug'
-import { Route as AuthenticatedTornarSeLojistaRouteImport } from './routes/_authenticated/tornar-se-lojista'
-import { Route as AuthenticatedTornarSeEntregadorRouteImport } from './routes/_authenticated/tornar-se-entregador'
-import { Route as AuthenticatedPagamentosRouteImport } from './routes/_authenticated/pagamentos'
-import { Route as AuthenticatedEnderecosRouteImport } from './routes/_authenticated/enderecos'
-import { Route as AuthenticatedConversasRouteImport } from './routes/_authenticated/conversas'
-import { Route as AuthenticatedCheckoutRouteImport } from './routes/_authenticated/checkout'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AdmLoginRouteImport } from './routes/adm-login'
+import { Route as AjudaRouteImport } from './routes/ajuda'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as PrivacidadeRouteImport } from './routes/privacidade'
+import { Route as TermosRouteImport } from './routes/termos'
 import { Route as AuthenticatedAdmRouteImport } from './routes/_authenticated/adm'
-import { Route as AuthenticatedPedidosIndexRouteImport } from './routes/_authenticated/pedidos/index'
-import { Route as AuthenticatedLojistaIndexRouteImport } from './routes/_authenticated/lojista/index'
-import { Route as AuthenticatedEntregadorIndexRouteImport } from './routes/_authenticated/entregador/index'
-import { Route as ApiPublicMpWebhookRouteImport } from './routes/api/public/mp-webhook'
-import { Route as ApiPublicCourierApplicationRouteImport } from './routes/api/public/courier-application'
-import { Route as AuthenticatedPedidosIdRouteImport } from './routes/_authenticated/pedidos/$id'
-import { Route as AuthenticatedAdmUsuarioIdRouteImport } from './routes/_authenticated/adm-usuario.$id'
-import { Route as AuthenticatedAdmPedidoIdRouteImport } from './routes/_authenticated/adm-pedido.$id'
-import { Route as AuthenticatedAdmLojaIdRouteImport } from './routes/_authenticated/adm-loja.$id'
+import { Route as AuthenticatedCheckoutRouteImport } from './routes/_authenticated/checkout'
+import { Route as AuthenticatedConversasRouteImport } from './routes/_authenticated/conversas'
+import { Route as AuthenticatedEnderecosRouteImport } from './routes/_authenticated/enderecos'
+import { Route as AuthenticatedPagamentosRouteImport } from './routes/_authenticated/pagamentos'
+import { Route as AuthenticatedTornarSeEntregadorRouteImport } from './routes/_authenticated/tornar-se-entregador'
+import { Route as AuthenticatedTornarSeLojistaRouteImport } from './routes/_authenticated/tornar-se-lojista'
+import { Route as LojaSlugRouteImport } from './routes/loja.$slug'
 import { Route as AuthenticatedAdmEntregadorIdRouteImport } from './routes/_authenticated/adm-entregador.$id'
+import { Route as AuthenticatedAdmLojaIdRouteImport } from './routes/_authenticated/adm-loja.$id'
+import { Route as AuthenticatedAdmPedidoIdRouteImport } from './routes/_authenticated/adm-pedido.$id'
+import { Route as AuthenticatedAdmUsuarioIdRouteImport } from './routes/_authenticated/adm-usuario.$id'
+import { Route as AuthenticatedEntregadorIndexRouteImport } from './routes/_authenticated/entregador/index'
+import { Route as AuthenticatedLojistaIndexRouteImport } from './routes/_authenticated/lojista/index'
+import { Route as AuthenticatedPedidosIndexRouteImport } from './routes/_authenticated/pedidos/index'
+import { Route as AuthenticatedPedidosIdRouteImport } from './routes/_authenticated/pedidos/$id'
+import { Route as ApiPublicCourierApplicationRouteImport } from './routes/api/public/courier-application'
+import { Route as ApiPublicMpWebhookRouteImport } from './routes/api/public/mp-webhook'
 
-const TermosRoute = TermosRouteImport.update({
-  id: '/termos',
-  path: '/termos',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PrivacidadeRoute = PrivacidadeRouteImport.update({
-  id: '/privacidade',
-  path: '/privacidade',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AjudaRoute = AjudaRouteImport.update({
-  id: '/ajuda',
-  path: '/ajuda',
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdmLoginRoute = AdmLoginRouteImport.update({
@@ -60,45 +49,29 @@ const AdmLoginRoute = AdmLoginRouteImport.update({
   path: '/adm-login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
+const AjudaRoute = AjudaRouteImport.update({
+  id: '/ajuda',
+  path: '/ajuda',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LojaSlugRoute = LojaSlugRouteImport.update({
-  id: '/loja/$slug',
-  path: '/loja/$slug',
+const PrivacidadeRoute = PrivacidadeRouteImport.update({
+  id: '/privacidade',
+  path: '/privacidade',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedTornarSeLojistaRoute =
-  AuthenticatedTornarSeLojistaRouteImport.update({
-    id: '/tornar-se-lojista',
-    path: '/tornar-se-lojista',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedTornarSeEntregadorRoute =
-  AuthenticatedTornarSeEntregadorRouteImport.update({
-    id: '/tornar-se-entregador',
-    path: '/tornar-se-entregador',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedPagamentosRoute = AuthenticatedPagamentosRouteImport.update({
-  id: '/pagamentos',
-  path: '/pagamentos',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const TermosRoute = TermosRouteImport.update({
+  id: '/termos',
+  path: '/termos',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedEnderecosRoute = AuthenticatedEnderecosRouteImport.update({
-  id: '/enderecos',
-  path: '/enderecos',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedConversasRoute = AuthenticatedConversasRouteImport.update({
-  id: '/conversas',
-  path: '/conversas',
+const AuthenticatedAdmRoute = AuthenticatedAdmRouteImport.update({
+  id: '/adm',
+  path: '/adm',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedCheckoutRoute = AuthenticatedCheckoutRouteImport.update({
@@ -106,21 +79,59 @@ const AuthenticatedCheckoutRoute = AuthenticatedCheckoutRouteImport.update({
   path: '/checkout',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedAdmRoute = AuthenticatedAdmRouteImport.update({
-  id: '/adm',
-  path: '/adm',
+const AuthenticatedConversasRoute = AuthenticatedConversasRouteImport.update({
+  id: '/conversas',
+  path: '/conversas',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedPedidosIndexRoute =
-  AuthenticatedPedidosIndexRouteImport.update({
-    id: '/pedidos/',
-    path: '/pedidos/',
+const AuthenticatedEnderecosRoute = AuthenticatedEnderecosRouteImport.update({
+  id: '/enderecos',
+  path: '/enderecos',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPagamentosRoute = AuthenticatedPagamentosRouteImport.update({
+  id: '/pagamentos',
+  path: '/pagamentos',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTornarSeEntregadorRoute =
+  AuthenticatedTornarSeEntregadorRouteImport.update({
+    id: '/tornar-se-entregador',
+    path: '/tornar-se-entregador',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedLojistaIndexRoute =
-  AuthenticatedLojistaIndexRouteImport.update({
-    id: '/lojista/',
-    path: '/lojista/',
+const AuthenticatedTornarSeLojistaRoute =
+  AuthenticatedTornarSeLojistaRouteImport.update({
+    id: '/tornar-se-lojista',
+    path: '/tornar-se-lojista',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const LojaSlugRoute = LojaSlugRouteImport.update({
+  id: '/loja/$slug',
+  path: '/loja/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAdmEntregadorIdRoute =
+  AuthenticatedAdmEntregadorIdRouteImport.update({
+    id: '/adm-entregador/$id',
+    path: '/adm-entregador/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdmLojaIdRoute = AuthenticatedAdmLojaIdRouteImport.update({
+  id: '/adm-loja/$id',
+  path: '/adm-loja/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdmPedidoIdRoute =
+  AuthenticatedAdmPedidoIdRouteImport.update({
+    id: '/adm-pedido/$id',
+    path: '/adm-pedido/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdmUsuarioIdRoute =
+  AuthenticatedAdmUsuarioIdRouteImport.update({
+    id: '/adm-usuario/$id',
+    path: '/adm-usuario/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedEntregadorIndexRoute =
@@ -129,10 +140,22 @@ const AuthenticatedEntregadorIndexRoute =
     path: '/entregador/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const ApiPublicMpWebhookRoute = ApiPublicMpWebhookRouteImport.update({
-  id: '/api/public/mp-webhook',
-  path: '/api/public/mp-webhook',
-  getParentRoute: () => rootRouteImport,
+const AuthenticatedLojistaIndexRoute =
+  AuthenticatedLojistaIndexRouteImport.update({
+    id: '/lojista/',
+    path: '/lojista/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPedidosIndexRoute =
+  AuthenticatedPedidosIndexRouteImport.update({
+    id: '/pedidos/',
+    path: '/pedidos/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPedidosIdRoute = AuthenticatedPedidosIdRouteImport.update({
+  id: '/pedidos/$id',
+  path: '/pedidos/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const ApiPublicCourierApplicationRoute =
   ApiPublicCourierApplicationRouteImport.update({
@@ -140,34 +163,11 @@ const ApiPublicCourierApplicationRoute =
     path: '/api/public/courier-application',
     getParentRoute: () => rootRouteImport,
   } as any)
-const AuthenticatedPedidosIdRoute = AuthenticatedPedidosIdRouteImport.update({
-  id: '/pedidos/$id',
-  path: '/pedidos/$id',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const ApiPublicMpWebhookRoute = ApiPublicMpWebhookRouteImport.update({
+  id: '/api/public/mp-webhook',
+  path: '/api/public/mp-webhook',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedAdmUsuarioIdRoute =
-  AuthenticatedAdmUsuarioIdRouteImport.update({
-    id: '/adm-usuario/$id',
-    path: '/adm-usuario/$id',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedAdmPedidoIdRoute =
-  AuthenticatedAdmPedidoIdRouteImport.update({
-    id: '/adm-pedido/$id',
-    path: '/adm-pedido/$id',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedAdmLojaIdRoute = AuthenticatedAdmLojaIdRouteImport.update({
-  id: '/adm-loja/$id',
-  path: '/adm-loja/$id',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedAdmEntregadorIdRoute =
-  AuthenticatedAdmEntregadorIdRouteImport.update({
-    id: '/adm-entregador/$id',
-    path: '/adm-entregador/$id',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -346,39 +346,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/termos': {
-      id: '/termos'
-      path: '/termos'
-      fullPath: '/termos'
-      preLoaderRoute: typeof TermosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacidade': {
-      id: '/privacidade'
-      path: '/privacidade'
-      fullPath: '/privacidade'
-      preLoaderRoute: typeof PrivacidadeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/ajuda': {
-      id: '/ajuda'
-      path: '/ajuda'
-      fullPath: '/ajuda'
-      preLoaderRoute: typeof AjudaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/adm-login': {
-      id: '/adm-login'
-      path: '/adm-login'
-      fullPath: '/adm-login'
-      preLoaderRoute: typeof AdmLoginRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -388,53 +360,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/adm-login': {
+      id: '/adm-login'
+      path: '/adm-login'
+      fullPath: '/adm-login'
+      preLoaderRoute: typeof AdmLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/loja/$slug': {
-      id: '/loja/$slug'
-      path: '/loja/$slug'
-      fullPath: '/loja/$slug'
-      preLoaderRoute: typeof LojaSlugRouteImport
+    '/ajuda': {
+      id: '/ajuda'
+      path: '/ajuda'
+      fullPath: '/ajuda'
+      preLoaderRoute: typeof AjudaRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/tornar-se-lojista': {
-      id: '/_authenticated/tornar-se-lojista'
-      path: '/tornar-se-lojista'
-      fullPath: '/tornar-se-lojista'
-      preLoaderRoute: typeof AuthenticatedTornarSeLojistaRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/tornar-se-entregador': {
-      id: '/_authenticated/tornar-se-entregador'
-      path: '/tornar-se-entregador'
-      fullPath: '/tornar-se-entregador'
-      preLoaderRoute: typeof AuthenticatedTornarSeEntregadorRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/privacidade': {
+      id: '/privacidade'
+      path: '/privacidade'
+      fullPath: '/privacidade'
+      preLoaderRoute: typeof PrivacidadeRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/pagamentos': {
-      id: '/_authenticated/pagamentos'
-      path: '/pagamentos'
-      fullPath: '/pagamentos'
-      preLoaderRoute: typeof AuthenticatedPagamentosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/termos': {
+      id: '/termos'
+      path: '/termos'
+      fullPath: '/termos'
+      preLoaderRoute: typeof TermosRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/enderecos': {
-      id: '/_authenticated/enderecos'
-      path: '/enderecos'
-      fullPath: '/enderecos'
-      preLoaderRoute: typeof AuthenticatedEnderecosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/conversas': {
-      id: '/_authenticated/conversas'
-      path: '/conversas'
-      fullPath: '/conversas'
-      preLoaderRoute: typeof AuthenticatedConversasRouteImport
+    '/_authenticated/adm': {
+      id: '/_authenticated/adm'
+      path: '/adm'
+      fullPath: '/adm'
+      preLoaderRoute: typeof AuthenticatedAdmRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/checkout': {
@@ -444,67 +409,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCheckoutRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/adm': {
-      id: '/_authenticated/adm'
-      path: '/adm'
-      fullPath: '/adm'
-      preLoaderRoute: typeof AuthenticatedAdmRouteImport
+    '/_authenticated/conversas': {
+      id: '/_authenticated/conversas'
+      path: '/conversas'
+      fullPath: '/conversas'
+      preLoaderRoute: typeof AuthenticatedConversasRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/pedidos/': {
-      id: '/_authenticated/pedidos/'
-      path: '/pedidos'
-      fullPath: '/pedidos/'
-      preLoaderRoute: typeof AuthenticatedPedidosIndexRouteImport
+    '/_authenticated/enderecos': {
+      id: '/_authenticated/enderecos'
+      path: '/enderecos'
+      fullPath: '/enderecos'
+      preLoaderRoute: typeof AuthenticatedEnderecosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/lojista/': {
-      id: '/_authenticated/lojista/'
-      path: '/lojista'
-      fullPath: '/lojista/'
-      preLoaderRoute: typeof AuthenticatedLojistaIndexRouteImport
+    '/_authenticated/pagamentos': {
+      id: '/_authenticated/pagamentos'
+      path: '/pagamentos'
+      fullPath: '/pagamentos'
+      preLoaderRoute: typeof AuthenticatedPagamentosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/entregador/': {
-      id: '/_authenticated/entregador/'
-      path: '/entregador'
-      fullPath: '/entregador/'
-      preLoaderRoute: typeof AuthenticatedEntregadorIndexRouteImport
+    '/_authenticated/tornar-se-entregador': {
+      id: '/_authenticated/tornar-se-entregador'
+      path: '/tornar-se-entregador'
+      fullPath: '/tornar-se-entregador'
+      preLoaderRoute: typeof AuthenticatedTornarSeEntregadorRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/api/public/mp-webhook': {
-      id: '/api/public/mp-webhook'
-      path: '/api/public/mp-webhook'
-      fullPath: '/api/public/mp-webhook'
-      preLoaderRoute: typeof ApiPublicMpWebhookRouteImport
+    '/_authenticated/tornar-se-lojista': {
+      id: '/_authenticated/tornar-se-lojista'
+      path: '/tornar-se-lojista'
+      fullPath: '/tornar-se-lojista'
+      preLoaderRoute: typeof AuthenticatedTornarSeLojistaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/loja/$slug': {
+      id: '/loja/$slug'
+      path: '/loja/$slug'
+      fullPath: '/loja/$slug'
+      preLoaderRoute: typeof LojaSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/courier-application': {
-      id: '/api/public/courier-application'
-      path: '/api/public/courier-application'
-      fullPath: '/api/public/courier-application'
-      preLoaderRoute: typeof ApiPublicCourierApplicationRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/pedidos/$id': {
-      id: '/_authenticated/pedidos/$id'
-      path: '/pedidos/$id'
-      fullPath: '/pedidos/$id'
-      preLoaderRoute: typeof AuthenticatedPedidosIdRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/adm-usuario/$id': {
-      id: '/_authenticated/adm-usuario/$id'
-      path: '/adm-usuario/$id'
-      fullPath: '/adm-usuario/$id'
-      preLoaderRoute: typeof AuthenticatedAdmUsuarioIdRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/adm-pedido/$id': {
-      id: '/_authenticated/adm-pedido/$id'
-      path: '/adm-pedido/$id'
-      fullPath: '/adm-pedido/$id'
-      preLoaderRoute: typeof AuthenticatedAdmPedidoIdRouteImport
+    '/_authenticated/adm-entregador/$id': {
+      id: '/_authenticated/adm-entregador/$id'
+      path: '/adm-entregador/$id'
+      fullPath: '/adm-entregador/$id'
+      preLoaderRoute: typeof AuthenticatedAdmEntregadorIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/adm-loja/$id': {
@@ -514,12 +465,61 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdmLojaIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/adm-entregador/$id': {
-      id: '/_authenticated/adm-entregador/$id'
-      path: '/adm-entregador/$id'
-      fullPath: '/adm-entregador/$id'
-      preLoaderRoute: typeof AuthenticatedAdmEntregadorIdRouteImport
+    '/_authenticated/adm-pedido/$id': {
+      id: '/_authenticated/adm-pedido/$id'
+      path: '/adm-pedido/$id'
+      fullPath: '/adm-pedido/$id'
+      preLoaderRoute: typeof AuthenticatedAdmPedidoIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/adm-usuario/$id': {
+      id: '/_authenticated/adm-usuario/$id'
+      path: '/adm-usuario/$id'
+      fullPath: '/adm-usuario/$id'
+      preLoaderRoute: typeof AuthenticatedAdmUsuarioIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/entregador/': {
+      id: '/_authenticated/entregador/'
+      path: '/entregador'
+      fullPath: '/entregador/'
+      preLoaderRoute: typeof AuthenticatedEntregadorIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/lojista/': {
+      id: '/_authenticated/lojista/'
+      path: '/lojista'
+      fullPath: '/lojista/'
+      preLoaderRoute: typeof AuthenticatedLojistaIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pedidos/': {
+      id: '/_authenticated/pedidos/'
+      path: '/pedidos'
+      fullPath: '/pedidos/'
+      preLoaderRoute: typeof AuthenticatedPedidosIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pedidos/$id': {
+      id: '/_authenticated/pedidos/$id'
+      path: '/pedidos/$id'
+      fullPath: '/pedidos/$id'
+      preLoaderRoute: typeof AuthenticatedPedidosIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/courier-application': {
+      id: '/api/public/courier-application'
+      path: '/api/public/courier-application'
+      fullPath: '/api/public/courier-application'
+      preLoaderRoute: typeof ApiPublicCourierApplicationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/mp-webhook': {
+      id: '/api/public/mp-webhook'
+      path: '/api/public/mp-webhook'
+      fullPath: '/api/public/mp-webhook'
+      preLoaderRoute: typeof ApiPublicMpWebhookRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
