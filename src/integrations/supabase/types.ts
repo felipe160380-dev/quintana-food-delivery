@@ -1456,6 +1456,10 @@ export type Database = {
         Args: { _comment: string; _order_id: string; _rating: number }
         Returns: undefined
       }
+      store_is_open_now: {
+        Args: { _at?: string; _hours: Json }
+        Returns: boolean
+      }
       store_wallet_balance: { Args: { _store_id: string }; Returns: number }
     }
     Enums: {
